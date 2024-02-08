@@ -1,0 +1,32 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>org.btik.idf-for-clion</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>ESP-IDF for Clion</name>
+    <depends>com.intellij.modules.clion</depends>
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="lustreofjade@qq.com" url="">云逸之</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[
+   This plugin enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif IoT Development Framework)</a> support.<br>
+  ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <directoryProjectGenerator implementation="org.bitk.espidf.project.IdfProjectGenerator"
+                                   id="org.bitk.espidf" order="after jetbrains.cidr.stm32cubemx"/>
+        <notificationGroup id="org.bitk.espidf" displayType="BALLOON" bundle="messages.org_btik_espidf"
+                           key="notification.group"/>
+    </extensions>
+</idea-plugin>
