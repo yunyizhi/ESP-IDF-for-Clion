@@ -64,4 +64,9 @@ public class IdfProjectGenerator extends CMakeProjectGenerator {
     public void setIdfToolsPath(String text) {
         idfToolPath = text;
     }
+
+
+    public void setIdfId(String idfId) {
+
+    }
 }

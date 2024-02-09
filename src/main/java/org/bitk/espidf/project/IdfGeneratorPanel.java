@@ -1,24 +1,27 @@
 package org.bitk.espidf.project;
 
-import com.intellij.execution.configuration.EnvironmentVariablesComponent;
-import com.intellij.execution.util.PathMappingsComponent;
+import com.google.common.reflect.TypeToken;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
-import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.TextFieldWithBrowseButton;
-import com.intellij.openapi.ui.VerticalFlowLayout;
-import com.intellij.ui.components.JBTextField;
+import com.intellij.openapi.ui.*;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.jetbrains.cidr.cpp.CLionCMakeBundle;
 import com.jetbrains.cidr.cpp.cmake.projectWizard.generators.CMakeProjectGenerator;
 import com.jetbrains.cidr.cpp.cmake.projectWizard.generators.settings.ui.CMakeSettingsPanel;
-import org.jdesktop.swingx.VerticalLayout;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+
+
+import java.awt.event.ActionEvent;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.bitk.espidf.util.I18nMessage.$i18n;
 
@@ -27,21 +30,15 @@ import static org.bitk.espidf.util.I18nMessage.$i18n;
  * @since 2024/2/8 21:47
  */
 public class IdfGeneratorPanel extends CMakeSettingsPanel {
-    private PathMappingsComponent idfToolsPath;
 
-    private VerticalLayout layout;
+    private static final String ESP_IDF_JSON = "esp_idf.json";
+
+    protected ComboBox<IdfFrameworkItem> idfFrameworks;
+    private String idfToolPath;
 
 
     public IdfGeneratorPanel(@NotNull CMakeProjectGenerator cMakeProjectGenerator) {
         super(cMakeProjectGenerator);
-        createUIComponents();
-        setLayout(layout);
-        layout.addLayoutComponent("PATH", idfToolsPath);
-    }
-
-    private void createUIComponents() {
-        idfToolsPath = new PathMappingsComponent();
-        layout = new VerticalLayout();
     }
 
     @Override
@@ -54,11 +51,11 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
         GridLayoutManager gridLayoutManager = new GridLayoutManager(3, 2);
         JPanel wrapper = new JPanel(gridLayoutManager);
         FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
-        final TextFieldWithBrowseButton idfToolPathBrowser = new TextFieldWithBrowseButton();
-        idfToolPathBrowser.addBrowseFolderListener($i18n("select.idf.tools.path"), $i18n("select.idf.tools.path.for.idf"), (Project)null, descriptor);
-        idfToolPathBrowser.getTextField().getDocument().addDocumentListener(new DocumentListener() {
+        final TextFieldWithBrowseButton idfToolPathBrowserButton = new TextFieldWithBrowseButton();
+        idfToolPathBrowserButton.getTextField().getDocument().addDocumentListener(new DocumentListener() {
             private void handleChange() {
-                idfGenerator.setIdfToolsPath(idfToolPathBrowser.getText());
+                idfToolPath = idfToolPathBrowserButton.getText();
+                idfGenerator.setIdfToolsPath(idfToolPath);
             }
 
             public void insertUpdate(DocumentEvent e) {
@@ -73,16 +70,90 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
                 this.handleChange();
             }
         });
-        if (idfToolPathBrowser.getTextField() instanceof JBTextField) {
-            ((JBTextField)idfToolPathBrowser.getTextField()).getEmptyText().setText(CLionCMakeBundle.message("cmake.settings.qt.cmake.prefix.path.optional", new Object[0]));
-        }
+        idfToolPathBrowserButton.addActionListener(new ComponentWithBrowseButton.BrowseFolderActionListener<>(
+                $i18n("select.idf.tools.path"), $i18n("select.idf.tools.path.for.idf"),
+                idfToolPathBrowserButton, null, descriptor, TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT) {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                super.actionPerformed(e);
+                refreshIdfIdSet();
+            }
+        });
 
         JLabel qtCMakePrefixLabel = new JLabel($i18n("idf.tools.path.title"));
         wrapper.add(qtCMakePrefixLabel, createConstraints(0, 0));
         GridConstraints firstRowConstraints = createConstraints(0, 1);
         firstRowConstraints.setFill(1);
         firstRowConstraints.setHSizePolicy(4);
-        wrapper.add(idfToolPathBrowser, firstRowConstraints);
+        wrapper.add(idfToolPathBrowserButton, firstRowConstraints);
+        idfFrameworks = new ComboBox<>();
+        idfFrameworks.addItemListener(e -> {
+            IdfFrameworkItem item = (IdfFrameworkItem) e.getItem();
+            idfGenerator.setIdfId(item.idfId);
+        });
+        JLabel idfFrameworkLabel = new JLabel($i18n("idf.framework"));
+        wrapper.add(idfFrameworkLabel, createConstraints(2, 0));
+        wrapper.add(idfFrameworks, createConstraints(2, 1));
         this.add(wrapper, "West");
+    }
+
+    private void refreshIdfIdSet() {
+        Path path = Path.of(idfToolPath, ESP_IDF_JSON);
+        if (!Files.exists(path)) {
+            return;
+        }
+        Gson gson = new Gson();
+
+        try {
+            String json = Files.readString(path);
+            JsonElement jsonElement = gson.fromJson(json, JsonElement.class);
+
+            JsonObject jsonObject = jsonElement.getAsJsonObject();
+            JsonObject idfInstalled = jsonObject.get("idfInstalled").getAsJsonObject();
+            idfFrameworks.removeAllItems();
+            idfInstalled.asMap().forEach((key, value) -> {
+                IdfFrameworkItem idfFrameworkItem = new IdfFrameworkItem();
+                idfFrameworks.addItem(idfFrameworkItem);
+                idfFrameworkItem.idfId = key;
+                JsonObject idfInfo = value.getAsJsonObject();
+                idfFrameworkItem.version = idfInfo.get("version").getAsString();
+                String idfPath = idfInfo.get("path").getAsString();
+                String[] split = idfPath.split("[\\\\|/]");
+                if (split[split.length - 1].isEmpty()) {
+                    idfFrameworkItem.displayName = split[split.length - 2];
+                } else {
+                    idfFrameworkItem.displayName = split[split.length - 1];
+                }
+            });
+            System.out.println(idfFrameworks.getItemCount());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    static class IdfFrameworkItem {
+        private String displayName;
+
+        private String version;
+
+        private String idfId;
+
+        @Override
+        public String toString() {
+            return displayName;
+        }
+
+        public String getDisplayName() {
+            return displayName;
+        }
+
+        public String getVersion() {
+            return version;
+        }
+
+        public String getIdfId() {
+            return idfId;
+        }
     }
 }
