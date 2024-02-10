@@ -1,16 +1,17 @@
 package org.bitk.espidf.project;
 
-import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.*;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.jetbrains.cidr.cpp.cmake.projectWizard.generators.CMakeProjectGenerator;
 import com.jetbrains.cidr.cpp.cmake.projectWizard.generators.settings.ui.CMakeSettingsPanel;
+import org.bitk.espidf.project.component.ComboBoxWithRefresh;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -34,6 +35,8 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
     private static final String ESP_IDF_JSON = "esp_idf.json";
 
     protected ComboBox<IdfFrameworkItem> idfFrameworks;
+
+    protected ComboBox<String> projectTargets;
     private String idfToolPath;
 
 
@@ -91,13 +94,25 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
             IdfFrameworkItem item = (IdfFrameworkItem) e.getItem();
             idfGenerator.setIdfId(item.idfId);
         });
+
         JLabel idfFrameworkLabel = new JLabel($i18n("idf.framework"));
-        wrapper.add(idfFrameworkLabel, createConstraints(2, 0));
-        wrapper.add(idfFrameworks, createConstraints(2, 1));
+        wrapper.add(idfFrameworkLabel, createConstraints(1, 0));
+        wrapper.add(new ComboBoxWithRefresh<>(idfFrameworks, this::refreshIdfIdSet),
+                createConstraints(1, 1));
+        JLabel projectTargetLabel = new JLabel($i18n("project.target"));
+        projectTargets = new ComboBox<>();
+        projectTargets.addItem("esp32");
+        wrapper.add(projectTargetLabel, createConstraints(2, 0));
+        wrapper.add(new ComboBoxWithRefresh<>(projectTargets, this::refreshProjectTarget),
+                createConstraints(2, 1));
         this.add(wrapper, "West");
     }
 
     private void refreshIdfIdSet() {
+        idfFrameworks.removeAllItems();
+        if (StringUtil.isEmpty(idfToolPath)) {
+            return;
+        }
         Path path = Path.of(idfToolPath, ESP_IDF_JSON);
         if (!Files.exists(path)) {
             return;
@@ -110,7 +125,6 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
 
             JsonObject jsonObject = jsonElement.getAsJsonObject();
             JsonObject idfInstalled = jsonObject.get("idfInstalled").getAsJsonObject();
-            idfFrameworks.removeAllItems();
             idfInstalled.asMap().forEach((key, value) -> {
                 IdfFrameworkItem idfFrameworkItem = new IdfFrameworkItem();
                 idfFrameworks.addItem(idfFrameworkItem);
@@ -125,10 +139,13 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
                     idfFrameworkItem.displayName = split[split.length - 1];
                 }
             });
-            System.out.println(idfFrameworks.getItemCount());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+    }
+
+    private void refreshProjectTarget(){
 
     }
 
@@ -142,18 +159,6 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
         @Override
         public String toString() {
             return displayName;
-        }
-
-        public String getDisplayName() {
-            return displayName;
-        }
-
-        public String getVersion() {
-            return version;
-        }
-
-        public String getIdfId() {
-            return idfId;
         }
     }
 }
