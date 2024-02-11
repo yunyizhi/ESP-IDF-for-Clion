@@ -3,14 +3,16 @@ package org.bitk.espidf.project;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.intellij.ide.util.projectWizard.AbstractNewProjectStep;
+import com.intellij.ide.util.projectWizard.ProjectSettingsStepBase;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.*;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.platform.DirectoryProjectGenerator;
+import com.intellij.ui.components.JBPanel;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.jetbrains.cidr.cpp.cmake.projectWizard.generators.CMakeProjectGenerator;
-import com.jetbrains.cidr.cpp.cmake.projectWizard.generators.settings.ui.CMakeSettingsPanel;
 import org.bitk.espidf.project.component.ComboBoxWithRefresh;
 import org.jetbrains.annotations.NotNull;
 
@@ -20,6 +22,7 @@ import javax.swing.event.DocumentListener;
 
 
 import java.awt.event.ActionEvent;
+import java.awt.event.ItemEvent;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -30,8 +33,9 @@ import static org.bitk.espidf.util.I18nMessage.$i18n;
  * @author lustre
  * @since 2024/2/8 21:47
  */
-public class IdfGeneratorPanel extends CMakeSettingsPanel {
+public class IdfProjectSettingsStep extends ProjectSettingsStepBase<String> {
 
+    private JBPanel<?> panel;
     private static final String ESP_IDF_JSON = "esp_idf.json";
 
     protected ComboBox<IdfFrameworkItem> idfFrameworks;
@@ -39,18 +43,18 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
     protected ComboBox<String> projectTargets;
     private String idfToolPath;
 
+    private final IdfProjectGenerator idfProjectGenerator;
 
-    public IdfGeneratorPanel(@NotNull CMakeProjectGenerator cMakeProjectGenerator) {
-        super(cMakeProjectGenerator);
+    public IdfProjectSettingsStep(DirectoryProjectGenerator<String> projectGenerator, AbstractNewProjectStep.AbstractCallback<String> callback) {
+        super(projectGenerator, callback);
+        this.idfProjectGenerator = (IdfProjectGenerator) projectGenerator;
     }
-
+    public boolean isDumbAware() {
+        return true;
+    }
     @Override
-    public void init(@NotNull CMakeProjectGenerator cMakeProjectGenerator) {
-        if (!(cMakeProjectGenerator instanceof IdfProjectGenerator idfGenerator)) {
-            super.init(cMakeProjectGenerator);
-            return;
-        }
-        this.setLayout(new VerticalFlowLayout(0, 2));
+    public JPanel createAdvancedSettings() {
+        panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
         GridLayoutManager gridLayoutManager = new GridLayoutManager(3, 2);
         JPanel wrapper = new JPanel(gridLayoutManager);
         FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
@@ -58,7 +62,8 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
         idfToolPathBrowserButton.getTextField().getDocument().addDocumentListener(new DocumentListener() {
             private void handleChange() {
                 idfToolPath = idfToolPathBrowserButton.getText();
-                idfGenerator.setIdfToolsPath(idfToolPath);
+                idfProjectGenerator.setIdfToolsPath(idfToolPath);
+                checkValid();
             }
 
             public void insertUpdate(DocumentEvent e) {
@@ -91,8 +96,12 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
         wrapper.add(idfToolPathBrowserButton, firstRowConstraints);
         idfFrameworks = new ComboBox<>();
         idfFrameworks.addItemListener(e -> {
+            if (e.getStateChange() != ItemEvent.SELECTED) {
+                return;
+            }
             IdfFrameworkItem item = (IdfFrameworkItem) e.getItem();
-            idfGenerator.setIdfId(item.idfId);
+            idfProjectGenerator.setIdfId(item.idfId);
+            checkValid();
         });
 
         JLabel idfFrameworkLabel = new JLabel($i18n("idf.framework"));
@@ -105,12 +114,14 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
         wrapper.add(projectTargetLabel, createConstraints(2, 0));
         wrapper.add(new ComboBoxWithRefresh<>(projectTargets, this::refreshProjectTarget),
                 createConstraints(2, 1));
-        this.add(wrapper, "West");
+        panel.add(wrapper, "West");
+        return panel;
     }
 
     private void refreshIdfIdSet() {
         idfFrameworks.removeAllItems();
         if (StringUtil.isEmpty(idfToolPath)) {
+            checkValid();
             return;
         }
         Path path = Path.of(idfToolPath, ESP_IDF_JSON);
@@ -127,7 +138,6 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
             JsonObject idfInstalled = jsonObject.get("idfInstalled").getAsJsonObject();
             idfInstalled.asMap().forEach((key, value) -> {
                 IdfFrameworkItem idfFrameworkItem = new IdfFrameworkItem();
-                idfFrameworks.addItem(idfFrameworkItem);
                 idfFrameworkItem.idfId = key;
                 JsonObject idfInfo = value.getAsJsonObject();
                 idfFrameworkItem.version = idfInfo.get("version").getAsString();
@@ -138,7 +148,11 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
                 } else {
                     idfFrameworkItem.displayName = split[split.length - 1];
                 }
+                idfFrameworks.addItem(idfFrameworkItem);
             });
+            if(idfFrameworks.getItemCount() > 0) {
+                idfFrameworks.setSelectedIndex(0);
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -149,7 +163,16 @@ public class IdfGeneratorPanel extends CMakeSettingsPanel {
 
     }
 
-    static class IdfFrameworkItem {
+    private static @NotNull GridConstraints createConstraints(int row, int column) {
+        GridConstraints constraints = new GridConstraints();
+        constraints.setRow(row);
+        constraints.setColumn(column);
+        constraints.setAnchor(8);
+        return constraints;
+    }
+
+
+    public static class IdfFrameworkItem {
         private String displayName;
 
         private String version;
