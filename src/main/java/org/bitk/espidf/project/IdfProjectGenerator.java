@@ -1,23 +1,25 @@
 package org.bitk.espidf.project;
 
+import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.facet.ui.ValidationResult;
 import com.intellij.ide.util.projectWizard.AbstractNewProjectStep;
 import com.intellij.ide.util.projectWizard.CustomStepProjectGenerator;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.impl.welcomeScreen.AbstractActionWithPanel;
 import com.intellij.platform.DirectoryProjectGenerator;
+import com.intellij.util.system.OS;
 import com.jetbrains.cidr.cpp.cmake.projectWizard.generators.CLionProjectGenerator;
-import com.jetbrains.cidr.cpp.cmake.projectWizard.generators.CMakeProjectGenerator;
-import com.jetbrains.cidr.cpp.cmake.projectWizard.generators.settings.ui.CMakeSettingsPanel;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.io.IOException;
+import java.io.File;
 
 import static org.bitk.espidf.util.I18nMessage.$i18n;
 import static org.bitk.espidf.util.SysConf.$sys;
@@ -26,10 +28,22 @@ import static org.bitk.espidf.util.SysConf.$sys;
  * @author lustre
  * @since 2024/2/8 20:37
  */
-public class IdfProjectGenerator extends CLionProjectGenerator<String> implements CustomStepProjectGenerator<String> {
-    private String idfToolPath;
+public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements CustomStepProjectGenerator<T> {
 
-    private String idfId;
+    private WindowsGenerator windowsGenerator;
+
+    private UnixLikeGenerator unixLikeGenerator;
+
+    private final boolean isWindows;
+
+    public IdfProjectGenerator() {
+        isWindows = OS.CURRENT == OS.Windows;
+        if (isWindows) {
+            windowsGenerator = new WindowsGenerator();
+        } else {
+            unixLikeGenerator = new UnixLikeGenerator();
+        }
+    }
 
     @Override
     public @Nullable @Nls(capitalization = Nls.Capitalization.Sentence) String getDescription() {
@@ -61,29 +75,38 @@ public class IdfProjectGenerator extends CLionProjectGenerator<String> implement
     @Override
     public @NotNull ValidationResult validate(@NotNull String baseDirPath) {
         ValidationResult superResult = super.validate(baseDirPath);
-        if(!superResult.isOk()) {
+        if (!superResult.isOk()) {
             return superResult;
         }
-        if(StringUtil.isEmpty(idfToolPath)){
-            return new ValidationResult($i18n("please.select.idf.tools.path.for.idf"));
-        }
-        if(StringUtil.isEmpty(idfId)) {
-            return new ValidationResult($i18n("please.select.idf.id"));
-        }
-        return ValidationResult.OK;
+        return isWindows ? windowsGenerator.validate() : unixLikeGenerator.validate();
     }
 
     public void setIdfToolsPath(String text) {
-        idfToolPath = text;
+        windowsGenerator.setIdfToolsPath(text);
     }
 
 
     public void setIdfId(String idfId) {
-        this.idfId = idfId;
+        windowsGenerator.setIdfId(idfId);
+    }
+
+    public void setIdfFrameworkPath(String idfFrameworkPath) {
+        unixLikeGenerator.setIdfFrameworkPath(idfFrameworkPath);
     }
 
     @Override
-    public AbstractActionWithPanel createStep(DirectoryProjectGenerator<String> directoryProjectGenerator, AbstractNewProjectStep.AbstractCallback<String> abstractCallback) {
-        return new IdfProjectSettingsStep(directoryProjectGenerator, abstractCallback);
+    public AbstractActionWithPanel createStep(DirectoryProjectGenerator<T> directoryProjectGenerator, AbstractNewProjectStep.AbstractCallback<T> abstractCallback) {
+
+        return isWindows ? new IdfWindowsProjectSettingsStep(directoryProjectGenerator, abstractCallback) :
+                new IdfUnixLikeProjectSettingsStep(directoryProjectGenerator, abstractCallback);
+    }
+
+    @Override
+    public void generateProject(@NotNull Project project, @NotNull VirtualFile baseDir, @NotNull T settings, @NotNull Module module) {
+        super.generateProject(project, baseDir, settings, module);
+        if(isWindows) {
+            windowsGenerator.generateProject(project, baseDir, settings, module);
+        }
+
     }
 }

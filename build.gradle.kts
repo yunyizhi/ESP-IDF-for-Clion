@@ -17,7 +17,6 @@ intellij {
     type.set("CL") // Target IDE Platform
 
     plugins.set(listOf("com.intellij.cidr.base",
-        "nativeDebug-plugin",
         "com.intellij.clion",
         "com.intellij.clion.embedded",
         "terminal"))
