@@ -1,6 +1,5 @@
 package org.bitk.espidf.project;
 
-import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.facet.ui.ValidationResult;
 import com.intellij.ide.util.projectWizard.AbstractNewProjectStep;
 import com.intellij.ide.util.projectWizard.CustomStepProjectGenerator;
@@ -8,20 +7,18 @@ import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.util.NlsContexts;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.impl.welcomeScreen.AbstractActionWithPanel;
 import com.intellij.platform.DirectoryProjectGenerator;
-import com.intellij.util.system.OS;
 import com.jetbrains.cidr.cpp.cmake.projectWizard.generators.CLionProjectGenerator;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
-import java.io.File;
 
-import static org.bitk.espidf.util.I18nMessage.$i18n;
+
+import static org.bitk.espidf.util.OsUtil.IS_WINDOWS;
 import static org.bitk.espidf.util.SysConf.$sys;
 
 /**
@@ -30,18 +27,17 @@ import static org.bitk.espidf.util.SysConf.$sys;
  */
 public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements CustomStepProjectGenerator<T> {
 
-    private WindowsGenerator windowsGenerator;
+    private WindowsGenerator<T> windowsGenerator;
 
-    private UnixLikeGenerator unixLikeGenerator;
+    private UnixLikeGenerator<T> unixLikeGenerator;
 
-    private final boolean isWindows;
 
     public IdfProjectGenerator() {
-        isWindows = OS.CURRENT == OS.Windows;
-        if (isWindows) {
-            windowsGenerator = new WindowsGenerator();
+
+        if (IS_WINDOWS) {
+            windowsGenerator = new WindowsGenerator<>();
         } else {
-            unixLikeGenerator = new UnixLikeGenerator();
+            unixLikeGenerator = new UnixLikeGenerator<>();
         }
     }
 
@@ -78,7 +74,7 @@ public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements 
         if (!superResult.isOk()) {
             return superResult;
         }
-        return isWindows ? windowsGenerator.validate() : unixLikeGenerator.validate();
+        return IS_WINDOWS ? windowsGenerator.validate() : unixLikeGenerator.validate();
     }
 
     public void setIdfToolsPath(String text) {
@@ -97,14 +93,14 @@ public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements 
     @Override
     public AbstractActionWithPanel createStep(DirectoryProjectGenerator<T> directoryProjectGenerator, AbstractNewProjectStep.AbstractCallback<T> abstractCallback) {
 
-        return isWindows ? new IdfWindowsProjectSettingsStep(directoryProjectGenerator, abstractCallback) :
-                new IdfUnixLikeProjectSettingsStep(directoryProjectGenerator, abstractCallback);
+        return IS_WINDOWS ? new IdfWindowsProjectSettingsStep<>(directoryProjectGenerator, abstractCallback) :
+                new IdfUnixLikeProjectSettingsStep<>(directoryProjectGenerator, abstractCallback);
     }
 
     @Override
     public void generateProject(@NotNull Project project, @NotNull VirtualFile baseDir, @NotNull T settings, @NotNull Module module) {
         super.generateProject(project, baseDir, settings, module);
-        if(isWindows) {
+        if(IS_WINDOWS) {
             windowsGenerator.generateProject(project, baseDir, settings, module);
         }
 

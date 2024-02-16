@@ -4,7 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.intellij.ide.util.projectWizard.AbstractNewProjectStep;
-import com.intellij.ide.util.projectWizard.ProjectSettingsStepBase;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.*;
@@ -13,8 +13,9 @@ import com.intellij.platform.DirectoryProjectGenerator;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import org.bitk.espidf.conf.IdfToolConf;
 import org.bitk.espidf.project.component.ComboBoxWithRefresh;
-import org.jetbrains.annotations.NotNull;
+import org.bitk.espidf.service.IdfToolConfService;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -43,9 +44,10 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
     public IdfWindowsProjectSettingsStep(DirectoryProjectGenerator<T> projectGenerator, AbstractNewProjectStep.AbstractCallback<T> callback) {
         super(projectGenerator, callback);
     }
+
     @Override
     public JPanel createAdvancedSettings() {
-        JBPanel panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
+        JBPanel<?> panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
         GridLayoutManager gridLayoutManager = new GridLayoutManager(3, 2);
         JPanel wrapper = new JPanel(gridLayoutManager);
         FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
@@ -78,7 +80,6 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
                 refreshIdfIdSet();
             }
         });
-
         JLabel qtCMakePrefixLabel = new JLabel($i18n("idf.tools.path.title"));
         wrapper.add(qtCMakePrefixLabel, createConstraints(0, 0));
         GridConstraints firstRowConstraints = createConstraints(0, 1);
@@ -106,6 +107,13 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
         wrapper.add(new ComboBoxWithRefresh<>(projectTargets, this::refreshProjectTarget),
                 createConstraints(2, 1));
         panel.add(wrapper, "West");
+
+        IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
+        IdfToolConf idfToolConf = service.getIdfToolConf();
+        if (idfToolConf != null) {
+            idfToolPathBrowserButton.getTextField().setText(idfToolConf.getIdfToolPath());
+            refreshIdfIdSet();
+        }
         return panel;
     }
 
@@ -141,7 +149,7 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
                 }
                 idfFrameworks.addItem(idfFrameworkItem);
             });
-            if(idfFrameworks.getItemCount() > 0) {
+            if (idfFrameworks.getItemCount() > 0) {
                 idfFrameworks.setSelectedIndex(0);
             }
         } catch (IOException e) {
@@ -150,7 +158,7 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
 
     }
 
-    private void refreshProjectTarget(){
+    private void refreshProjectTarget() {
 
     }
 

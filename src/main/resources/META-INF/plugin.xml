@@ -28,5 +28,6 @@
                                    id="org.bitk.espidf" order="after jetbrains.cidr.stm32cubemx"/>
         <notificationGroup id="org.bitk.espidf" displayType="BALLOON" bundle="messages.org_btik_espidf"
                            key="notification.group"/>
+    <applicationService serviceInterface="org.bitk.espidf.service.IdfToolConfService" serviceImplementation="org.bitk.espidf.conf.IdfToolConfManager" />
     </extensions>
 </idea-plugin>

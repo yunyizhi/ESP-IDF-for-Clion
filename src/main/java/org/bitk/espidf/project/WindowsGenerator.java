@@ -10,30 +10,38 @@ import com.intellij.facet.ui.ValidationResult;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.module.Module;
-import com.intellij.openapi.progress.ProgressIndicator;
-import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.tools.ToolProcessAdapter;
+import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
+import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
+import org.bitk.espidf.conf.IdfToolConf;
+import org.bitk.espidf.service.IdfToolConfService;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 import static org.bitk.espidf.util.I18nMessage.*;
-import static org.bitk.espidf.util.EnvironmentVarUtil.parseEnv;
+import static org.btik.espidf.adapter.Adapter.readEnvironment;
 
 /**
  * @author lustre
  * @since 2024/2/11 16:57
  */
 public class WindowsGenerator<T> implements SubGenerator<T> {
+    private static final String IDF_CMAKE_PROFILE_NAME = "idf";
+
+    private static final String IDF_CMAKE_BUILD_DIR = "build";
+
     private String idfToolPath;
 
     private String idfId;
@@ -60,49 +68,32 @@ public class WindowsGenerator<T> implements SubGenerator<T> {
 
     @Override
     public void generateProject(Project project, VirtualFile baseDir, T settings, Module module) {
-        new Task.Backgroundable(null, $i18n("init.idf.env")) {
-
-            @Override
-            public void run(@NotNull ProgressIndicator progressIndicator) {
-                GeneralCommandLine commandLine = new GeneralCommandLine()
-                        .withExePath("cmd")
-                        .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
-                        .withWorkDirectory(idfToolPath)
-                        .withParameters(
-                                "/c", idfToolPath + File.separatorChar + "idf_cmd_init.bat " + idfId +
-                                        " 1>&2 && SET");
-                try {
-                    ProcessOutput output = new CapturingProcessRunner(new CapturingProcessHandler(commandLine))
-                            .runProcess(60000);
-                    if (output.isTimeout()) {
-                        NOTIFICATION_GROUP.createNotification(getMsg("idf.cmd.init.failed"),
-                                getMsg("idf.cmd.init.failed.timeout"), NotificationType.ERROR).notify(null);
-
-                    } else if (output.getExitCode() != 0) {
-                        NOTIFICATION_GROUP.createNotification(getMsg("idf.cmd.init.failed"),
-                                output.getStderr(), NotificationType.ERROR).notify(null);
-                    } else {
-                        ApplicationManager.getApplication().invokeLater(() ->{
-                            generateProject(project, baseDir, parseEnv(output.getStdout()));
-                        });
-                    }
-                } catch (ExecutionException e) {
-                    NOTIFICATION_GROUP.createNotification(getMsg("idf.cmd.init.failed"),
-                            getMsgF("idf.cmd.init.failed.with", e.getMessage()), NotificationType.ERROR).notify(null);
+        ApplicationManager.getApplication().invokeLater(() -> {
+            try {
+                IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
+                IdfToolConf idfToolConf = service.getIdfToolConf();
+                if (idfToolConf == null) {
+                    idfToolConf = service.createWinToolConf(idfToolPath, idfId);
                 }
+                Map<String, String> readEnvironment = readEnvironment(idfToolConf);
+                String toolChainName = idfToolConf.getToolchain().getName();
+                generateProject(project, baseDir, readEnvironment, toolChainName);
+
+            } catch (ExecutionException | IOException e) {
+                throw new RuntimeException(e);
             }
-        }.queue();
-
-
+        });
     }
 
-    void generateProject(Project project, VirtualFile baseDir, Map<String, String> envs) {
+    void generateProject(Project project, VirtualFile baseDir, Map<String, String> envs, String toolChainName) {
+        Path idfGenerateTmpDir = baseDir.toNioPath().resolve(".tmp");
         GeneralCommandLine generate = new GeneralCommandLine();
         generate.setExePath("idf.py.exe");
-        generate.setWorkDirectory(idfToolPath);
+        generate.setWorkDirectory(baseDir.getPath());
         generate.withEnvironment(envs);
         generate.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-        generate.addParameters("create-project", "-C", baseDir.getParent().getPath(), baseDir.getName());
+        generate.addParameters("create-project", "-p", idfGenerateTmpDir.toString(),
+                baseDir.getName());
 
         ExecutionEnvironment environment;
         try {
@@ -119,11 +110,54 @@ public class WindowsGenerator<T> implements SubGenerator<T> {
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
-
+        Object requestor = this;
         OSProcessHandler handler;
         try {
             handler = new OSProcessHandler(generate);
             handler.addProcessListener(new ToolProcessAdapter(project, false, "Init Project"));
+            handler.addProcessListener(new ProcessListener() {
+                @Override
+                public void processTerminated(@NotNull ProcessEvent event) {
+                    ProcessListener.super.processTerminated(event);
+                    if (event.getExitCode() == 0) {
+
+                        ApplicationManager.getApplication().invokeLater(() -> {
+                                VirtualFile fileByIoFile = VfsUtil.findFileByIoFile(idfGenerateTmpDir.toFile(), true);
+                                if (fileByIoFile != null) {
+                                    ApplicationManager.getApplication().runWriteAction(() ->{
+                                        try {
+                                            for (VirtualFile child : fileByIoFile.getChildren()) {
+                                                child.move(requestor, baseDir);
+                                            }
+                                        } catch (IOException e) {
+                                            NOTIFICATION_GROUP.createNotification(getMsg("idf.file.init.failed"),
+                                                    e.getMessage(), NotificationType.ERROR).notify(project);
+                                            throw new RuntimeException(e);
+                                        }
+
+                                        CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
+                                        List<CMakeSettings.Profile> profiles = instance.getSettings().getProfiles();
+                                        if (!profiles.isEmpty()) {
+                                            CMakeSettings.Profile profile = profiles.get(0);
+                                            instance.getSettings().setProfiles(List.of(profile
+                                                    .withToolchainName(toolChainName)
+                                                    .withName(IDF_CMAKE_PROFILE_NAME)
+                                                    .withGenerationDir(new File(IDF_CMAKE_BUILD_DIR))));
+                                        }
+                                        instance.linkCMakeProject(VfsUtilCore.virtualToIoFile(baseDir));
+                                        try {
+                                            fileByIoFile.delete(requestor);
+                                        } catch (IOException e) {
+                                            NOTIFICATION_GROUP.createNotification(getMsg("idf.file.init.failed"),
+                                                    e.getMessage(), NotificationType.ERROR).notify(project);
+                                        }
+                                    });
+
+                                }
+                        });
+                    }
+                }
+            });
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
