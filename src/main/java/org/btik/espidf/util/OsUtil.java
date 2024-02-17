@@ -1,4 +1,4 @@
-package org.bitk.espidf.util;
+package org.btik.espidf.util;
 
 import com.intellij.util.system.OS;
 

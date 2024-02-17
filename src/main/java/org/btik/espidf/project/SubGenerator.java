@@ -1,4 +1,4 @@
-package org.bitk.espidf.project;
+package org.btik.espidf.project;
 
 
 import com.intellij.facet.ui.ValidationResult;
@@ -11,7 +11,9 @@ import com.intellij.openapi.vfs.VirtualFile;
  * @since 2024/2/11 17:18
  */
 public interface SubGenerator<T> {
+    String IDF_CMAKE_PROFILE_NAME = "idf";
 
+    String IDF_CMAKE_BUILD_DIR = "build";
     ValidationResult validate();
 
     void generateProject(Project project, VirtualFile baseDir, T settings, Module module);

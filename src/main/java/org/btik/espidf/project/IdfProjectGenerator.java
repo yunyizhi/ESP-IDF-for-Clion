@@ -1,4 +1,4 @@
-package org.bitk.espidf.project;
+package org.btik.espidf.project;
 
 import com.intellij.facet.ui.ValidationResult;
 import com.intellij.ide.util.projectWizard.AbstractNewProjectStep;
@@ -18,8 +18,8 @@ import org.jetbrains.annotations.Nullable;
 import javax.swing.*;
 
 
-import static org.bitk.espidf.util.OsUtil.IS_WINDOWS;
-import static org.bitk.espidf.util.SysConf.$sys;
+import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
+import static org.btik.espidf.util.SysConf.$sys;
 
 /**
  * @author lustre
@@ -102,6 +102,8 @@ public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements 
         super.generateProject(project, baseDir, settings, module);
         if(IS_WINDOWS) {
             windowsGenerator.generateProject(project, baseDir, settings, module);
+        }else{
+            unixLikeGenerator.generateProject(project, baseDir, settings, module);
         }
 
     }

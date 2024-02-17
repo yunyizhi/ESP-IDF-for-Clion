@@ -1,4 +1,4 @@
-package org.bitk.espidf.project;
+package org.btik.espidf.project;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
@@ -19,8 +19,9 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.tools.ToolProcessAdapter;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
-import org.bitk.espidf.conf.IdfToolConf;
-import org.bitk.espidf.service.IdfToolConfService;
+import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.service.IdfToolConfService;
+import org.btik.espidf.util.I18nMessage;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -30,7 +31,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
-import static org.bitk.espidf.util.I18nMessage.*;
 import static org.btik.espidf.adapter.Adapter.readEnvironment;
 
 /**
@@ -38,9 +38,6 @@ import static org.btik.espidf.adapter.Adapter.readEnvironment;
  * @since 2024/2/11 16:57
  */
 public class WindowsGenerator<T> implements SubGenerator<T> {
-    private static final String IDF_CMAKE_PROFILE_NAME = "idf";
-
-    private static final String IDF_CMAKE_BUILD_DIR = "build";
 
     private String idfToolPath;
 
@@ -58,10 +55,10 @@ public class WindowsGenerator<T> implements SubGenerator<T> {
     @Override
     public ValidationResult validate() {
         if (StringUtil.isEmpty(idfToolPath)) {
-            return new ValidationResult($i18n("please.select.idf.tools.path.for.idf"));
+            return new ValidationResult(I18nMessage.$i18n("please.select.idf.tools.path.for.idf"));
         }
         if (StringUtil.isEmpty(idfId)) {
-            return new ValidationResult($i18n("please.select.idf.id"));
+            return new ValidationResult(I18nMessage.$i18n("please.select.idf.id"));
         }
         return ValidationResult.OK;
     }
@@ -130,7 +127,7 @@ public class WindowsGenerator<T> implements SubGenerator<T> {
                                                 child.move(requestor, baseDir);
                                             }
                                         } catch (IOException e) {
-                                            NOTIFICATION_GROUP.createNotification(getMsg("idf.file.init.failed"),
+                                            I18nMessage.NOTIFICATION_GROUP.createNotification(I18nMessage.getMsg("idf.file.init.failed"),
                                                     e.getMessage(), NotificationType.ERROR).notify(project);
                                             throw new RuntimeException(e);
                                         }
@@ -148,7 +145,7 @@ public class WindowsGenerator<T> implements SubGenerator<T> {
                                         try {
                                             fileByIoFile.delete(requestor);
                                         } catch (IOException e) {
-                                            NOTIFICATION_GROUP.createNotification(getMsg("idf.file.init.failed"),
+                                            I18nMessage.NOTIFICATION_GROUP.createNotification(I18nMessage.getMsg("idf.file.init.failed"),
                                                     e.getMessage(), NotificationType.ERROR).notify(project);
                                         }
                                     });

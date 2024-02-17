@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.intellij.execution.ExecutionException;
 import com.jetbrains.cidr.system.LocalHost;
-import org.bitk.espidf.conf.IdfToolConf;
+import org.btiik.espidf.conf.IdfToolConf;
 
 /**
  * @author lustre

@@ -1,6 +1,6 @@
-package org.bitk.espidf.service;
+package org.btik.espidf.service;
 
-import org.bitk.espidf.conf.IdfToolConf;
+import org.btik.espidf.conf.IdfToolConf;
 
 /**
  * @author lustre
@@ -13,4 +13,6 @@ public interface IdfToolConfService {
      * 仅windows
      * */
     IdfToolConf createWinToolConf(String idfToolPath, String idfId);
+
+    IdfToolConf createUnixToolConf(String idfFrameworkPath);
 }

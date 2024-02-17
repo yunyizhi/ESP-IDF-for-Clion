@@ -1,10 +1,9 @@
-package org.bitk.espidf.project;
+package org.btik.espidf.project;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.process.KillableProcessHandler;
-import com.intellij.execution.process.NopProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.util.NlsSafe;

@@ -1,4 +1,4 @@
-package org.bitk.espidf.project;
+package org.btik.espidf.project;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -13,9 +13,9 @@ import com.intellij.platform.DirectoryProjectGenerator;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import org.bitk.espidf.conf.IdfToolConf;
-import org.bitk.espidf.project.component.ComboBoxWithRefresh;
-import org.bitk.espidf.service.IdfToolConfService;
+import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.project.component.ComboBoxWithRefresh;
+import org.btik.espidf.service.IdfToolConfService;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -28,7 +28,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static org.bitk.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.I18nMessage.$i18n;
 
 /**
  * @author lustre
