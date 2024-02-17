@@ -1,12 +1,11 @@
-package org.bitk.espidf.project;
+package org.btik.espidf.project;
 
 import com.intellij.facet.ui.ValidationResult;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.openapi.vfs.VirtualFile;
-
-import static org.bitk.espidf.util.I18nMessage.$i18n;
+import org.btik.espidf.util.I18nMessage;
 
 /**
  * @author lustre
@@ -22,7 +21,7 @@ public class UnixLikeGenerator<T> implements SubGenerator<T>{
     @Override
     public ValidationResult validate() {
         if (StringUtil.isEmpty(idfFrameworkPath)) {
-            return new ValidationResult($i18n("please.select.idf.tools.path.for.idf"));
+            return new ValidationResult(I18nMessage.$i18n("please.select.idf.tools.path.for.idf"));
         }
         return ValidationResult.OK;
     }

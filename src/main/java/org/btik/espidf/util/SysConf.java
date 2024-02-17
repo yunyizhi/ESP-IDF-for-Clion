@@ -1,4 +1,4 @@
-package org.bitk.espidf.util;
+package org.btik.espidf.util;
 
 import com.intellij.DynamicBundle;
 import org.jetbrains.annotations.NotNull;

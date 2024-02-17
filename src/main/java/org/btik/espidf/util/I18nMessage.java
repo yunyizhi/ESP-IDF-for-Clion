@@ -1,4 +1,4 @@
-package org.bitk.espidf.util;
+package org.btik.espidf.util;
 
 import com.intellij.DynamicBundle;
 import com.intellij.notification.NotificationGroup;
@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 public class I18nMessage extends DynamicBundle {
     private static final I18nMessage INSTANCE = new I18nMessage("messages.org_btik_espidf");
     public static NotificationGroup NOTIFICATION_GROUP =
-            NotificationGroupManager.getInstance().getNotificationGroup("org.bitk.espidf");
+            NotificationGroupManager.getInstance().getNotificationGroup("org.btiik.espidf");
 
     public I18nMessage(@NotNull String pathToBundle) {
         super(pathToBundle);

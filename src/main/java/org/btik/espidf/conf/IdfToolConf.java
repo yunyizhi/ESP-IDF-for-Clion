@@ -1,4 +1,4 @@
-package org.bitk.espidf.conf;
+package org.btik.espidf.conf;
 
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 

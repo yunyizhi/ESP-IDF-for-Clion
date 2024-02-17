@@ -1,4 +1,4 @@
-package org.bitk.espidf.conf;
+package org.btik.espidf.conf;
 
 import com.google.gson.Gson;
 import com.intellij.notification.NotificationType;
@@ -8,7 +8,7 @@ import com.intellij.openapi.util.Computable;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.toolchains.OSType;
-import org.bitk.espidf.service.IdfToolConfService;
+import org.btik.espidf.service.IdfToolConfService;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,8 +19,8 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 
-import static org.bitk.espidf.util.OsUtil.IS_WINDOWS;
-import static org.bitk.espidf.util.I18nMessage.*;
+import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
+import static org.btik.espidf.util.I18nMessage.*;
 
 /**
  * @author lustre

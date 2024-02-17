@@ -1,4 +1,4 @@
-package org.bitk.espidf.project;
+package org.btik.espidf.project;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;

@@ -24,10 +24,10 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <directoryProjectGenerator implementation="org.bitk.espidf.project.IdfProjectGenerator"
-                                   id="org.bitk.espidf" order="after jetbrains.cidr.stm32cubemx"/>
-        <notificationGroup id="org.bitk.espidf" displayType="BALLOON" bundle="messages.org_btik_espidf"
+        <directoryProjectGenerator implementation="org.btik.espidf.project.IdfProjectGenerator"
+                                   id="org.btiik.espidf" order="after jetbrains.cidr.stm32cubemx"/>
+        <notificationGroup id="org.btiik.espidf" displayType="BALLOON" bundle="messages.org_btik_espidf"
                            key="notification.group"/>
-    <applicationService serviceInterface="org.bitk.espidf.service.IdfToolConfService" serviceImplementation="org.bitk.espidf.conf.IdfToolConfManager" />
+    <applicationService serviceInterface="org.btik.espidf.service.IdfToolConfService" serviceImplementation="org.btik.espidf.conf.IdfToolConfManager" />
     </extensions>
 </idea-plugin>

@@ -1,4 +1,4 @@
-package org.bitk.espidf.project;
+package org.btik.espidf.project;
 
 
 import com.intellij.facet.ui.ValidationResult;
