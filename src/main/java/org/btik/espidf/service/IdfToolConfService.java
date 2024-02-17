@@ -13,4 +13,6 @@ public interface IdfToolConfService {
      * 仅windows
      * */
     IdfToolConf createWinToolConf(String idfToolPath, String idfId);
+
+    IdfToolConf createUnixToolConf(String idfFrameworkPath);
 }

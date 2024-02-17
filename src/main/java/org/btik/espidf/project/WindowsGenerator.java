@@ -38,9 +38,6 @@ import static org.btik.espidf.adapter.Adapter.readEnvironment;
  * @since 2024/2/11 16:57
  */
 public class WindowsGenerator<T> implements SubGenerator<T> {
-    private static final String IDF_CMAKE_PROFILE_NAME = "idf";
-
-    private static final String IDF_CMAKE_BUILD_DIR = "build";
 
     private String idfToolPath;
 

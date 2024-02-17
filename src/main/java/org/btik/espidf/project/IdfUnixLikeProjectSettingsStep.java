@@ -1,6 +1,7 @@
 package org.btik.espidf.project;
 
 import com.intellij.ide.util.projectWizard.AbstractNewProjectStep;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.*;
@@ -8,6 +9,9 @@ import com.intellij.platform.DirectoryProjectGenerator;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.project.component.ComboBoxWithRefresh;
+import org.btik.espidf.service.IdfToolConfService;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -35,7 +39,7 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
     @Override
     public JPanel createAdvancedSettings() {
         panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(3, 2);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(2, 2);
         JPanel wrapper = new JPanel(gridLayoutManager);
         FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
         final TextFieldWithBrowseButton idfFrameworkPathBrowserButton = new TextFieldWithBrowseButton();
@@ -73,7 +77,18 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
         firstRowConstraints.setFill(1);
         firstRowConstraints.setHSizePolicy(4);
         wrapper.add(idfFrameworkPathBrowserButton, firstRowConstraints);
+        JLabel projectTargetLabel = new JLabel($i18n("project.target"));
+        projectTargets = new ComboBox<>();
+        projectTargets.addItem("esp32");
+        wrapper.add(projectTargetLabel, createConstraints(1, 0));
+        wrapper.add(new ComboBoxWithRefresh<>(projectTargets, this::refreshProjectTarget),
+                createConstraints(1, 1));
         panel.add(wrapper, "West");
+        IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
+        IdfToolConf idfToolConf = service.getIdfToolConf();
+        if (idfToolConf != null) {
+            idfFrameworkPathBrowserButton.getTextField().setText(idfToolConf.getIdfToolPath());
+        }
         return panel;
     }
 
