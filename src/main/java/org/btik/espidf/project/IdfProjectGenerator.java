@@ -65,7 +65,7 @@ public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements 
 
     @Override
     public @Nullable Icon getLogo() {
-        return IconLoader.getIcon("/org-btik-esp-idf/idf16_16.svg", getClass());
+        return IconLoader.getIcon("/org-btik-esp-idf/image/idf16_16.svg", getClass());
     }
 
     @Override

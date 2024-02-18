@@ -14,5 +14,5 @@ public class EspIdfIcon {
         return IconLoader.getIcon(path, EspIdfIcon.class);
 
     }
-  public static final @NotNull Icon IDF_16_16 = load("/org-btik-esp-idf/idf16_16.svg");
+  public static final @NotNull Icon IDF_16_16 = load("/org-btik-esp-idf/image/idf16_16.svg");
 }

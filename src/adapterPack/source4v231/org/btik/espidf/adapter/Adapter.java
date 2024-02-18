@@ -15,4 +15,8 @@ public class Adapter {
     public static Map<String, String> readEnvironment(IdfToolConf idfToolConf) throws IOException, ExecutionException {
         return idfToolConf.getToolchain().getToolSet().readEnvironment(idfToolConf.getEnvFileName(), LocalHost.INSTANCE);
     }
+
+    public static Map<String, String> readEnvironment(CPPToolchains.Toolchain toolchain, String env) throws IOException, ExecutionException {
+        return toolchain.getToolSet().readEnvironment(env, LocalHost.INSTANCE);
+    }
 }

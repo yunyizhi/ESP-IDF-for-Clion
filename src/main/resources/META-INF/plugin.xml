@@ -28,6 +28,11 @@
                                    id="org.btiik.espidf" order="after jetbrains.cidr.stm32cubemx"/>
         <notificationGroup id="org.btiik.espidf" displayType="BALLOON" bundle="messages.org_btik_espidf"
                            key="notification.group"/>
-    <applicationService serviceInterface="org.btik.espidf.service.IdfToolConfService" serviceImplementation="org.btik.espidf.conf.IdfToolConfManager" />
+        <toolWindow id="ESP-IDF Quick Tools" icon="/org-btik-esp-idf/image/idf13_13.svg" anchor="right"
+                    factoryClass="org.btik.espidf.toolwindow.EspIdfToolWindowFactory"/>
+        <applicationService serviceInterface="org.btik.espidf.service.IdfToolConfService"
+                            serviceImplementation="org.btik.espidf.conf.IdfToolConfManager"/>
+        <projectService serviceImplementation="org.btik.espidf.environment.impl.IdfEnvironmentServiceImpl"
+                        serviceInterface="org.btik.espidf.environment.IdfEnvironmentService"/>
     </extensions>
 </idea-plugin>

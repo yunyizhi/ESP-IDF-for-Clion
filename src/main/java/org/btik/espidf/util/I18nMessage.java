@@ -3,6 +3,7 @@ package org.btik.espidf.util;
 import com.intellij.DynamicBundle;
 import com.intellij.notification.NotificationGroup;
 import com.intellij.notification.NotificationGroupManager;
+import com.intellij.notification.NotificationType;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -22,7 +23,14 @@ public class I18nMessage extends DynamicBundle {
         if (key == null || key.isEmpty()) {
             return null;
         }
-        return INSTANCE.getResourceBundle().getString(key);
+
+        try {
+            return INSTANCE.getResourceBundle().getString(key);
+        } catch (Exception e) {
+            NOTIFICATION_GROUP.createNotification(getMsg("idf.get.msg.failed"),
+                    e.getMessage(), NotificationType.ERROR).notify(null);
+            return key;
+        }
     }
 
     public static String $i18n(String key) {

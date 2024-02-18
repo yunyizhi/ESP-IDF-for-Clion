@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<taskTree>
+    <tree name="Tasks" icon="/org-btik-esp-idf/image/idf13_13.svg">
+        <folder name="General">
+            <command name="Build" value="build" toolTip="${idf.tip.build}"/>
+            <command name="Flash" value="flash"/>
+            <command name="Monitor" value="monitor"/>
+            <command name="Flash and Monitor" value="flash monitor"/>
+            <command name="Clean" value="clean"/>
+            <command name="Erase" value="erase-flash"/>
+        </folder>
+    </tree>
+</taskTree>

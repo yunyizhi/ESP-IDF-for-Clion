@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
  * @since 2022/10/22 20:48
  */
 public class SysConf extends DynamicBundle {
-    private static final SysConf INSTANCE = new SysConf("org-btik-esp-idf.systemConf");
+    private static final SysConf INSTANCE = new SysConf("org-btik-esp-idf.conf.systemConf");
 
     private SysConf(@NotNull String pathToBundle) {
         super(pathToBundle);
