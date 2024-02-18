@@ -1,4 +1,4 @@
-package org.btik.espidf.project;
+package org.btik.espidf.command;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
@@ -55,5 +55,9 @@ public class IdfConsoleRunProfile implements RunProfile {
     @Override
     public @Nullable Icon getIcon() {
         return icon;
+    }
+
+    public GeneralCommandLine getCommandLine() {
+        return commandLine;
     }
 }
