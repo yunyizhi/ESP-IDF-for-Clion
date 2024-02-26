@@ -85,9 +85,12 @@ public class IdfToolConfManager implements IdfToolConfService {
     public IdfToolConf createWinToolConf(String idfToolPath, String idfId) {
         Path idfConfFolder = getIdfConfFolder();
         String exportEnvCmd = idfToolPath + File.separatorChar + "idf_cmd_init.bat " + idfId;
+        String exportEnvPs1 = idfToolPath + File.separatorChar + "Initialize-Idf.ps1 -IdfId " + idfId;
         Path idfExportBat = idfConfFolder.resolve("export.bat");
+        Path idfExportPs1 = idfConfFolder.resolve("export.ps1");
         try {
             Files.writeString(idfExportBat, exportEnvCmd);
+            Files.writeString(idfExportPs1, exportEnvPs1);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

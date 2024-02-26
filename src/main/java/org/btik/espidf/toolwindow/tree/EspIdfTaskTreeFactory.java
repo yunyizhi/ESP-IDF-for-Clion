@@ -1,9 +1,7 @@
 package org.btik.espidf.toolwindow.tree;
 
 import com.intellij.notification.NotificationType;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskCommandNode;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskFolderNode;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskTreeNode;
+import org.btik.espidf.toolwindow.tree.model.*;
 import org.btik.espidf.util.DomUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -18,6 +16,7 @@ import static org.btik.espidf.util.DomUtil.eachChildrenElement;
 import static org.btik.espidf.util.DomUtil.getFirstElementByName;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.I18nMessage.NOTIFICATION_GROUP;
+import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
 /**
  * @author lustre
@@ -29,6 +28,8 @@ public class EspIdfTaskTreeFactory {
     static {
         factories.put(FOLDER_TAG, EspIdfTaskTreeFactory::newFolder);
         factories.put(COMMAND_TAG, EspIdfTaskTreeFactory::newCmd);
+        factories.put(TERMINAL_COMMAND, EspIdfTaskTreeFactory::newTerminalCmd);
+        factories.put(RAW_COMMAND, EspIdfTaskTreeFactory::newRawCmd);
     }
 
     public static DefaultMutableTreeNode load() {
@@ -40,7 +41,7 @@ public class EspIdfTaskTreeFactory {
 
         } catch (Exception e) {
             NOTIFICATION_GROUP.createNotification($i18n("notification.group.idf"),
-                     e.getMessage(), NotificationType.ERROR).notify(null);
+                    e.getMessage(), NotificationType.ERROR).notify(null);
             return null;
         }
         Element treeRoot = getFirstElementByName(documentElement, TREE_ROOT);
@@ -90,6 +91,19 @@ public class EspIdfTaskTreeFactory {
         String command = element.getAttribute(VALUE);
         EspIdfTaskCommandNode taskTreeNode = new EspIdfTaskCommandNode(name, command);
         return buildNode(element, taskTreeNode);
+    }
+
+    private static XmlNode newTerminalCmd(Element element) {
+        String name = element.getAttribute(NAME);
+        String command = element.getAttribute(VALUE);
+        EspIdfTaskTerminalCommandNode taskTreeNode = new EspIdfTaskTerminalCommandNode(name, command);
+        return buildNode(element, taskTreeNode);
+    }
+
+    private static XmlNode newRawCmd(Element element) {
+        String name = element.getAttribute(NAME);
+        String command = element.getAttribute(IS_WINDOWS ? WIN_VALUE : UNIX_VALUE);
+        return buildNode(element, new RawCommandNode(name, command));
     }
 
     private static XmlNode buildNode(Element element, EspIdfTaskTreeNode taskTreeNode) {

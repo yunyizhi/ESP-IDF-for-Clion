@@ -26,7 +26,6 @@ public class CmdTaskExecutor {
         environment.setExecutionId(ExecutionEnvironment.getNextUnusedExecutionId());
         environment.getRunner().execute(environment);
         OSProcessHandler handler = new OSProcessHandler(idfConsoleRunProfile.getCommandLine());
-        handler.addProcessListener(new ToolProcessAdapter(project, false, "Cmd TaskExecutor"));
         if (processListener != null) {
             handler.addProcessListener(processListener);
         }

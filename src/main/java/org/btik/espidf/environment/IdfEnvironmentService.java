@@ -8,4 +8,6 @@ import java.util.Map;
  */
 public interface IdfEnvironmentService {
     Map<String, String> getEnvironments();
+
+    String getEnvironmentFile();
 }

@@ -20,7 +20,9 @@ import static org.btik.espidf.adapter.Adapter.readEnvironment;
  * @since 2024/2/18 17:34
  */
 public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
-    Map<String, String> environments;
+    private Map<String, String> environments;
+
+    private String environmentFile;
     private final Project project;
 
     public IdfEnvironmentServiceImpl(Project project) {
@@ -32,10 +34,21 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         if (environments == null) {
             generateEnvironment();
         }
-        if(environments == null) {
+        if (environments == null) {
             return Map.of();
         }
         return environments;
+    }
+
+    @Override
+    public String getEnvironmentFile() {
+        if (environmentFile == null) {
+            generateEnvironment();
+        }
+        if (environmentFile == null) {
+            return "";
+        }
+        return environmentFile;
     }
 
     private void generateEnvironment() {
@@ -47,7 +60,7 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         CMakeSettings.Profile currentProfile = activeProfiles.get(0);
         CPPToolchains.Toolchain toolchain = CPPToolchains.getInstance()
                 .getToolchainByNameOrDefault(currentProfile.getToolchainName());
-        if(toolchain == null){
+        if (toolchain == null) {
             return;
         }
         String environment = toolchain.getEnvironment();
@@ -57,6 +70,10 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         try {
             environments = ApplicationManager.getApplication()
                     .executeOnPooledThread(() -> readEnvironment(toolchain, environment)).get();
+            if(environment.endsWith(".bat")){
+                environmentFile = environment.substring(0, environment.length() - 4) + ".ps1";
+            }
+
         } catch (InterruptedException | ExecutionException e) {
             throw new RuntimeException(e);
         }

@@ -27,7 +27,8 @@ intellij {
                 "com.intellij.clion",
                 "nativeDebug-plugin",
                 "com.intellij.clion.embedded",
-                "terminal"
+                "terminal",
+                "sh"
             )
         )
     } else {
@@ -39,7 +40,8 @@ intellij {
                 "nativeDebug-plugin",
                 "com.intellij.clion.embedded",
                 "clion-ide",
-                "terminal"
+                "terminal",
+                "sh"
             )
         )
     }

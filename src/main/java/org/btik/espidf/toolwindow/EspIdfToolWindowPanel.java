@@ -6,6 +6,8 @@ import org.btik.espidf.toolwindow.tree.EspIdfTaskTreeFactory;
 import org.btik.espidf.toolwindow.tree.IconCellRenderer;
 import org.btik.espidf.toolwindow.tree.TreeNodeCmdExecutor;
 import org.btik.espidf.toolwindow.tree.model.EspIdfTaskCommandNode;
+import org.btik.espidf.toolwindow.tree.model.EspIdfTaskTerminalCommandNode;
+import org.btik.espidf.toolwindow.tree.model.RawCommandNode;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -45,6 +47,10 @@ public class EspIdfToolWindowPanel extends JPanel {
                     Object userObject = lastPathComponent.getUserObject();
                     if (userObject instanceof EspIdfTaskCommandNode commandNode) {
                         TreeNodeCmdExecutor.execute(commandNode, project);
+                    }else if(userObject instanceof EspIdfTaskTerminalCommandNode taskTerminalCommandNode) {
+                        TreeNodeCmdExecutor.execute(taskTerminalCommandNode, project);
+                    }else if(userObject instanceof RawCommandNode rawCommandNode) {
+                        TreeNodeCmdExecutor.execute(rawCommandNode, project);
                     }
                 }
             }

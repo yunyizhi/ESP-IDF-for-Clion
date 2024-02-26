@@ -4,10 +4,14 @@
         <folder name="General">
             <command name="Build" value="build" toolTip="${idf.tip.build}"/>
             <command name="Flash" value="flash"/>
-            <command name="Monitor" value="monitor"/>
-            <command name="Flash and Monitor" value="flash monitor"/>
+            <terminal-command name="Monitor" value="monitor"/>
+            <terminal-command name="Flash and Monitor" value="flash monitor"/>
             <command name="Clean" value="clean"/>
             <command name="Erase" value="erase-flash"/>
+            <terminal-command name="IDF Console" value="" />
+        </folder>
+        <folder name="Advanced">
+            <raw-command name="Export Environments" win-value="SET" unix-value="env" />
         </folder>
     </tree>
 </taskTree>

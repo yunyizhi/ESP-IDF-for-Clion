@@ -3,9 +3,7 @@ package org.btik.espidf.toolwindow.tree;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.CheckedTreeNode;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskCommandNode;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskFolderNode;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskTreeNode;
+import org.btik.espidf.toolwindow.tree.model.*;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -27,6 +25,8 @@ public class IconCellRenderer extends DefaultTreeCellRenderer {
         metaIconMap.put(EspIdfTaskTreeNode.class, AllIcons.Nodes.ConfigFolder);
         metaIconMap.put(EspIdfTaskFolderNode.class, AllIcons.Nodes.ConfigFolder);
         metaIconMap.put(EspIdfTaskCommandNode.class, icons.ExternalSystemIcons.Task);
+        metaIconMap.put(EspIdfTaskTerminalCommandNode.class, icons.ExternalSystemIcons.Task);
+        metaIconMap.put(RawCommandNode.class, icons.ExternalSystemIcons.Task);
     }
 
     JLabel label = new JLabel();
