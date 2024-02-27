@@ -12,6 +12,7 @@ import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.toolchains.OSType;
 import org.btik.espidf.service.IdfToolConfService;
 import com.intellij.openapi.diagnostic.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -21,6 +22,7 @@ import java.util.*;
 import java.util.function.Predicate;
 
 
+import static org.btik.espidf.adapter.Adapter.readEnvironment;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 import static org.btik.espidf.util.I18nMessage.*;
 
@@ -78,20 +80,17 @@ public class IdfToolConfManager implements IdfToolConfService {
                         break;
                     }
                 }
-                idfToolConfMap.put(toolConf.getKey() , toolConf);
-                if (toolConf.getToolchain() != null) {
-                    this.idfToolConfs = idfToolConfSet;
-                }
+                idfToolConfMap.put(toolConf.getKey(), toolConf);
+                this.idfToolConfs = idfToolConfSet;
             }
 
         } catch (JsonSyntaxException jsonSyntaxException) {
             LOG.error(jsonSyntaxException);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             NOTIFICATION_GROUP.createNotification(getMsg("idf.cmd.init.failed"),
                     getMsgF("idf.cmd.init.failed.with", e.getMessage()), NotificationType.ERROR).notify(null);
-        }finally {
-            if(idfToolConfs == null){
+        } finally {
+            if (idfToolConfs == null) {
                 idfToolConfs = new HashSet<>();
             }
         }
@@ -99,7 +98,7 @@ public class IdfToolConfManager implements IdfToolConfService {
 
     @Override
     public IdfToolConf getLastActivedIdfToolConf() {
-        if(idfToolConfs == null || idfToolConfs.isEmpty()) {
+        if (idfToolConfs == null || idfToolConfs.isEmpty()) {
             return null;
         }
         return idfToolConfs.stream().max(Comparator.comparing(IdfToolConf::getActiveTime)).get();
@@ -107,15 +106,9 @@ public class IdfToolConfManager implements IdfToolConfService {
 
     @Override
     public void store(IdfToolConf newIdfToolConf) {
-        Path idfConfFolder = getIdfConfFolder();
-        Path idfJson = idfConfFolder.resolve(IDF_JSON_NAME);
         idfToolConfs.add(newIdfToolConf);
-        idfToolConfMap.put(newIdfToolConf.getKey() , newIdfToolConf);
-        try {
-            Files.writeString(idfJson, new Gson().toJson(idfToolConfs));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        idfToolConfMap.put(newIdfToolConf.getKey(), newIdfToolConf);
+        saveConfig();
     }
 
     @Override
@@ -135,10 +128,24 @@ public class IdfToolConfManager implements IdfToolConfService {
     @Override
     public IdfToolConf getToolConfByKey(String key) {
         IdfToolConf idfToolConf = idfToolConfMap.get(key);
-        if(idfToolConf != null) {
+        if (idfToolConf != null) {
             idfToolConf.setActiveTime(System.currentTimeMillis());
+            saveConfig();
         }
         return idfToolConf;
+    }
+
+    private void saveConfig() {
+        ApplicationManager.getApplication()
+                .executeOnPooledThread(() -> {
+                    Path idfConfFolder = getIdfConfFolder();
+                    Path idfJson = idfConfFolder.resolve(IDF_JSON_NAME);
+                    try {
+                        Files.writeString(idfJson, new Gson().toJson(idfToolConfs));
+                    } catch (IOException e) {
+                        LOG.error(e);
+                    }
+                });
     }
 }
 
