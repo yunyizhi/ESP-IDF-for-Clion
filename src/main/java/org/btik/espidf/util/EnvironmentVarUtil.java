@@ -2,6 +2,7 @@ package org.btik.espidf.util;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * @author lustre
@@ -21,5 +22,17 @@ public class EnvironmentVarUtil {
             }
         }
         return env;
+    }
+
+    public static Map<String,String> diffWithSystem(Map<String,String> env) {
+        Map<String, String> sysEnv = System.getenv();
+        Map<String, String> resultEnv = new HashMap<>();
+        env.forEach((key, value) ->{
+            String sysValue = sysEnv.get(key);
+            if(sysValue == null || Objects.equals(sysValue, value)){
+                resultEnv.put(key, value);
+            }
+        });
+        return resultEnv;
     }
 }

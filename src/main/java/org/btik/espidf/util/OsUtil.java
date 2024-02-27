@@ -8,15 +8,17 @@ import com.intellij.util.system.OS;
  */
 public class OsUtil {
     public interface Const {
-        String WIN_CMD = "cmd.exe ";
-        String WIN_CMD_ARG = "/c ";
-        String WIN_IDF_EXE = "idf.py.exe ";
+        String WIN_CMD = "cmd.exe";
+        String WIN_CMD_ARG = "/c";
+        String WIN_IDF_EXE = "idf.py.exe";
 
-        String UNIX_BASH = "/bin/bash ";
+        String UNIX_BASH = "/bin/bash";
 
-        String UNIX_BASH_ARG = "-c ";
+        String UNIX_BASH_ARG = "-c";
 
-        String UNIX_IDF_EXE = "idf.py ";
+        String UNIX_IDF_EXE = "idf.py";
+
+        String POWER_SHELL_ENV_PREFIX = "$env:";
     }
 
     public final static boolean IS_WINDOWS = OS.CURRENT == OS.Windows;

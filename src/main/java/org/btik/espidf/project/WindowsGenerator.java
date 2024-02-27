@@ -15,9 +15,10 @@ import com.intellij.openapi.vfs.VirtualFile;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.icon.EspIdfIcon;
-import org.btik.espidf.service.IdfToolConfService;
+import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.I18nMessage;
+import org.btik.espidf.util.OsUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.IOException;
@@ -62,11 +63,8 @@ public class WindowsGenerator<T> implements SubGenerator<T> {
     public void generateProject(Project project, VirtualFile baseDir, T settings, Module module) {
         ApplicationManager.getApplication().invokeLater(() -> {
             try {
-                IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
-                IdfToolConf idfToolConf = service.getIdfToolConf();
-                if (idfToolConf == null) {
-                    idfToolConf = service.createWinToolConf(idfToolPath, idfId);
-                }
+                IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
+                IdfToolConf idfToolConf = environmentService.getWinToolConf(idfToolPath, idfId);
                 Map<String, String> readEnvironment = readEnvironment(idfToolConf);
                 String toolChainName = idfToolConf.getToolchain().getName();
                 generateProject(project, baseDir, readEnvironment, toolChainName);
@@ -80,7 +78,7 @@ public class WindowsGenerator<T> implements SubGenerator<T> {
     void generateProject(Project project, VirtualFile baseDir, Map<String, String> envs, String toolChainName) throws ExecutionException {
         Path idfGenerateTmpDir = baseDir.toNioPath().resolve(".tmp");
         GeneralCommandLine generate = new GeneralCommandLine();
-        generate.setExePath("idf.py.exe");
+        generate.setExePath(OsUtil.Const.WIN_IDF_EXE);
         generate.setWorkDirectory(baseDir.getPath());
         generate.withEnvironment(envs);
         generate.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));

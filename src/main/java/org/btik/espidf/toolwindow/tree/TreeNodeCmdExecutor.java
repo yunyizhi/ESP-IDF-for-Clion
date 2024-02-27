@@ -13,7 +13,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.sh.run.ShConfigurationType;
 import com.intellij.sh.run.ShRunConfiguration;
 import org.btik.espidf.command.IdfConsoleRunProfile;
-import org.btik.espidf.environment.IdfEnvironmentService;
+import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.toolwindow.tree.model.EspIdfTaskCommandNode;
 import org.btik.espidf.toolwindow.tree.model.EspIdfTaskTerminalCommandNode;
@@ -21,8 +21,10 @@ import org.btik.espidf.toolwindow.tree.model.RawCommandNode;
 import org.btik.espidf.util.CmdTaskExecutor;
 
 import java.nio.charset.Charset;
+import java.util.Map;
 
 import static org.btik.espidf.util.OsUtil.*;
+import static org.btik.espidf.util.OsUtil.Const.POWER_SHELL_ENV_PREFIX;
 
 /**
  * @author lustre
@@ -58,16 +60,27 @@ public class TreeNodeCmdExecutor {
         ShRunConfiguration runConfiguration = (ShRunConfiguration) settings.getConfiguration();
         runConfiguration.setExecuteInTerminal(true);
         runConfiguration.setExecuteScriptFile(false);
+        runConfiguration.setInterpreterPath(getCmdEnv());
         IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
         String command = commandNode.getCommand();
         if (IS_WINDOWS) {
-            String environmentFile = environmentService.getEnvironmentFile();
-            String envPrefix = ". \"" + environmentFile + "\"";
+            Map<String, String> environments = environmentService.getEnvironments();
+            StringBuilder envPrefixBuilder = new StringBuilder();
+            environments.forEach((key, value) -> {
+                envPrefixBuilder.append(POWER_SHELL_ENV_PREFIX).append(key).append("=");
+                if (!value.startsWith("\"")) {
+                    envPrefixBuilder.append("\"").append(value).append("\"");
+                } else {
+                    envPrefixBuilder.append(value);
+                }
+                envPrefixBuilder.append(";");
+            });
+            String envPrefix = envPrefixBuilder.toString();
             runConfiguration.setScriptText(StringUtil.isEmpty(command) ?
-                    envPrefix : envPrefix + ";" + Const.WIN_IDF_EXE + command);
+                    envPrefix : envPrefix + Const.WIN_IDF_EXE + " " + command);
         } else {
             runConfiguration.setEnvData(EnvironmentVariablesData.DEFAULT.with(environmentService.getEnvironments()));
-            runConfiguration.setScriptText(Const.UNIX_IDF_EXE + command);
+            runConfiguration.setScriptText(Const.UNIX_IDF_EXE + " " + command);
         }
         runConfiguration.setScriptWorkingDirectory(basePath);
 

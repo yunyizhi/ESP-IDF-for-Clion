@@ -1,6 +1,8 @@
 package org.btik.espidf.conf;
 
+import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PathManager;
@@ -9,13 +11,13 @@ import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.toolchains.OSType;
 import org.btik.espidf.service.IdfToolConfService;
-
+import com.intellij.openapi.diagnostic.Logger;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 
 
@@ -27,13 +29,19 @@ import static org.btik.espidf.util.I18nMessage.*;
  * @since 2024/2/14 23:17
  */
 public class IdfToolConfManager implements IdfToolConfService {
+    private static final Logger LOG = Logger.getInstance(IdfToolConfManager.class);
     private static final String IDF_FOLDER_NAME = "org.btik.espidf";
 
     private static final String IDF_JSON_NAME = "espidf.json";
 
-    IdfToolConf idfToolConf;
+    private HashSet<IdfToolConf> idfToolConfs;
+
+    private final HashMap<String, IdfToolConf> idfToolConfMap = new HashMap<>();
+    private final Type type = new TypeToken<HashSet<IdfToolConf>>() {
+    }.getType();
 
     public IdfToolConfManager() {
+
         Path configDir = PathManager.getConfigDir();
         Path idfFolder = configDir.resolve(IDF_FOLDER_NAME);
         if (!Files.exists(idfFolder)) {
@@ -50,88 +58,68 @@ public class IdfToolConfManager implements IdfToolConfService {
     private void parseConf(Path idfJson) {
         try {
             String json = Files.readString(idfJson);
-            IdfToolConf idfToolConfFormFile = new Gson().fromJson(json, IdfToolConf.class);
+            HashSet<IdfToolConf> idfToolConfSet = new Gson().fromJson(json, type);
+            if (idfToolConfSet == null) {
+                return;
+            }
+            for (IdfToolConf toolConf : idfToolConfSet) {
+                List<CPPToolchains.Toolchain> toolchains = CPPToolchains.getInstance().getToolchains();
+                String envFileName = toolConf.getEnvFileName();
+                Predicate<CPPToolSet.Kind> kindPredicate = IS_WINDOWS ?
+                        (kind -> kind == CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET) :
+                        (kind -> kind == CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET);
+                for (CPPToolchains.Toolchain toolchain : toolchains) {
+                    if (!kindPredicate.test(toolchain.getToolSetKind())) {
+                        continue;
+                    }
+                    String environment = toolchain.getEnvironment();
+                    if (Objects.equals(environment, envFileName)) {
+                        toolConf.setToolchain(toolchain);
+                        break;
+                    }
+                }
+                idfToolConfMap.put(toolConf.getKey() , toolConf);
+                if (toolConf.getToolchain() != null) {
+                    this.idfToolConfs = idfToolConfSet;
+                }
+            }
 
-            List<CPPToolchains.Toolchain> toolchains = CPPToolchains.getInstance().getToolchains();
-            String envFileName = idfToolConfFormFile.getEnvFileName();
-            Predicate<CPPToolSet.Kind> kindPredicate = IS_WINDOWS ?
-                    (kind -> kind == CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET) :
-                    (kind -> kind == CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET);
-            for (CPPToolchains.Toolchain toolchain : toolchains) {
-                if (!kindPredicate.test(toolchain.getToolSetKind())) {
-                    continue;
-                }
-                String environment = toolchain.getEnvironment();
-                if (Objects.equals(environment, envFileName)) {
-                    idfToolConfFormFile.setToolchain(toolchain);
-                    break;
-                }
-            }
-            if (idfToolConfFormFile.getToolchain() != null) {
-                this.idfToolConf = idfToolConfFormFile;
-            }
-        } catch (IOException e) {
+        } catch (JsonSyntaxException jsonSyntaxException) {
+            LOG.error(jsonSyntaxException);
+        }
+        catch (IOException e) {
             NOTIFICATION_GROUP.createNotification(getMsg("idf.cmd.init.failed"),
                     getMsgF("idf.cmd.init.failed.with", e.getMessage()), NotificationType.ERROR).notify(null);
+        }finally {
+            if(idfToolConfs == null){
+                idfToolConfs = new HashSet<>();
+            }
         }
     }
 
     @Override
-    public IdfToolConf getIdfToolConf() {
-        return idfToolConf;
+    public IdfToolConf getLastActivedIdfToolConf() {
+        if(idfToolConfs == null || idfToolConfs.isEmpty()) {
+            return null;
+        }
+        return idfToolConfs.stream().max(Comparator.comparing(IdfToolConf::getActiveTime)).get();
     }
 
     @Override
-    public IdfToolConf createWinToolConf(String idfToolPath, String idfId) {
-        Path idfConfFolder = getIdfConfFolder();
-        String exportEnvCmd = idfToolPath + File.separatorChar + "idf_cmd_init.bat " + idfId;
-        String exportEnvPs1 = idfToolPath + File.separatorChar + "Initialize-Idf.ps1 -IdfId " + idfId;
-        Path idfExportBat = idfConfFolder.resolve("export.bat");
-        Path idfExportPs1 = idfConfFolder.resolve("export.ps1");
-        try {
-            Files.writeString(idfExportBat, exportEnvCmd);
-            Files.writeString(idfExportPs1, exportEnvPs1);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        String exportBatPath = idfExportBat.toString();
-        IdfToolConf newIdfToolConf = new IdfToolConf();
-        newIdfToolConf.setIdfId(idfId);
-        newIdfToolConf.setEnvFileName(exportBatPath);
-        newIdfToolConf.setIdfToolPath(idfToolPath);
-
-        CPPToolchains.Toolchain toolchain = getToolChain(exportBatPath);
-        newIdfToolConf.setToolchain(toolchain);
-        Path idfJson = idfConfFolder.resolve(IDF_JSON_NAME);
-        try {
-            Files.writeString(idfJson, new Gson().toJson(newIdfToolConf));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        this.idfToolConf = newIdfToolConf;
-        return this.idfToolConf;
-    }
-
-    @Override
-    public IdfToolConf createUnixToolConf(String idfFrameworkPath) {
-        IdfToolConf newIdfToolConf = new IdfToolConf();
-        String envFileName = idfFrameworkPath + File.separatorChar + "export.sh";
-        newIdfToolConf.setEnvFileName(envFileName);
-        newIdfToolConf.setIdfToolPath(idfFrameworkPath);
-        CPPToolchains.Toolchain toolchain = getToolChain(envFileName);
-        newIdfToolConf.setToolchain(toolchain);
+    public void store(IdfToolConf newIdfToolConf) {
         Path idfConfFolder = getIdfConfFolder();
         Path idfJson = idfConfFolder.resolve(IDF_JSON_NAME);
+        idfToolConfs.add(newIdfToolConf);
+        idfToolConfMap.put(newIdfToolConf.getKey() , newIdfToolConf);
         try {
-            Files.writeString(idfJson, new Gson().toJson(newIdfToolConf));
+            Files.writeString(idfJson, new Gson().toJson(idfToolConfs));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.idfToolConf = newIdfToolConf;
-        return newIdfToolConf;
     }
 
-    private Path getIdfConfFolder(){
+    @Override
+    public Path getIdfConfFolder() {
         Path configDir = PathManager.getConfigDir();
         Path idfFolder = configDir.resolve(IDF_FOLDER_NAME);
         if (!Files.exists(idfFolder)) {
@@ -144,33 +132,13 @@ public class IdfToolConfManager implements IdfToolConfService {
         return idfFolder;
     }
 
-    private CPPToolchains.Toolchain getToolChain(String envFileName) {
-        CPPToolchains.Toolchain existsToolChain = ApplicationManager.getApplication().runReadAction((Computable<CPPToolchains.Toolchain>) () -> {
-            List<CPPToolchains.Toolchain> toolchains = CPPToolchains.getInstance().getToolchains();
-            for (CPPToolchains.Toolchain toolchain : toolchains) {
-                if (Objects.equals(toolchain.getEnvironment(), envFileName)) {
-                    return toolchain;
-                }
-            }
-            return null;
-        });
-        if (existsToolChain != null) {
-            return existsToolChain;
+    @Override
+    public IdfToolConf getToolConfByKey(String key) {
+        IdfToolConf idfToolConf = idfToolConfMap.get(key);
+        if(idfToolConf != null) {
+            idfToolConf.setActiveTime(System.currentTimeMillis());
         }
-
-        CPPToolchains.Toolchain idfToolChain = new CPPToolchains.Toolchain(OSType.getCurrent());
-        idfToolChain.setToolSetKind(IS_WINDOWS ? CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET : CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET);
-        idfToolChain.setName("Idf" + Integer.toHexString(envFileName.hashCode()));
-        ApplicationManager.getApplication().invokeLater(() ->
-                ApplicationManager.getApplication().runWriteAction(() -> {
-                            CPPToolchains.getInstance().beginUpdate();
-                            CPPToolchains.getInstance().addToolchain(idfToolChain);
-                            idfToolChain.setEnvironment(envFileName);
-                            CPPToolchains.getInstance().endUpdate();
-                        }
-                ));
-        return idfToolChain;
+        return idfToolConf;
     }
-
 }
 

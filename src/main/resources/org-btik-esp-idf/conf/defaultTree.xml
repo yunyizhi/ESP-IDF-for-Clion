@@ -11,7 +11,9 @@
             <terminal-command name="IDF Console" value="" />
         </folder>
         <folder name="Advanced">
-            <raw-command name="Export Environments" win-value="SET" unix-value="env" />
+            <raw-command name="Export Environments"
+                         win-value="SET"
+                         unix-value="env" />
         </folder>
     </tree>
 </taskTree>

@@ -109,7 +109,7 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
         panel.add(wrapper, "West");
 
         IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
-        IdfToolConf idfToolConf = service.getIdfToolConf();
+        IdfToolConf idfToolConf = service.getLastActivedIdfToolConf();
         if (idfToolConf != null) {
             idfToolPathBrowserButton.getTextField().setText(idfToolConf.getIdfToolPath());
             refreshIdfIdSet();

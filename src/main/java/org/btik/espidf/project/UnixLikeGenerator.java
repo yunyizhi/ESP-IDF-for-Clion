@@ -16,7 +16,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.icon.EspIdfIcon;
-import org.btik.espidf.service.IdfToolConfService;
+import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.I18nMessage;
 import org.jetbrains.annotations.NotNull;
@@ -25,7 +25,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Map;
 
 import static org.btik.espidf.adapter.Adapter.readEnvironment;
@@ -59,11 +58,8 @@ public class UnixLikeGenerator<T> implements SubGenerator<T> {
     public void generateProject(Project project, VirtualFile baseDir, T settings, Module module) {
         ApplicationManager.getApplication().invokeLater(() -> {
             try {
-                IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
-                IdfToolConf idfToolConf = service.getIdfToolConf();
-                if (idfToolConf == null) {
-                    idfToolConf = service.createUnixToolConf(idfFrameworkPath);
-                }
+                IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
+                IdfToolConf idfToolConf = environmentService.getUnixToolConf(idfFrameworkPath);
                 final IdfToolConf idfToolConf1 = idfToolConf;
                 Map<String, String> readEnvironment = ApplicationManager.getApplication()
                         .executeOnPooledThread(() -> readEnvironment(idfToolConf1)).get();

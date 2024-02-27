@@ -32,7 +32,7 @@
                     factoryClass="org.btik.espidf.toolwindow.EspIdfToolWindowFactory"/>
         <applicationService serviceInterface="org.btik.espidf.service.IdfToolConfService"
                             serviceImplementation="org.btik.espidf.conf.IdfToolConfManager"/>
-        <projectService serviceImplementation="org.btik.espidf.environment.impl.IdfEnvironmentServiceImpl"
-                        serviceInterface="org.btik.espidf.environment.IdfEnvironmentService"/>
+        <projectService serviceImplementation="org.btik.espidf.environment.IdfEnvironmentServiceImpl"
+                        serviceInterface="org.btik.espidf.service.IdfEnvironmentService"/>
     </extensions>
 </idea-plugin>
