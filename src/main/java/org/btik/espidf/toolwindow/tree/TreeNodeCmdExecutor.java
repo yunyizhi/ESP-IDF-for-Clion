@@ -23,6 +23,7 @@ import org.btik.espidf.util.CmdTaskExecutor;
 import java.nio.charset.Charset;
 import java.util.Map;
 
+import static org.btik.espidf.util.EnvironmentVarUtil.diffWithSystem;
 import static org.btik.espidf.util.OsUtil.*;
 import static org.btik.espidf.util.OsUtil.Const.POWER_SHELL_ENV_PREFIX;
 
@@ -66,7 +67,7 @@ public class TreeNodeCmdExecutor {
         if (IS_WINDOWS) {
             Map<String, String> environments = environmentService.getEnvironments();
             StringBuilder envPrefixBuilder = new StringBuilder();
-            environments.forEach((key, value) -> {
+            diffWithSystem(environments).forEach((key, value) -> {
                 envPrefixBuilder.append(POWER_SHELL_ENV_PREFIX).append(key).append("=");
                 if (!value.startsWith("\"")) {
                     envPrefixBuilder.append("\"").append(value).append("\"");

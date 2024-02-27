@@ -29,7 +29,7 @@ public class EnvironmentVarUtil {
         Map<String, String> resultEnv = new HashMap<>();
         env.forEach((key, value) ->{
             String sysValue = sysEnv.get(key);
-            if(sysValue == null || Objects.equals(sysValue, value)){
+            if(sysValue == null || !Objects.equals(sysValue, value)){
                 resultEnv.put(key, value);
             }
         });
