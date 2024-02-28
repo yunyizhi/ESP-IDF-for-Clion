@@ -7,6 +7,7 @@ import com.intellij.execution.process.ProcessListener;
 import com.intellij.facet.ui.ValidationResult;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
@@ -34,8 +35,7 @@ import static org.btik.espidf.util.I18nMessage.$i18n;
  * @author lustre
  * @since 2024/2/11 17:00
  */
-public class UnixLikeGenerator<T> implements SubGenerator<T> {
-
+public class UnixLikeGenerator<T> extends SubGenerator<T> {
     private String idfFrameworkPath;
 
     public void setIdfFrameworkPath(String idfFrameworkPath) {
@@ -55,7 +55,7 @@ public class UnixLikeGenerator<T> implements SubGenerator<T> {
     }
 
     @Override
-    public void generateProject(Project project, VirtualFile baseDir, T settings, Module module) {
+    public void generateProject() {
         ApplicationManager.getApplication().invokeLater(() -> {
             try {
                 IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
@@ -64,56 +64,12 @@ public class UnixLikeGenerator<T> implements SubGenerator<T> {
                 Map<String, String> readEnvironment = ApplicationManager.getApplication()
                         .executeOnPooledThread(() -> readEnvironment(idfToolConf1)).get();
                 String toolChainName = idfToolConf.getToolchain().getName();
-                generateProject(project, baseDir, readEnvironment, toolChainName);
+                generateProject(readEnvironment, toolChainName);
             } catch (java.util.concurrent.ExecutionException | InterruptedException | ExecutionException e) {
                 I18nMessage.NOTIFICATION_GROUP.createNotification(I18nMessage.getMsg("idf.cmd.init.project.failed"),
                         e.getMessage(), NotificationType.ERROR).notify(project);
                 throw new RuntimeException(e);
             }
         });
-    }
-
-    void generateProject(Project project, VirtualFile baseDir, Map<String, String> envs, String toolChainName) throws ExecutionException {
-        Path idfGenerateTmpDir = baseDir.toNioPath().resolve(".tmp");
-        GeneralCommandLine generate = new GeneralCommandLine();
-        generate.setExePath("idf.py");
-        generate.setWorkDirectory(baseDir.getPath());
-        generate.withEnvironment(envs);
-        generate.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-        generate.addParameters("create-project", "-p", idfGenerateTmpDir.toString(),
-                baseDir.getName());
-        Object requestor = this;
-        CmdTaskExecutor.execute(project, new IdfConsoleRunProfile($i18n("idf.create.project"),
-                EspIdfIcon.IDF_16_16, generate), new ProcessListener() {
-            @Override
-            public void processTerminated(@NotNull ProcessEvent event) {
-                ProcessListener.super.processTerminated(event);
-                if (event.getExitCode() != 0) {
-                    I18nMessage.NOTIFICATION_GROUP.createNotification(I18nMessage.getMsg("idf.cmd.init.project.failed"),
-                            event.getText(), NotificationType.ERROR).notify(project);
-                }
-                VirtualFile fileByIoFile = VfsUtil.findFileByIoFile(idfGenerateTmpDir.toFile(), true);
-                if (fileByIoFile == null) {
-                    return;
-                }
-                ApplicationManager.getApplication().invokeLater(() -> {
-                    ApplicationManager.getApplication().runWriteAction(() -> {
-                        try {
-                            for (VirtualFile child : fileByIoFile.getChildren()) {
-                                child.move(requestor, baseDir);
-                            }
-                            fileByIoFile.delete(requestor);
-                        } catch (IOException e) {
-                            I18nMessage.NOTIFICATION_GROUP.createNotification(I18nMessage.getMsg("idf.file.init.failed"),
-                                    e.getMessage(), NotificationType.ERROR).notify(project);
-                            throw new RuntimeException(e);
-                        }
-                        loadCMakeProject(project, VfsUtilCore.virtualToIoFile(baseDir), toolChainName);
-                    });
-                });
-
-            }
-        });
-
     }
 }

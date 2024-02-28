@@ -3,8 +3,15 @@ package org.btik.espidf.project;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.intellij.execution.ExecutionException;
+import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.process.CapturingProcessHandler;
+import com.intellij.execution.process.CapturingProcessRunner;
+import com.intellij.execution.process.ProcessOutput;
 import com.intellij.ide.util.projectWizard.AbstractNewProjectStep;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.*;
@@ -16,6 +23,8 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.project.component.ComboBoxWithRefresh;
 import org.btik.espidf.service.IdfToolConfService;
+import org.btik.espidf.util.CmdTaskExecutor;
+import org.btik.espidf.util.EnvironmentVarUtil;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -24,11 +33,16 @@ import javax.swing.event.DocumentListener;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.OsUtil.Const.*;
+import static org.btik.espidf.util.SysConf.$sys;
 
 /**
  * @author lustre
@@ -100,12 +114,6 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
         wrapper.add(idfFrameworkLabel, createConstraints(1, 0));
         wrapper.add(new ComboBoxWithRefresh<>(idfFrameworks, this::refreshIdfIdSet),
                 createConstraints(1, 1));
-        JLabel projectTargetLabel = new JLabel($i18n("project.target"));
-        projectTargets = new ComboBox<>();
-        projectTargets.addItem("esp32");
-        wrapper.add(projectTargetLabel, createConstraints(2, 0));
-        wrapper.add(new ComboBoxWithRefresh<>(projectTargets, this::refreshProjectTarget),
-                createConstraints(2, 1));
         panel.add(wrapper, "West");
 
         IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
@@ -155,10 +163,6 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-    }
-
-    private void refreshProjectTarget() {
 
     }
 

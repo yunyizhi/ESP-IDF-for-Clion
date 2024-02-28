@@ -27,8 +27,6 @@ import static org.btik.espidf.util.I18nMessage.$i18n;
 public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T> {
 
     private JBPanel<?> panel;
-
-    protected ComboBox<String> projectTargets;
     private String idfFrameworkPath;
 
 
@@ -77,12 +75,6 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
         firstRowConstraints.setFill(1);
         firstRowConstraints.setHSizePolicy(4);
         wrapper.add(idfFrameworkPathBrowserButton, firstRowConstraints);
-        JLabel projectTargetLabel = new JLabel($i18n("project.target"));
-        projectTargets = new ComboBox<>();
-        projectTargets.addItem("esp32");
-        wrapper.add(projectTargetLabel, createConstraints(1, 0));
-        wrapper.add(new ComboBoxWithRefresh<>(projectTargets, this::refreshProjectTarget),
-                createConstraints(1, 1));
         panel.add(wrapper, "West");
         IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
         IdfToolConf idfToolConf = service.getLastActivedIdfToolConf();
@@ -91,9 +83,4 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
         }
         return panel;
     }
-
-    private void refreshProjectTarget(){
-
-    }
-
 }

@@ -13,8 +13,6 @@ import org.jetbrains.annotations.NotNull;
  */
 public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
 
-    protected ComboBox<String> projectTargets;
-
     protected final IdfProjectGenerator<?> idfProjectGenerator;
 
     public IdfProjectSettingsStep(DirectoryProjectGenerator<T> projectGenerator, AbstractNewProjectStep.AbstractCallback<T> callback) {
