@@ -39,9 +39,15 @@ public class TreeNodeCmdExecutor {
         commandLine.setWorkDirectory(project.getBasePath());
         commandLine.withEnvironment(environmentService.getEnvironments());
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-        commandLine.addParameters(getCmdArg(),
-                getIdfExe(),
-                commandNode.getCommand());
+        if (IS_WINDOWS) {
+            commandLine.addParameters(getCmdArg(),
+                    getIdfExe(),
+                    commandNode.getCommand());
+        } else {
+            commandLine.addParameters(getCmdArg(),
+                    getIdfExe() + " " + commandNode.getCommand());
+        }
+
 
         try {
             CmdTaskExecutor.execute(project, new IdfConsoleRunProfile(commandNode.getDisplayName(),
@@ -63,9 +69,9 @@ public class TreeNodeCmdExecutor {
         runConfiguration.setExecuteScriptFile(false);
         runConfiguration.setInterpreterPath(getCmdEnv());
         IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
+        Map<String, String> environments = environmentService.getEnvironments();
         String command = commandNode.getCommand();
         if (IS_WINDOWS) {
-            Map<String, String> environments = environmentService.getEnvironments();
             StringBuilder envPrefixBuilder = new StringBuilder();
             diffWithSystem(environments).forEach((key, value) -> {
                 envPrefixBuilder.append(POWER_SHELL_ENV_PREFIX).append(key).append("=");
@@ -80,8 +86,8 @@ public class TreeNodeCmdExecutor {
             runConfiguration.setScriptText(StringUtil.isEmpty(command) ?
                     envPrefix : envPrefix + Const.WIN_IDF_EXE + " " + command);
         } else {
-            runConfiguration.setEnvData(EnvironmentVariablesData.DEFAULT.with(environmentService.getEnvironments()));
-            runConfiguration.setScriptText(Const.UNIX_IDF_EXE + " " + command);
+            runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, false));
+            runConfiguration.setScriptText(StringUtil.isEmpty(command) ? "" : Const.UNIX_IDF_EXE + " " + command);
         }
         runConfiguration.setScriptWorkingDirectory(basePath);
 
