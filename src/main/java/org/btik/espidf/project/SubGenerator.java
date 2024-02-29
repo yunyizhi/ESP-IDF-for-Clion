@@ -63,7 +63,7 @@ public abstract class SubGenerator<T> {
     protected void generateProject(Map<String, String> envs, String toolChainName) throws ExecutionException {
         Path idfGenerateTmpDir = baseDir.toNioPath().resolve(".tmp");
         GeneralCommandLine generate = new GeneralCommandLine();
-        generate.setExePath(OsUtil.Const.WIN_IDF_EXE);
+        generate.setExePath(OsUtil.getIdfExe());
         generate.setWorkDirectory(baseDir.getPath());
         generate.withEnvironment(envs);
         generate.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
