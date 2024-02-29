@@ -67,7 +67,7 @@ public abstract class SubGenerator<T> {
         generate.setWorkDirectory(baseDir.getPath());
         generate.withEnvironment(envs);
         generate.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-        generate.addParameters("--generator", "Ninja", "create-project", "-p", idfGenerateTmpDir.toString(),
+        generate.addParameters("create-project", "-p", idfGenerateTmpDir.toString(),
                 baseDir.getName());
         IdfConsoleRunProfile createProjectProfile = new IdfConsoleRunProfile($i18n("idf.create.project"),
                 EspIdfIcon.IDF_16_16, generate);
