@@ -7,6 +7,7 @@
             <terminal-command name="Monitor" value="monitor"/>
             <terminal-command name="Flash and Monitor" value="flash monitor"/>
             <command name="Clean" value="clean"/>
+            <command name="Full Clean" value="fullclean"/>
             <command name="Erase" value="erase-flash"/>
             <terminal-command name="IDF Console" value="" />
         </folder>

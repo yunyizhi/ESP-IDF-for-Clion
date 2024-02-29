@@ -67,7 +67,7 @@ public abstract class SubGenerator<T> {
         generate.setWorkDirectory(baseDir.getPath());
         generate.withEnvironment(envs);
         generate.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-        generate.addParameters("--generator", "Ninja", "create-project", "-p", idfGenerateTmpDir.toString(),
+        generate.addParameters("create-project", "-p", idfGenerateTmpDir.toString(),
                 baseDir.getName());
         IdfConsoleRunProfile createProjectProfile = new IdfConsoleRunProfile($i18n("idf.create.project"),
                 EspIdfIcon.IDF_16_16, generate);
@@ -95,7 +95,6 @@ public abstract class SubGenerator<T> {
 
     protected void moveTmpDir(Path idfGenerateTmpDir, Runnable nextTask) {
         VirtualFile tmpDir = VfsUtil.findFileByIoFile(idfGenerateTmpDir.toFile(), true);
-        Object requestor = this;
         if (tmpDir == null) {
             LOG.error("tmpDir not found, can't move");
             return;
@@ -104,9 +103,9 @@ public abstract class SubGenerator<T> {
             ApplicationManager.getApplication().runWriteAction(() -> {
                 try {
                     for (VirtualFile child : tmpDir.getChildren()) {
-                        child.move(requestor, baseDir);
+                        child.move(project, baseDir);
                     }
-                    tmpDir.delete(requestor);
+                    tmpDir.delete(project);
                 } catch (IOException e) {
                     I18nMessage.NOTIFICATION_GROUP.createNotification(I18nMessage.getMsg("idf.file.init.failed"),
                             e.getMessage(), NotificationType.ERROR).notify(project);
