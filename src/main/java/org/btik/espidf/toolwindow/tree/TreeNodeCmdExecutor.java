@@ -32,7 +32,7 @@ import static org.btik.espidf.util.OsUtil.Const.POWER_SHELL_ENV_PREFIX;
  * @since 2024/2/18 18:51
  */
 public class TreeNodeCmdExecutor {
-    public static void execute(EspIdfTaskCommandNode commandNode, Project project, String generatorValue) {
+    public static void execute(EspIdfTaskCommandNode commandNode, Project project) {
         IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
         GeneralCommandLine commandLine = new GeneralCommandLine();
         commandLine.setExePath(getCmdEnv());
@@ -40,16 +40,12 @@ public class TreeNodeCmdExecutor {
         commandLine.withEnvironment(environmentService.getEnvironments());
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
         if (IS_WINDOWS) {
-            commandLine.addParameters(getCmdArg(), getIdfExe());
-            if (!StringUtil.isEmpty(generatorValue)) {
-                commandLine.addParameters("-G", generatorValue);
-            }
-            commandLine.addParameters(
+            commandLine.addParameters(getCmdArg(),
+                    getIdfExe(),
                     commandNode.getCommand());
         } else {
-            commandLine.addParameters(getCmdArg());
-            String generatorArg = StringUtil.isEmpty(generatorValue) ? "" : " -G " + generatorValue;
-            commandLine.addParameters(getIdfExe() + generatorArg + " " + commandNode.getCommand());
+            commandLine.addParameters(getCmdArg(),
+                    getIdfExe() + " " + commandNode.getCommand());
         }
 
 
@@ -61,7 +57,7 @@ public class TreeNodeCmdExecutor {
         }
     }
 
-    public static void execute(EspIdfTaskTerminalCommandNode commandNode, Project project, String generatorValue) {
+    public static void execute(EspIdfTaskTerminalCommandNode commandNode, Project project) {
         String basePath = project.getBasePath();
         if (basePath == null) {
             return;
@@ -75,7 +71,6 @@ public class TreeNodeCmdExecutor {
         IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
         Map<String, String> environments = environmentService.getEnvironments();
         String command = commandNode.getCommand();
-        String generatorArg = StringUtil.isEmpty(generatorValue) ? "" : " -G " + generatorValue;
         if (IS_WINDOWS) {
             StringBuilder envPrefixBuilder = new StringBuilder();
             diffWithSystem(environments).forEach((key, value) -> {
@@ -89,11 +84,10 @@ public class TreeNodeCmdExecutor {
             });
             String envPrefix = envPrefixBuilder.toString();
             runConfiguration.setScriptText(StringUtil.isEmpty(command) ?
-                    envPrefix : envPrefix + Const.WIN_IDF_EXE + generatorArg + " " + command);
+                    envPrefix : envPrefix + Const.WIN_IDF_EXE + " " + command);
         } else {
             runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, false));
-            runConfiguration.setScriptText(StringUtil.isEmpty(command) ? "" : Const.UNIX_IDF_EXE +
-                    generatorArg + " " + command);
+            runConfiguration.setScriptText(StringUtil.isEmpty(command) ? "" : Const.UNIX_IDF_EXE + " " + command);
         }
         runConfiguration.setScriptWorkingDirectory(basePath);
 
