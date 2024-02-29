@@ -95,7 +95,7 @@ public abstract class SubGenerator<T> {
 
     protected void moveTmpDir(Path idfGenerateTmpDir, Runnable nextTask) {
         VirtualFile tmpDir = VfsUtil.findFileByIoFile(idfGenerateTmpDir.toFile(), true);
-        Object requestor = this;
+        Object requestor = project;
         if (tmpDir == null) {
             LOG.error("tmpDir not found, can't move");
             return;
