@@ -6,14 +6,11 @@ import com.google.gson.JsonSyntaxException;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PathManager;
-import com.intellij.openapi.util.Computable;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
-import com.jetbrains.cidr.toolchains.OSType;
 import org.btik.espidf.service.IdfToolConfService;
 import com.intellij.openapi.diagnostic.Logger;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
@@ -21,8 +18,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
 
-
-import static org.btik.espidf.adapter.Adapter.readEnvironment;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 import static org.btik.espidf.util.I18nMessage.*;
 
@@ -36,7 +31,7 @@ public class IdfToolConfManager implements IdfToolConfService {
 
     private static final String IDF_JSON_NAME = "espidf.json";
 
-    private HashSet<IdfToolConf> idfToolConfs;
+    private final HashSet<IdfToolConf> idfToolConfs = new HashSet<>();
 
     private final HashMap<String, IdfToolConf> idfToolConfMap = new HashMap<>();
     private final Type type = new TypeToken<HashSet<IdfToolConf>>() {
@@ -61,7 +56,7 @@ public class IdfToolConfManager implements IdfToolConfService {
         try {
             String json = Files.readString(idfJson);
             HashSet<IdfToolConf> idfToolConfSet = new Gson().fromJson(json, type);
-            if (idfToolConfSet == null) {
+            if (idfToolConfSet == null || idfToolConfSet.isEmpty()) {
                 return;
             }
             for (IdfToolConf toolConf : idfToolConfSet) {
@@ -81,7 +76,7 @@ public class IdfToolConfManager implements IdfToolConfService {
                     }
                 }
                 idfToolConfMap.put(toolConf.getKey(), toolConf);
-                this.idfToolConfs = idfToolConfSet;
+                this.idfToolConfs.addAll(idfToolConfSet);
             }
 
         } catch (JsonSyntaxException jsonSyntaxException) {
@@ -89,10 +84,6 @@ public class IdfToolConfManager implements IdfToolConfService {
         } catch (IOException e) {
             NOTIFICATION_GROUP.createNotification(getMsg("idf.cmd.init.failed"),
                     getMsgF("idf.cmd.init.failed.with", e.getMessage()), NotificationType.ERROR).notify(null);
-        } finally {
-            if (idfToolConfs == null) {
-                idfToolConfs = new HashSet<>();
-            }
         }
     }
 

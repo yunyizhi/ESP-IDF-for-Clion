@@ -7,15 +7,10 @@ import com.intellij.execution.process.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.notification.NotificationType;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.tools.ToolProcessAdapter;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.function.Consumer;
-
-import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.StringUtils.safeNull;
 
 /**
  * @author lustre
@@ -47,7 +42,7 @@ public class CmdTaskExecutor {
                 ProcessListener.super.processTerminated(event);
                 if (event.getExitCode() != 0) {
                     I18nMessage.NOTIFICATION_GROUP.createNotification(failedTip,
-                            event.getText(), NotificationType.ERROR).notify(project);
+                            safeNull(event.getText()), NotificationType.ERROR).notify(project);
                     return;
                 }
                 successCallBack.run();
