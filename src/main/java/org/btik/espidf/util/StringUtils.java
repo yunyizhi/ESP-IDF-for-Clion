@@ -7,6 +7,6 @@ package org.btik.espidf.util;
 public class StringUtils {
 
     public static String safeNull(String string) {
-        return string == null ? "null" : string;
+        return string == null ? "" : string;
     }
 }

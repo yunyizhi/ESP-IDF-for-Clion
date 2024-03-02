@@ -108,11 +108,13 @@ public abstract class SubGenerator<T> {
                     }
                     tmpDir.delete(requestor);
                 } catch (IOException e) {
-                    I18nMessage.NOTIFICATION_GROUP.createNotification(I18nMessage.getMsg("idf.file.init.failed"),
+                    I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.file.init.failed"),
                             e.getMessage(), NotificationType.ERROR).notify(project);
                     LOG.error(e);
                 }
                 nextTask.run();
+                I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.tmp.folder.title"),
+                        $i18n("idf.tmp.folder.may.not.deleted"), NotificationType.INFORMATION).notify(project);
             });
         });
     }

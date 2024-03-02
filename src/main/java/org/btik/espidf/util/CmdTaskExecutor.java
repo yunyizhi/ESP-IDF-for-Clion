@@ -10,6 +10,7 @@ import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.jetbrains.annotations.NotNull;
+
 import static org.btik.espidf.util.StringUtils.safeNull;
 
 /**
@@ -42,7 +43,8 @@ public class CmdTaskExecutor {
                 ProcessListener.super.processTerminated(event);
                 if (event.getExitCode() != 0) {
                     I18nMessage.NOTIFICATION_GROUP.createNotification(failedTip,
-                            safeNull(event.getText()), NotificationType.ERROR).notify(project);
+                            safeNull(event.getText()) + " ,idf exit code :%d".formatted(event.getExitCode())
+                            , NotificationType.ERROR).notify(project);
                     return;
                 }
                 successCallBack.run();

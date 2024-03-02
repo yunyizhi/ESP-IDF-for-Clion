@@ -99,7 +99,7 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         }
         Path idfConfFolder = service.getIdfConfFolder();
         String exportEnvCmd = idfToolPath + File.separatorChar +
-                $sys("idf.windows.command.prefix") + " " + idfId;
+                $sys("idf.windows.command.init.bat") + " " + idfId;
         Path idfExportPs1 = idfConfFolder.resolve(ENV_FILE_PREFIX + Integer.toHexString(exportEnvCmd.hashCode()) + ".bat");
         try {
             Files.writeString(idfExportPs1, exportEnvCmd);

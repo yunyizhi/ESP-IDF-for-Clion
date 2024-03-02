@@ -25,11 +25,13 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
 import static org.btik.espidf.adapter.Adapter.readEnvironment;
 import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.SysConf.$sys;
 
 /**
  * @author lustre
@@ -47,9 +49,13 @@ public class UnixLikeGenerator<T> extends SubGenerator<T> {
         if (StringUtil.isEmpty(idfFrameworkPath)) {
             return new ValidationResult($i18n("please.select.idf.path"));
         }
-        File file = new File(idfFrameworkPath);
-        if (!file.exists()) {
+        Path folder = Path.of(idfFrameworkPath);
+        if (!Files.exists(folder)){
             return new ValidationResult($i18n("please.select.idf.path.not.exist"));
+        }
+        Path exportSh = folder.resolve($sys("idf.unix.export.script"));
+        if (!Files.exists(exportSh)){
+            return new ValidationResult($i18n("idf.folder.invalid"));
         }
         return ValidationResult.OK;
     }

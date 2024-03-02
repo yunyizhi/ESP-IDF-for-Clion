@@ -14,7 +14,16 @@
          Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
     <description><![CDATA[
-   This plugin enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif IoT Development Framework)</a> support.<br>
+Enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif IoT Development Framework)</a> support.
+<ul>
+    <li>Supports creating ESP-IDF projects with automatic configuration and initialization.</li>
+    <li>Simplifies the ESP-IDF command set by encapsulating certain commands within a GUI.</li>
+</ul>
+支持 <a href="https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32/index.html">ESP-IDF(Espressif IoT Development Framework)</a> .
+<ul>
+    <li>支持创建ESP-IDF项目，并自动配置环境并初始化。</li>
+    <li>简单封装了部分idf命令为界面。</li>
+</ul>
   ]]></description>
 
     <!-- Product and plugin compatibility requirements.
