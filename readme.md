@@ -1,7 +1,6 @@
 # ESP-IDF for CLion
 
-<div width="100%" style="overflow-x: auto;"> 
-    <svg
+<svg
         width="19.13324mm"
         height="22.246479mm"
         viewBox="0 0 19.13324 22.246479"
@@ -188,7 +187,8 @@
             cy="97.661095"
             r="1.1170774" />
   </g>
-</svg></div>
+</svg>
+
 
 为CLion添加完善的<a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif IoT Development Framework)</a>支持。
 
@@ -200,3 +200,4 @@
 
 
 
+现已上架插件市场[ESP-IDF](https://plugins.jetbrains.com/plugin/23886-esp-idf/)
