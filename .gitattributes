@@ -1,0 +1,2 @@
+*.gradle.kts text eol=crlf
+*.java text eol=crlf

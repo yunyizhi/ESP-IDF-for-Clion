@@ -34,8 +34,11 @@ public class CmdTaskExecutor {
         handler.startNotify();
     }
 
+    /**
+     * @param continueWithError 遇到错误继续，尽量减少idf误报时，中断可以设为true
+     */
     public static void execute(@NotNull Project project,
-                               IdfConsoleRunProfile idfConsoleRunProfile, Runnable successCallBack, String failedTip)
+                               IdfConsoleRunProfile idfConsoleRunProfile, Runnable terminatedCallBack, String failedTip, boolean continueWithError)
             throws ExecutionException {
         execute(project, idfConsoleRunProfile, new ProcessListener() {
             @Override
@@ -45,9 +48,11 @@ public class CmdTaskExecutor {
                     I18nMessage.NOTIFICATION_GROUP.createNotification(failedTip,
                             safeNull(event.getText()) + " ,idf exit code :%d".formatted(event.getExitCode())
                             , NotificationType.ERROR).notify(project);
-                    return;
+                    if (!continueWithError) {
+                        return;
+                    }
                 }
-                successCallBack.run();
+                terminatedCallBack.run();
             }
         });
     }

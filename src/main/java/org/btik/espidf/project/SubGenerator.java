@@ -73,9 +73,9 @@ public abstract class SubGenerator<T> {
                 EspIdfIcon.IDF_16_16, generate);
         Runnable nextTaskChain =
                 () -> moveTmpDir(idfGenerateTmpDir,
-                                () -> loadCMakeProject(toolChainName));
+                        () -> loadCMakeProject(toolChainName));
         CmdTaskExecutor.execute(project, createProjectProfile,
-                nextTaskChain, $i18n("idf.cmd.init.project.failed")
+                nextTaskChain, $i18n("idf.cmd.init.project.failed"), true
         );
     }
 
