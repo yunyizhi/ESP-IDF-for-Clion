@@ -15,9 +15,11 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.*;
+import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.platform.DirectoryProjectGenerator;
 import com.intellij.ui.components.JBPanel;
+import com.intellij.ui.components.JBRadioButton;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.btik.espidf.conf.IdfToolConf;
@@ -62,7 +64,7 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
     @Override
     public JPanel createAdvancedSettings() {
         JBPanel<?> panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(3, 2);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(4, 3);
         JPanel wrapper = new JPanel(gridLayoutManager);
         FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
         final TextFieldWithBrowseButton idfToolPathBrowserButton = new TextFieldWithBrowseButton();
@@ -94,12 +96,24 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
                 refreshIdfIdSet();
             }
         });
-        JLabel qtCMakePrefixLabel = new JLabel($i18n("idf.tools.path.title"));
-        wrapper.add(qtCMakePrefixLabel, createConstraints(0, 0));
-        GridConstraints firstRowConstraints = createConstraints(0, 1);
+        int rowIndex = 0;
+        ButtonGroup installType = new ButtonGroup();
+        JLabel installTypeLabel = new JLabel($i18n("idf.install.type"));
+        JBRadioButton source = new JBRadioButton($i18n("idf.install.type.source"));
+        JBRadioButton idfTool = new JBRadioButton($i18n("idf.install.type.package"));
+        wrapper.add(installTypeLabel, createConstraints(rowIndex, 0));
+        installType.add(source);
+        installType.add(idfTool);
+        wrapper.add(source, createConstraints(rowIndex, 1));
+        wrapper.add(idfTool, createConstraints(rowIndex, 2));
+        rowIndex++;
+        JLabel idfToolPrefixLabel = new JLabel($i18n("idf.tools.path.title"));
+        wrapper.add(idfToolPrefixLabel, createConstraints(rowIndex, 0));
+        GridConstraints firstRowConstraints = createConstraints(rowIndex, 1);
         firstRowConstraints.setFill(1);
         firstRowConstraints.setHSizePolicy(4);
         wrapper.add(idfToolPathBrowserButton, firstRowConstraints);
+        rowIndex++;
         idfFrameworks = new ComboBox<>();
         idfFrameworks.addItemListener(e -> {
             if (e.getStateChange() != ItemEvent.SELECTED) {
@@ -111,9 +125,9 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
         });
 
         JLabel idfFrameworkLabel = new JLabel($i18n("idf.framework"));
-        wrapper.add(idfFrameworkLabel, createConstraints(1, 0));
+        wrapper.add(idfFrameworkLabel, createConstraints(rowIndex, 0));
         wrapper.add(new ComboBoxWithRefresh<>(idfFrameworks, this::refreshIdfIdSet),
-                createConstraints(1, 1));
+                createConstraints(rowIndex, 1));
         panel.add(wrapper, "West");
 
         IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
