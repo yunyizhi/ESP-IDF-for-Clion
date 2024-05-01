@@ -107,4 +107,8 @@ public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements 
         }
 
     }
+
+    public void setEnvType(IdfEnvType envType) {
+        windowsGenerator.setEnvType(envType);
+    }
 }

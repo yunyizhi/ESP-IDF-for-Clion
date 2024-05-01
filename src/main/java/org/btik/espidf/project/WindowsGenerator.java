@@ -5,11 +5,8 @@ import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.text.StringUtil;
-import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.conf.IdfToolConf;
-import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.service.IdfEnvironmentService;
-import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.I18nMessage;
 
 import java.nio.file.Files;
@@ -26,12 +23,14 @@ import static org.btik.espidf.util.SysConf.$sys;
  */
 public class WindowsGenerator<T> extends SubGenerator<T> {
     private final Logger LOG = Logger.getInstance(WindowsGenerator.class);
-    private String idfToolPath;
+    private String installPath;
 
     private String idfId;
 
+    private IdfEnvType envType = IdfEnvType.IDF_TOOL;
+
     public void setIdfToolsPath(String text) {
-        idfToolPath = text;
+        installPath = text;
     }
 
 
@@ -41,20 +40,35 @@ public class WindowsGenerator<T> extends SubGenerator<T> {
 
     @Override
     public ValidationResult validate() {
-        if (StringUtil.isEmpty(idfToolPath)) {
-            return new ValidationResult($i18n("please.select.idf.tools.path.for.idf"));
+        if (envType == IdfEnvType.IDF_TOOL) {
+            if (StringUtil.isEmpty(installPath)) {
+                return new ValidationResult($i18n("please.select.idf.tools.path.for.idf"));
+            }
+            if (StringUtil.isEmpty(idfId)) {
+                return new ValidationResult($i18n("please.select.idf.id"));
+            }
+            Path folder = Path.of(installPath);
+            if (!Files.exists(folder)) {
+                return new ValidationResult($i18n("please.select.idf.path.not.exist"));
+            }
+            Path initBat = folder.resolve($sys("idf.windows.command.init.bat"));
+            if (!Files.exists(initBat)) {
+                return new ValidationResult($i18n("idf.tool.folder.invalid"));
+            }
+        } else {
+            if (StringUtil.isEmpty(installPath)) {
+                return new ValidationResult($i18n("please.select.idf.path"));
+            }
+            Path folder = Path.of(installPath);
+            if (!Files.exists(folder)) {
+                return new ValidationResult($i18n("please.select.idf.path.not.exist"));
+            }
+            Path exportBat = folder.resolve($sys("idf.windows.export.bat"));
+            if (!Files.exists(exportBat)) {
+                return new ValidationResult($i18n("idf.folder.invalid"));
+            }
         }
-        if (StringUtil.isEmpty(idfId)) {
-            return new ValidationResult($i18n("please.select.idf.id"));
-        }
-        Path folder = Path.of(idfToolPath);
-        if (!Files.exists(folder)){
-            return new ValidationResult($i18n("please.select.idf.path.not.exist"));
-        }
-        Path initBat = folder.resolve($sys("idf.windows.command.init.bat"));
-        if (!Files.exists(initBat)){
-            return new ValidationResult($i18n("idf.folder.invalid"));
-        }
+
         return ValidationResult.OK;
     }
 
@@ -63,7 +77,13 @@ public class WindowsGenerator<T> extends SubGenerator<T> {
         ApplicationManager.getApplication().invokeLater(() -> {
             try {
                 IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
-                IdfToolConf idfToolConf = environmentService.getWinToolConf(idfToolPath, idfId);
+                IdfToolConf idfToolConf;
+                if (envType == IdfEnvType.IDF_TOOL) {
+                    idfToolConf = environmentService.getWinToolConf(installPath, idfId);
+                } else {
+                    idfToolConf = environmentService.getSourceToolConf(installPath);
+                }
+
                 Map<String, String> readEnvironment = readEnvironment(idfToolConf);
                 String toolChainName = idfToolConf.getToolchain().getName();
                 generateProject(readEnvironment, toolChainName);
@@ -73,5 +93,9 @@ public class WindowsGenerator<T> extends SubGenerator<T> {
                         e.getMessage(), NotificationType.ERROR).notify(project);
             }
         });
+    }
+
+    public void setEnvType(IdfEnvType envType) {
+        this.envType = envType;
     }
 }

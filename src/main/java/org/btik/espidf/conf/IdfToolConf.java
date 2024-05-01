@@ -1,9 +1,12 @@
 package org.btik.espidf.conf;
 
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
+import org.btik.espidf.project.IdfEnvType;
 
 import java.util.Objects;
 
+import static org.btik.espidf.project.IdfEnvType.IDF_FRAMEWORK;
+import static org.btik.espidf.project.IdfEnvType.IDF_TOOL;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
 /**
@@ -72,7 +75,7 @@ public class IdfToolConf {
         if (key != null) {
             return key;
         }
-        if (IS_WINDOWS) {
+        if (idfId != null && !idfId.isEmpty()) {
             key = idfToolPath + idfId;
         } else {
             key = idfToolPath;

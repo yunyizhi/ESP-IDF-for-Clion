@@ -69,7 +69,7 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
             }
         });
 
-        JLabel idfFrameworkPathLabel = new JLabel($i18n("idf.tools.path.title"));
+        JLabel idfFrameworkPathLabel = new JLabel($i18n("idf.path.title"));
         wrapper.add(idfFrameworkPathLabel, createConstraints(0, 0));
         GridConstraints firstRowConstraints = createConstraints(0, 1);
         firstRowConstraints.setFill(1);

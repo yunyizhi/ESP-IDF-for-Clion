@@ -55,6 +55,10 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
     private static final String ESP_IDF_JSON = "esp_idf.json";
 
     protected ComboBox<IdfFrameworkItem> idfFrameworks;
+    private ComboBoxWithRefresh<IdfFrameworkItem> idfFrameworkItemComboBox;
+    private JLabel idfFrameworkLabel;
+
+    protected ComboBox<IdfEnvType> idfPathType;
     private String idfToolPath;
 
     public IdfWindowsProjectSettingsStep(DirectoryProjectGenerator<T> projectGenerator, AbstractNewProjectStep.AbstractCallback<T> callback) {
@@ -97,17 +101,15 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
             }
         });
         int rowIndex = 0;
-        ButtonGroup installType = new ButtonGroup();
-        JLabel installTypeLabel = new JLabel($i18n("idf.install.type"));
-        JBRadioButton source = new JBRadioButton($i18n("idf.install.type.source"));
-        JBRadioButton idfTool = new JBRadioButton($i18n("idf.install.type.package"));
+        JLabel installTypeLabel = new JLabel($i18n("idf.env.type.title"));
+        idfPathType = new ComboBox<>();
+        idfPathType.addItem(IdfEnvType.IDF_TOOL);
+        idfPathType.addItem(IdfEnvType.IDF_FRAMEWORK);
+        idfPathType.addItemListener(this::envTypeChange);
         wrapper.add(installTypeLabel, createConstraints(rowIndex, 0));
-        installType.add(source);
-        installType.add(idfTool);
-        wrapper.add(source, createConstraints(rowIndex, 1));
-        wrapper.add(idfTool, createConstraints(rowIndex, 2));
+        wrapper.add(idfPathType, createConstraints(rowIndex, 1));
         rowIndex++;
-        JLabel idfToolPrefixLabel = new JLabel($i18n("idf.tools.path.title"));
+        JLabel idfToolPrefixLabel = new JLabel($i18n("idf.path.title"));
         wrapper.add(idfToolPrefixLabel, createConstraints(rowIndex, 0));
         GridConstraints firstRowConstraints = createConstraints(rowIndex, 1);
         firstRowConstraints.setFill(1);
@@ -124,9 +126,10 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
             checkValid();
         });
 
-        JLabel idfFrameworkLabel = new JLabel($i18n("idf.framework"));
+        idfFrameworkLabel = new JLabel($i18n("idf.framework"));
         wrapper.add(idfFrameworkLabel, createConstraints(rowIndex, 0));
-        wrapper.add(new ComboBoxWithRefresh<>(idfFrameworks, this::refreshIdfIdSet),
+        idfFrameworkItemComboBox = new ComboBoxWithRefresh<>(idfFrameworks, this::refreshIdfIdSet);
+        wrapper.add(idfFrameworkItemComboBox,
                 createConstraints(rowIndex, 1));
         panel.add(wrapper, "West");
 
@@ -137,6 +140,21 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
             refreshIdfIdSet();
         }
         return panel;
+    }
+
+    private void envTypeChange(ItemEvent e) {
+        if (e.getStateChange() != ItemEvent.SELECTED) {
+            return;
+        }
+        IdfEnvType envType = (IdfEnvType) e.getItem();
+        idfProjectGenerator.setEnvType(envType);
+        if (envType == IdfEnvType.IDF_FRAMEWORK) {
+            idfFrameworkItemComboBox.setVisible(false);
+            idfFrameworkLabel.setVisible(false);
+        } else {
+            idfFrameworkItemComboBox.setVisible(true);
+            idfFrameworkLabel.setVisible(true);
+        }
     }
 
     private void refreshIdfIdSet() {
@@ -192,4 +210,5 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
             return displayName;
         }
     }
+
 }

@@ -22,5 +22,5 @@ public interface IdfEnvironmentService {
      * */
     IdfToolConf getWinToolConf(String idfToolPath, String idfId);
 
-    IdfToolConf getUnixToolConf(String idfFrameworkPath);
+    IdfToolConf getSourceToolConf(String idfFrameworkPath);
 }

@@ -121,14 +121,14 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
     }
 
     @Override
-    public IdfToolConf getUnixToolConf(String idfFrameworkPath) {
+    public IdfToolConf getSourceToolConf(String idfFrameworkPath) {
         IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
         IdfToolConf toolConfByKey = service.getToolConfByKey(idfFrameworkPath);
         if (toolConfByKey != null && toolConfByKey.getToolchain() != null) {
             return toolConfByKey;
         }
         IdfToolConf newIdfToolConf = new IdfToolConf();
-        String envFileName = idfFrameworkPath + File.separatorChar + $sys("idf.unix.export.script");
+        String envFileName = idfFrameworkPath + File.separatorChar + $sys(IS_WINDOWS ? "idf.windows.export.bat" : "idf.unix.export.script");
         newIdfToolConf.setEnvFileName(envFileName);
         newIdfToolConf.setIdfToolPath(idfFrameworkPath);
         CPPToolchains.Toolchain toolchain = getToolChain(envFileName);
