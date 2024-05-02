@@ -15,6 +15,7 @@ import com.intellij.sh.run.ShRunConfiguration;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.icon.EspIdfIcon;
+import org.btik.espidf.toolwindow.tree.model.EspIdfTaskActionNode;
 import org.btik.espidf.toolwindow.tree.model.EspIdfTaskCommandNode;
 import org.btik.espidf.toolwindow.tree.model.EspIdfTaskTerminalCommandNode;
 import org.btik.espidf.toolwindow.tree.model.RawCommandNode;
@@ -112,5 +113,9 @@ public class TreeNodeCmdExecutor {
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void execute(EspIdfTaskActionNode actionNode, Project project) {
+        EspIdfActionMap.exec(actionNode, project);
     }
 }

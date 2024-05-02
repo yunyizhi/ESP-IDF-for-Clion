@@ -25,6 +25,8 @@ public interface TreeXmlMeta {
 
     String RAW_COMMAND = "raw-command";
 
+    String ACTION = "action";
+
     String WIN_VALUE = "win-value";
 
     String UNIX_VALUE = "unix-value";

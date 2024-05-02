@@ -6,6 +6,9 @@ import com.google.gson.JsonSyntaxException;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PathManager;
+import com.intellij.openapi.project.Project;
+import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
+import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.btik.espidf.service.IdfToolConfService;
@@ -99,6 +102,7 @@ public class IdfToolConfManager implements IdfToolConfService {
     public void store(IdfToolConf newIdfToolConf) {
         idfToolConfs.add(newIdfToolConf);
         idfToolConfMap.put(newIdfToolConf.getKey(), newIdfToolConf);
+        newIdfToolConf.setActiveTime(System.currentTimeMillis());
         saveConfig();
     }
 
@@ -124,6 +128,28 @@ public class IdfToolConfManager implements IdfToolConfService {
             saveConfig();
         }
         return idfToolConf;
+    }
+
+    @Override
+    public IdfToolConf getIdfConfByProject(Project project) {
+        CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
+        List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
+        if (activeProfiles.isEmpty()) {
+            return null;
+        }
+        CMakeSettings.Profile currentProfile = activeProfiles.get(0);
+        CPPToolchains.Toolchain toolchain = CPPToolchains.getInstance()
+                .getToolchainByNameOrDefault(currentProfile.getToolchainName());
+        if (toolchain == null) {
+            return null;
+        }
+        IdfToolConf[] idfToolConfRef = {null};
+        idfToolConfMap.forEach((key, value) -> {
+            if (Objects.equals(value.getEnvFileName(), toolchain.getEnvironment())) {
+                idfToolConfRef[0] = value;
+            }
+        });
+        return idfToolConfRef[0];
     }
 
     private void saveConfig() {

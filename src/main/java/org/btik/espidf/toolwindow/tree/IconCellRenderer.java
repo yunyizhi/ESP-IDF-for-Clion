@@ -3,6 +3,7 @@ package org.btik.espidf.toolwindow.tree;
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.CheckedTreeNode;
+import icons.TerminalIcons;
 import org.btik.espidf.toolwindow.tree.model.*;
 
 import javax.swing.*;
@@ -25,7 +26,8 @@ public class IconCellRenderer extends DefaultTreeCellRenderer {
         metaIconMap.put(EspIdfTaskTreeNode.class, AllIcons.Nodes.ConfigFolder);
         metaIconMap.put(EspIdfTaskFolderNode.class, AllIcons.Nodes.ConfigFolder);
         metaIconMap.put(EspIdfTaskCommandNode.class, icons.ExternalSystemIcons.Task);
-        metaIconMap.put(EspIdfTaskTerminalCommandNode.class, icons.ExternalSystemIcons.Task);
+        metaIconMap.put(EspIdfTaskTerminalCommandNode.class, TerminalIcons.OpenTerminal_13x13);
+        metaIconMap.put(EspIdfTaskActionNode.class, TerminalIcons.OpenTerminal_13x13);
         metaIconMap.put(RawCommandNode.class, icons.ExternalSystemIcons.Task);
     }
 

@@ -30,6 +30,7 @@ public class EspIdfTaskTreeFactory {
         factories.put(COMMAND_TAG, EspIdfTaskTreeFactory::newCmd);
         factories.put(TERMINAL_COMMAND, EspIdfTaskTreeFactory::newTerminalCmd);
         factories.put(RAW_COMMAND, EspIdfTaskTreeFactory::newRawCmd);
+        factories.put(ACTION, EspIdfTaskTreeFactory::newAction);
     }
 
     public static DefaultMutableTreeNode load() {
@@ -91,6 +92,12 @@ public class EspIdfTaskTreeFactory {
         String command = element.getAttribute(VALUE);
         EspIdfTaskCommandNode taskTreeNode = new EspIdfTaskCommandNode(name, command);
         return buildNode(element, taskTreeNode);
+    }
+
+    private static XmlNode newAction(Element element) {
+        String name = element.getAttribute(NAME);
+        EspIdfTaskActionNode espIdfTaskActionNode = new EspIdfTaskActionNode(name);
+        return buildNode(element, espIdfTaskActionNode);
     }
 
     private static XmlNode newTerminalCmd(Element element) {

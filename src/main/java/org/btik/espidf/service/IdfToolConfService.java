@@ -1,5 +1,6 @@
 package org.btik.espidf.service;
 
+import com.intellij.openapi.project.Project;
 import org.btik.espidf.conf.IdfToolConf;
 
 import java.nio.file.Path;
@@ -18,4 +19,6 @@ public interface IdfToolConfService {
     Path getIdfConfFolder();
 
     IdfToolConf getToolConfByKey(String key);
+
+    IdfToolConf getIdfConfByProject(Project project);
 }

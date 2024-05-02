@@ -8,7 +8,9 @@
             <terminal-command name="Flash and Monitor" value="flash monitor"/>
             <command name="Clean" value="clean"/>
             <command name="Erase" value="erase-flash"/>
+            <terminal-command name="Menu Config" value="menuconfig" />
             <terminal-command name="IDF Console" value="" />
+            <action name="IDF Export Console" id="idf.export.console" terminal="true" />
         </folder>
         <folder name="Advanced">
             <raw-command name="Export Environments"
