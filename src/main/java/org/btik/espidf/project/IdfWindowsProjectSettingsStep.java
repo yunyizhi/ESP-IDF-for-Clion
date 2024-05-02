@@ -3,30 +3,20 @@ package org.btik.espidf.project;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.intellij.execution.ExecutionException;
-import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.execution.process.CapturingProcessHandler;
-import com.intellij.execution.process.CapturingProcessRunner;
-import com.intellij.execution.process.ProcessOutput;
 import com.intellij.ide.util.projectWizard.AbstractNewProjectStep;
-import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.*;
-import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.platform.DirectoryProjectGenerator;
 import com.intellij.ui.components.JBPanel;
-import com.intellij.ui.components.JBRadioButton;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.project.component.ComboBoxWithRefresh;
 import org.btik.espidf.service.IdfToolConfService;
-import org.btik.espidf.util.CmdTaskExecutor;
-import org.btik.espidf.util.EnvironmentVarUtil;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -35,16 +25,13 @@ import javax.swing.event.DocumentListener;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Map;
+import java.util.ArrayList;
+
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
-import static org.btik.espidf.util.OsUtil.Const.*;
-import static org.btik.espidf.util.SysConf.$sys;
 
 /**
  * @author lustre
@@ -132,14 +119,23 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
         wrapper.add(idfFrameworkItemComboBox,
                 createConstraints(rowIndex, 1));
         panel.add(wrapper, "West");
+        setLastValue(idfToolPathBrowserButton);
 
+        return panel;
+    }
+
+    private void setLastValue(TextFieldWithBrowseButton idfToolPathBrowserButton) {
         IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
         IdfToolConf idfToolConf = service.getLastActivedIdfToolConf();
         if (idfToolConf != null) {
             idfToolPathBrowserButton.getTextField().setText(idfToolConf.getIdfToolPath());
-            refreshIdfIdSet();
+            if (StringUtil.isEmpty(idfToolConf.getIdfId())) {
+                idfPathType.setSelectedItem(IdfEnvType.IDF_FRAMEWORK);
+            } else {
+                refreshIdfIdSet();
+            }
+
         }
-        return panel;
     }
 
     private void envTypeChange(ItemEvent e) {
@@ -155,6 +151,7 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
             idfFrameworkItemComboBox.setVisible(true);
             idfFrameworkLabel.setVisible(true);
         }
+        checkValid();
     }
 
     private void refreshIdfIdSet() {
@@ -175,6 +172,7 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
 
             JsonObject jsonObject = jsonElement.getAsJsonObject();
             JsonObject idfInstalled = jsonObject.get("idfInstalled").getAsJsonObject();
+            ArrayList<IdfFrameworkItem> idfFrameworksItems = new ArrayList<>();
             idfInstalled.asMap().forEach((key, value) -> {
                 IdfFrameworkItem idfFrameworkItem = new IdfFrameworkItem();
                 idfFrameworkItem.idfId = key;
@@ -187,9 +185,12 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
                 } else {
                     idfFrameworkItem.displayName = split[split.length - 1];
                 }
-                idfFrameworks.addItem(idfFrameworkItem);
+                idfFrameworksItems.add(idfFrameworkItem);
             });
-            if (idfFrameworks.getItemCount() > 0) {
+            if (!idfFrameworksItems.isEmpty()) {
+                idfFrameworksItems.stream()
+                        .sorted()
+                        .forEach(idfFrameworks::addItem);
                 idfFrameworks.setSelectedIndex(0);
             }
         } catch (IOException e) {
@@ -198,7 +199,7 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
 
     }
 
-    public static class IdfFrameworkItem {
+    public static class IdfFrameworkItem implements Comparable<IdfFrameworkItem> {
         private String displayName;
 
         private String version;
@@ -208,6 +209,14 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
         @Override
         public String toString() {
             return displayName;
+        }
+
+        @Override
+        public int compareTo(@NotNull IdfWindowsProjectSettingsStep.IdfFrameworkItem o) {
+            if(StringUtil.isEmpty(o.displayName)) {
+                return -1;
+            }
+            return o.displayName.compareTo(displayName);
         }
     }
 

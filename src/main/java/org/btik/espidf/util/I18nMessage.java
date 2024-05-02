@@ -37,6 +37,10 @@ public class I18nMessage extends DynamicBundle {
         return getMsg(key);
     }
 
+    public static String $i18nF(String key, Object... o) {
+        return getMsgF(key, o);
+    }
+
     public static String getMsgF(String key, Object... o) {
         return String.format(getMsg(key), o);
     }

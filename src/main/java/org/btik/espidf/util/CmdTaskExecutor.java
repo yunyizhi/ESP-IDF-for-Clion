@@ -11,6 +11,8 @@ import com.intellij.openapi.project.Project;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.jetbrains.annotations.NotNull;
 
+import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.util.StringUtils.safeNull;
 
 /**
@@ -46,8 +48,9 @@ public class CmdTaskExecutor {
                 ProcessListener.super.processTerminated(event);
                 if (event.getExitCode() != 0) {
                     I18nMessage.NOTIFICATION_GROUP.createNotification(failedTip,
-                            safeNull(event.getText()) + " ,idf exit code :%d".formatted(event.getExitCode())
-                            , NotificationType.ERROR).notify(project);
+                            $i18nF("idf.exec.return.error", safeNull(event.getText()), event.getExitCode())
+                                    + (continueWithError ? "<br>" + $i18n("next.task.run") : "")
+                            , NotificationType.WARNING).notify(project);
                     if (!continueWithError) {
                         return;
                     }
