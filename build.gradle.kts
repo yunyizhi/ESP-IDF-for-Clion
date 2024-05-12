@@ -9,7 +9,7 @@ val versionDefault = "0.2-beta"
 
 
 group = "org.btik"
-version = if (buildType == "231")  version231 else versionDefault
+version = if (buildType == "231") version231 else versionDefault
 
 repositories {
     mavenCentral()
@@ -50,7 +50,7 @@ intellij {
 
 if (buildType == "231") {
     sourceSets.getByName("main").java.srcDirs("src/adapterPack/source4v231")
-}else {
+} else {
     sourceSets.getByName("main").java.srcDirs("src/adapterPack/main")
 }
 tasks {
@@ -68,6 +68,25 @@ tasks {
             sinceBuild.set("232")
             untilBuild.set("241.*")
         }
+        changeNotes.set(
+            """
+            <h3>0.2</h3>
+            en:
+            <p>
+                Support for ESP-IDF installation from source on Windows.
+            </p>
+            <p>
+                Added `IDF Export Console` to address the scenario where the `espefuse.py` tool was unavailable in CLion's terminal.
+            </p>
+            中文:
+            <p>
+                支持Windows下通过源码安装的ESP-IDF。
+            </p>
+            <p>
+                添加了IDF Export Console 修复espefuse.py 工具在CLion的终端中不可用的场景。
+            </p>
+            """
+        )
     }
 
     signPlugin {
