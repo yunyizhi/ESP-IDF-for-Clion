@@ -4,8 +4,8 @@ plugins {
 }
 //val buildType = "231"
 val buildType = "default"
-val version231 = "0.2.231-beta"
-val versionDefault = "0.2-beta"
+val version231 = "0.21.231-beta"
+val versionDefault = "0.21-pre"
 
 
 group = "org.btik"
@@ -66,7 +66,7 @@ tasks {
             untilBuild.set("231.*")
         } else {
             sinceBuild.set("232")
-            untilBuild.set("241.*")
+            untilBuild.set("242.*")
         }
         changeNotes.set(
             """
