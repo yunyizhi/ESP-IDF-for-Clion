@@ -16,8 +16,10 @@ import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
+import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
+import kotlin.coroutines.EmptyCoroutineContext;
 import org.btik.espidf.command.IdfConsoleRunProfile;
-import org.btik.espidf.conf.IdfToolConfManager;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.I18nMessage;
@@ -30,10 +32,9 @@ import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
-import static org.btik.espidf.util.SysConf.$sys;
+
 
 /**
  * @author lustre
@@ -90,7 +91,19 @@ public abstract class SubGenerator<T> {
                     .withName(IDF_CMAKE_PROFILE_NAME)
                     .withGenerationDir(new File(IDF_CMAKE_BUILD_DIR))));
         }
-        instance.linkCMakeProject(VfsUtilCore.virtualToIoFile(baseDir));
+        File cmakeProject = VfsUtilCore.virtualToIoFile(baseDir);
+        instance.linkCMakeProject(cmakeProject, new Continuation<>() {
+            @NotNull
+            @Override
+            public CoroutineContext getContext() {
+                return EmptyCoroutineContext.INSTANCE;
+            }
+
+            @Override
+            public void resumeWith(@NotNull Object o) {
+
+            }
+        });
     }
 
     protected void moveTmpDir(Path idfGenerateTmpDir, Runnable nextTask) {
