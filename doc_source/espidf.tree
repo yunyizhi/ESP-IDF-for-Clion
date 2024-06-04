@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE instance-profile
+        SYSTEM "https://resources.jetbrains.com/writerside/1.0/product-profile.dtd">
+
+<instance-profile id="espidf"
+                 name="ESP-IDF for Clion 文档"
+                 start-page="home.md">
+
+    <toc-element topic="home.md"/>
+    <toc-element topic="newProject.md"/>
+    <toc-element topic="toolTree.md"/>
+    <toc-element topic="openIdfProject.md"/>
+</instance-profile>
