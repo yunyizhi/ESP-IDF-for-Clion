@@ -125,7 +125,7 @@ public abstract class SubGenerator<T> {
                             e.getMessage(), NotificationType.ERROR).notify(project);
                     LOG.error(e);
                 }
-                nextTask.run();
+                ApplicationManager.getApplication().invokeLater(nextTask);
                 I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.tmp.folder.title"),
                         $i18n("idf.tmp.folder.may.not.deleted"), NotificationType.INFORMATION).notify(project);
             });

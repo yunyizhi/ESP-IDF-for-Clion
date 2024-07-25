@@ -44,7 +44,11 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
 
     @Override
     public Map<String, String> getEnvironments() {
-        if (environments == null) {
+        CPPToolchains.Toolchain toolchain = getCMakeToolchain();
+        if (toolchain == null) {
+            return Map.of();
+        }
+        if (!Objects.equals(environmentFile, toolchain.getEnvironment())) {
             generateEnvironment();
         }
         if (environments == null) {
@@ -55,7 +59,11 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
 
     @Override
     public String getEnvironmentFile() {
-        if (environmentFile == null) {
+        CPPToolchains.Toolchain toolchain = getCMakeToolchain();
+        if (toolchain == null) {
+            return environmentFile;
+        }
+        if (!Objects.equals(environmentFile, toolchain.getEnvironment())) {
             generateEnvironment();
         }
         if (environmentFile == null) {
@@ -64,15 +72,19 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         return environmentFile;
     }
 
-    private void generateEnvironment() {
+    private CPPToolchains.Toolchain getCMakeToolchain() {
         CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
         List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
         if (activeProfiles.isEmpty()) {
-            return;
+            return null;
         }
         CMakeSettings.Profile currentProfile = activeProfiles.get(0);
-        CPPToolchains.Toolchain toolchain = CPPToolchains.getInstance()
+        return CPPToolchains.getInstance()
                 .getToolchainByNameOrDefault(currentProfile.getToolchainName());
+    }
+
+    private void generateEnvironment() {
+        CPPToolchains.Toolchain toolchain = getCMakeToolchain();
         if (toolchain == null) {
             return;
         }
