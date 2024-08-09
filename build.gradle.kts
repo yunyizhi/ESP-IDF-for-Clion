@@ -13,6 +13,9 @@ version = if (buildType == "231") version231 else versionDefault
 
 repositories {
     mavenCentral()
+    maven {
+        url = uri("https://maven.aliyun.com/repository/public/")
+    }
 }
 
 // Configure Gradle IntelliJ Plugin
