@@ -10,3 +10,7 @@
 
 
 现已上架插件市场[ESP-IDF](https://plugins.jetbrains.com/plugin/23886-esp-idf/)
+
+
+## 文档
+[ESP-IDF-for-Clion](https://yunyizhi.github.io/ESP-IDF-for-Clion/home.html)
