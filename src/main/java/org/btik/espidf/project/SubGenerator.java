@@ -14,11 +14,13 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.platform.ide.progress.TasksKt;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
+import kotlinx.coroutines.CoroutineScope;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.util.CmdTaskExecutor;
@@ -125,7 +127,7 @@ public abstract class SubGenerator<T> {
                             e.getMessage(), NotificationType.ERROR).notify(project);
                     LOG.error(e);
                 }
-                ApplicationManager.getApplication().invokeLater(nextTask);
+                ApplicationManager.getApplication().executeOnPooledThread(nextTask);
                 I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.tmp.folder.title"),
                         $i18n("idf.tmp.folder.may.not.deleted"), NotificationType.INFORMATION).notify(project);
             });

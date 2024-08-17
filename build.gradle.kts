@@ -35,7 +35,7 @@ intellij {
             )
         )
     } else {
-        version.set("LATEST-EAP-SNAPSHOT")
+        version.set("2024.2")
         plugins.set(
             listOf(
                 "com.intellij.cidr.base",
