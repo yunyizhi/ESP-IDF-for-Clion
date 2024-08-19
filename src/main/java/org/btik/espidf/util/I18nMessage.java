@@ -12,14 +12,14 @@ import org.jetbrains.annotations.NotNull;
  */
 public class I18nMessage extends DynamicBundle {
     private static final I18nMessage INSTANCE = new I18nMessage("messages.org_btik_espidf");
-    public static NotificationGroup NOTIFICATION_GROUP =
-            NotificationGroupManager.getInstance().getNotificationGroup("org.btiik.espidf");
+    public static NotificationGroup NOTIFICATION_GROUP;
 
     public I18nMessage(@NotNull String pathToBundle) {
         super(pathToBundle);
     }
 
     public static String getMsg(String key) {
+        checkInitNotificationGroup();
         if (key == null || key.isEmpty()) {
             return null;
         }
@@ -30,6 +30,12 @@ public class I18nMessage extends DynamicBundle {
             NOTIFICATION_GROUP.createNotification(getMsg("idf.get.msg.failed"),
                     e.getMessage(), NotificationType.ERROR).notify(null);
             return key;
+        }
+    }
+
+    private static void checkInitNotificationGroup() {
+        if (NOTIFICATION_GROUP == null) {
+            NOTIFICATION_GROUP = NotificationGroupManager.getInstance().getNotificationGroup("org.btiik.espidf");
         }
     }
 

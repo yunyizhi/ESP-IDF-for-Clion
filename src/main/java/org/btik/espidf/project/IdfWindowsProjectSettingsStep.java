@@ -32,6 +32,7 @@ import java.util.ArrayList;
 
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.SysConf.$sys;
 
 /**
  * @author lustre
@@ -55,7 +56,7 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
     @Override
     public JPanel createAdvancedSettings() {
         JBPanel<?> panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(4, 3);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(5, 3);
         JPanel wrapper = new JPanel(gridLayoutManager);
         FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
         final TextFieldWithBrowseButton idfToolPathBrowserButton = new TextFieldWithBrowseButton();
@@ -120,7 +121,16 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
                 createConstraints(rowIndex, 1));
         panel.add(wrapper, "West");
         setLastValue(idfToolPathBrowserButton);
-
+        rowIndex++;
+        JLabel idfTargetLabel = new JLabel($i18n("idf.env.type.target"));
+        wrapper.add(idfTargetLabel, createConstraints(rowIndex, 0));
+        initIdfTargets();
+        wrapper.add(idfTargets, createConstraints(rowIndex, 1));
+        rowIndex++;
+        GridConstraints targetTipCell = createConstraints(rowIndex, 0);
+        targetTipCell.setColSpan(2);
+        JLabel idfTargetTipLabel = new JLabel($i18n("idf.env.type.target.tip"));
+        wrapper.add(idfTargetTipLabel, targetTipCell);
         return panel;
     }
 
@@ -213,7 +223,7 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
 
         @Override
         public int compareTo(@NotNull IdfWindowsProjectSettingsStep.IdfFrameworkItem o) {
-            if(StringUtil.isEmpty(o.displayName)) {
+            if (StringUtil.isEmpty(o.displayName)) {
                 return -1;
             }
             return o.displayName.compareTo(displayName);

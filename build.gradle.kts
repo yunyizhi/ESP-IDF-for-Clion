@@ -4,8 +4,8 @@ plugins {
 }
 //val buildType = "231"
 val buildType = "default"
-val version231 = "0.21.231-beta"
-val versionDefault = "0.21.1"
+val version231 = "0.3.231-beta"
+val versionDefault = "0.3"
 
 
 group = "org.btik"

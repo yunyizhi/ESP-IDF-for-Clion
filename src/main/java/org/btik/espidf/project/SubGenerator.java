@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,9 +50,13 @@ public abstract class SubGenerator<T> {
 
     protected static final String IDF_CMAKE_BUILD_DIR = "build";
 
+    protected static final String IDF_TARGET = "IDF_TARGET";
+
     protected VirtualFile baseDir;
 
     protected Project project;
+
+    protected String idfTarget = "esp32";
 
     public abstract ValidationResult validate();
 
@@ -76,10 +81,29 @@ public abstract class SubGenerator<T> {
                 EspIdfIcon.IDF_16_16, generate);
         Runnable nextTaskChain =
                 () -> moveTmpDir(idfGenerateTmpDir,
-                        () -> loadCMakeProject(toolChainName));
+                        () -> setTargetTask(envs,
+                                () -> loadCMakeProject(toolChainName)));
         CmdTaskExecutor.execute(project, createProjectProfile,
                 nextTaskChain, $i18n("idf.cmd.init.project.failed"), true
         );
+    }
+
+    protected void setTargetTask(Map<String, String> envs, Runnable nextTask) {
+        GeneralCommandLine generate = new GeneralCommandLine();
+        generate.setExePath(OsUtil.getIdfExe());
+        generate.setWorkDirectory(baseDir.getPath());
+        generate.withEnvironment(envs);
+        generate.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
+        generate.addParameters("set-target", idfTarget);
+        IdfConsoleRunProfile setTargetProfile = new IdfConsoleRunProfile($i18n("idf.set.project.target"),
+                EspIdfIcon.IDF_16_16, generate);
+        try {
+            CmdTaskExecutor.execute(project, setTargetProfile,
+                    nextTask, $i18n("idf.cmd.init.project.failed"), true);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 
 
@@ -127,11 +151,17 @@ public abstract class SubGenerator<T> {
                             e.getMessage(), NotificationType.ERROR).notify(project);
                     LOG.error(e);
                 }
-                ApplicationManager.getApplication().executeOnPooledThread(nextTask);
+                ApplicationManager.getApplication().invokeLater(nextTask);
                 I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.tmp.folder.title"),
                         $i18n("idf.tmp.folder.may.not.deleted"), NotificationType.INFORMATION).notify(project);
             });
         });
     }
 
+    public void setIdfTarget(String idfTarget) {
+        if (idfTarget == null || idfTarget.isEmpty() || idfTarget.equals("null")) {
+            return;
+        }
+        this.idfTarget = idfTarget;
+    }
 }
