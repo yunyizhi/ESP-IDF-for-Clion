@@ -3,8 +3,6 @@ package org.btik.espidf.project;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
-import com.intellij.execution.process.ProcessEvent;
-import com.intellij.execution.process.ProcessListener;
 import com.intellij.facet.ui.ValidationResult;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
@@ -14,13 +12,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VfsUtilCore;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.platform.ide.progress.TasksKt;
+import com.jetbrains.cidr.CidrProjectApplicationVersion;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
-import kotlinx.coroutines.CoroutineScope;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.util.CmdTaskExecutor;
@@ -49,8 +46,6 @@ public abstract class SubGenerator<T> {
     protected static final String IDF_CMAKE_PROFILE_NAME = "idf";
 
     protected static final String IDF_CMAKE_BUILD_DIR = "build";
-
-    protected static final String IDF_TARGET = "IDF_TARGET";
 
     protected VirtualFile baseDir;
 
@@ -117,6 +112,7 @@ public abstract class SubGenerator<T> {
                     .withName(IDF_CMAKE_PROFILE_NAME)
                     .withGenerationDir(new File(IDF_CMAKE_BUILD_DIR))));
         }
+        CidrProjectApplicationVersion.getInstance(project).initializeApplicationInfo();
         File cmakeProject = VfsUtilCore.virtualToIoFile(baseDir);
         instance.linkCMakeProject(cmakeProject, new Continuation<>() {
             @NotNull
@@ -152,8 +148,10 @@ public abstract class SubGenerator<T> {
                     LOG.error(e);
                 }
                 ApplicationManager.getApplication().invokeLater(nextTask);
-                I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.tmp.folder.title"),
-                        $i18n("idf.tmp.folder.may.not.deleted"), NotificationType.INFORMATION).notify(project);
+                if (tmpDir.exists()) {
+                    I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.tmp.folder.title"),
+                            $i18n("idf.tmp.folder.may.not.deleted"), NotificationType.INFORMATION).notify(project);
+                }
             });
         });
     }

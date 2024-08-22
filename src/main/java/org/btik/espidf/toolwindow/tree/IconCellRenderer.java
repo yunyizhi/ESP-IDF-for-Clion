@@ -22,11 +22,15 @@ public class IconCellRenderer extends DefaultTreeCellRenderer {
     private static final HashMap<Class<? extends EspIdfTaskTreeNode>, Icon> metaIconMap = new HashMap<>();
 
     static {
-        ijIconMap.put("ij:AllIcons.FileTypes.Config" , AllIcons.FileTypes.Config);
+        ijIconMap.put("ij:AllIcons.FileTypes.Config", AllIcons.FileTypes.Config);
+        ijIconMap.put("ij:AllIcons.General.Delete", AllIcons.General.Delete);
+        ijIconMap.put("ij:AllIcons.Actions.Compile", AllIcons.Actions.Compile);
+        ijIconMap.put("ij:AllIcons.General.Web", AllIcons.General.Web);
+        ijIconMap.put("ij:AllIcons.Actions.Refresh", AllIcons.Actions.Refresh);
         metaIconMap.put(EspIdfTaskTreeNode.class, AllIcons.Nodes.ConfigFolder);
         metaIconMap.put(EspIdfTaskFolderNode.class, AllIcons.Nodes.ConfigFolder);
         metaIconMap.put(EspIdfTaskCommandNode.class, icons.ExternalSystemIcons.Task);
-        metaIconMap.put(EspIdfTaskTerminalCommandNode.class, AllIcons.Nodes.Console);
+        metaIconMap.put(EspIdfTaskConsoleCommandNode.class, AllIcons.Nodes.Console);
         metaIconMap.put(EspIdfTaskActionNode.class, AllIcons.Nodes.Console);
         metaIconMap.put(RawCommandNode.class, icons.ExternalSystemIcons.Task);
     }

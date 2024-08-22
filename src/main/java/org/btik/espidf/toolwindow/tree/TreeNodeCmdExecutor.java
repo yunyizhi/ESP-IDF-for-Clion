@@ -17,7 +17,7 @@ import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.toolwindow.tree.model.EspIdfTaskActionNode;
 import org.btik.espidf.toolwindow.tree.model.EspIdfTaskCommandNode;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskTerminalCommandNode;
+import org.btik.espidf.toolwindow.tree.model.EspIdfTaskConsoleCommandNode;
 import org.btik.espidf.toolwindow.tree.model.RawCommandNode;
 import org.btik.espidf.util.CmdTaskExecutor;
 
@@ -58,7 +58,7 @@ public class TreeNodeCmdExecutor {
         }
     }
 
-    public static void execute(EspIdfTaskTerminalCommandNode commandNode, Project project) {
+    public static void execute(EspIdfTaskConsoleCommandNode commandNode, Project project) {
         String basePath = project.getBasePath();
         if (basePath == null) {
             return;
@@ -66,7 +66,7 @@ public class TreeNodeCmdExecutor {
         RunnerAndConfigurationSettings settings = RunManager.getInstance(project)
                 .createConfiguration(commandNode.getDisplayName(), ShConfigurationType.class);
         ShRunConfiguration runConfiguration = (ShRunConfiguration) settings.getConfiguration();
-        runConfiguration.setExecuteInTerminal(true);
+        runConfiguration.setExecuteInTerminal(commandNode.isInTerminal());
         runConfiguration.setExecuteScriptFile(false);
         runConfiguration.setInterpreterPath(getCmdEnv());
         IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);

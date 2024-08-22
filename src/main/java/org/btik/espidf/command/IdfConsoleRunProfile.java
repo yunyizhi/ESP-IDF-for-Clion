@@ -23,6 +23,8 @@ public class IdfConsoleRunProfile implements RunProfile {
 
     GeneralCommandLine commandLine;
 
+    private ProcessHandler processHandler;
+
     public IdfConsoleRunProfile(String name, Icon icon, GeneralCommandLine commandLine) {
         this.name = name;
         this.icon = icon;
@@ -42,9 +44,17 @@ public class IdfConsoleRunProfile implements RunProfile {
         return new CommandLineState(environment) {
             @Override
             protected @NotNull ProcessHandler startProcess() throws ExecutionException {
-                return new KillableProcessHandler(commandLine);
+                processHandler = new KillableProcessHandler(commandLine);
+                return processHandler;
             }
         };
+    }
+
+    public boolean isRunning() {
+        if (processHandler == null) {
+            return false;
+        }
+        return !processHandler.isProcessTerminated();
     }
 
     @Override

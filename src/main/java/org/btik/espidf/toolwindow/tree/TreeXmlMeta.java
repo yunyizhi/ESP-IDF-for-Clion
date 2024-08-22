@@ -21,7 +21,7 @@ public interface TreeXmlMeta {
 
     String COMMAND_TAG = "command";
 
-    String TERMINAL_COMMAND = "terminal-command";
+    String CONSOLE_COMMAND = "console-command";
 
     String RAW_COMMAND = "raw-command";
 
@@ -30,6 +30,8 @@ public interface TreeXmlMeta {
     String WIN_VALUE = "win-value";
 
     String UNIX_VALUE = "unix-value";
+
+    String USE_TERMINAL = "use-terminal";
 
     String RES_BUNDLE_EXP_START = "${";
 

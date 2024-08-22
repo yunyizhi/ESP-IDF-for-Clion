@@ -7,7 +7,7 @@ import org.btik.espidf.toolwindow.tree.IconCellRenderer;
 import org.btik.espidf.toolwindow.tree.TreeNodeCmdExecutor;
 import org.btik.espidf.toolwindow.tree.model.EspIdfTaskActionNode;
 import org.btik.espidf.toolwindow.tree.model.EspIdfTaskCommandNode;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskTerminalCommandNode;
+import org.btik.espidf.toolwindow.tree.model.EspIdfTaskConsoleCommandNode;
 import org.btik.espidf.toolwindow.tree.model.RawCommandNode;
 
 import javax.swing.*;
@@ -48,7 +48,7 @@ public class EspIdfToolWindowPanel extends JPanel {
                     Object userObject = lastPathComponent.getUserObject();
                     if (userObject instanceof EspIdfTaskCommandNode commandNode) {
                         TreeNodeCmdExecutor.execute(commandNode, project);
-                    } else if (userObject instanceof EspIdfTaskTerminalCommandNode taskTerminalCommandNode) {
+                    } else if (userObject instanceof EspIdfTaskConsoleCommandNode taskTerminalCommandNode) {
                         TreeNodeCmdExecutor.execute(taskTerminalCommandNode, project);
                     } else if (userObject instanceof RawCommandNode rawCommandNode) {
                         TreeNodeCmdExecutor.execute(rawCommandNode, project);

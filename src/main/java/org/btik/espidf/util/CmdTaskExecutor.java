@@ -45,7 +45,6 @@ public class CmdTaskExecutor {
         execute(project, idfConsoleRunProfile, new ProcessListener() {
             @Override
             public void processTerminated(@NotNull ProcessEvent event) {
-                ProcessListener.super.processTerminated(event);
                 if (event.getExitCode() != 0) {
                     I18nMessage.NOTIFICATION_GROUP.createNotification(failedTip,
                             $i18nF("idf.exec.return.error", safeNull(event.getText()), event.getExitCode())
@@ -54,6 +53,9 @@ public class CmdTaskExecutor {
                     if (!continueWithError) {
                         return;
                     }
+                }
+                while (idfConsoleRunProfile.isRunning()) {
+                    Thread.yield();
                 }
                 terminatedCallBack.run();
             }

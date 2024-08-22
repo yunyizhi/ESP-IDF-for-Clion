@@ -28,7 +28,7 @@ public class EspIdfTaskTreeFactory {
     static {
         factories.put(FOLDER_TAG, EspIdfTaskTreeFactory::newFolder);
         factories.put(COMMAND_TAG, EspIdfTaskTreeFactory::newCmd);
-        factories.put(TERMINAL_COMMAND, EspIdfTaskTreeFactory::newTerminalCmd);
+        factories.put(CONSOLE_COMMAND, EspIdfTaskTreeFactory::newConsoleCmd);
         factories.put(RAW_COMMAND, EspIdfTaskTreeFactory::newRawCmd);
         factories.put(ACTION, EspIdfTaskTreeFactory::newAction);
     }
@@ -100,16 +100,22 @@ public class EspIdfTaskTreeFactory {
         return buildNode(element, espIdfTaskActionNode);
     }
 
-    private static XmlNode newTerminalCmd(Element element) {
+    private static XmlNode newConsoleCmd(Element element) {
         String name = element.getAttribute(NAME);
         String command = element.getAttribute(VALUE);
-        EspIdfTaskTerminalCommandNode taskTreeNode = new EspIdfTaskTerminalCommandNode(name, command);
+        String useTerminalStr = element.getAttribute(USE_TERMINAL);
+        boolean useTerminal = useTerminalStr.isEmpty() || Boolean.parseBoolean(useTerminalStr);
+        EspIdfTaskConsoleCommandNode taskTreeNode = new EspIdfTaskConsoleCommandNode(name, command, useTerminal);
         return buildNode(element, taskTreeNode);
     }
 
     private static XmlNode newRawCmd(Element element) {
         String name = element.getAttribute(NAME);
         String command = element.getAttribute(IS_WINDOWS ? WIN_VALUE : UNIX_VALUE);
+        String commandDefault = element.getAttribute(VALUE);
+        if (command.trim().isEmpty()) {
+            command = commandDefault;
+        }
         return buildNode(element, new RawCommandNode(name, command));
     }
 

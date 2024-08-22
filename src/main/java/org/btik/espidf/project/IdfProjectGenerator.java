@@ -99,7 +99,6 @@ public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements 
 
     @Override
     public void generateProject(@NotNull Project project, @NotNull VirtualFile baseDir, @NotNull T settings, @NotNull Module module) {
-        super.generateProject(project, baseDir, settings, module);
         if(IS_WINDOWS) {
             windowsGenerator.generateProject(project, baseDir, settings, module);
         }else{
