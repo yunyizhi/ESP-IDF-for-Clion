@@ -21,10 +21,10 @@ import java.awt.event.MouseEvent;
  * @author lustre
  * @since 2024/2/18 13:05
  */
-public class EspIdfToolWindowPanel extends JPanel {
+public class EspIdfToolWindowTaskPanel extends JPanel {
     private final Project project;
 
-    public EspIdfToolWindowPanel(Project project) {
+    public EspIdfToolWindowTaskPanel(Project project) {
         super(new BorderLayout());
         this.project = project;
         DefaultMutableTreeNode root = EspIdfTaskTreeFactory.load();
@@ -41,7 +41,6 @@ public class EspIdfToolWindowPanel extends JPanel {
                 if (path == null) {
                     return;
                 }
-                // 设置复选框选中
                 DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode) path.getLastPathComponent();
                 // 执行命令节点
                 if (e.getClickCount() == 2) {

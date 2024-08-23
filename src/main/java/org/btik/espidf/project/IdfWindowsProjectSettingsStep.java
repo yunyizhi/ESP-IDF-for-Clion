@@ -23,6 +23,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 
+import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ItemEvent;
 import java.io.IOException;
@@ -46,7 +47,8 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
     private ComboBoxWithRefresh<IdfFrameworkItem> idfFrameworkItemComboBox;
     private JLabel idfFrameworkLabel;
 
-    protected ComboBox<IdfEnvType> idfPathType;
+    private ComboBox<IdfEnvType> idfPathType;
+    private TextFieldWithBrowseButton idfToolPathBrowserButton;
     private String idfToolPath;
 
     public IdfWindowsProjectSettingsStep(DirectoryProjectGenerator<T> projectGenerator, AbstractNewProjectStep.AbstractCallback<T> callback) {
@@ -58,8 +60,63 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
         JBPanel<?> panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
         GridLayoutManager gridLayoutManager = new GridLayoutManager(5, 3);
         JPanel wrapper = new JPanel(gridLayoutManager);
+
+        int rowIndex = 0;
+
+        initIdfEnvType();
+        JLabel installTypeLabel = new JLabel($i18n("idf.env.type.title"));
+        wrapper.add(installTypeLabel, createConstraints(rowIndex, 0));
+        GridConstraints firstRowConstraints = createConstraints(rowIndex, 1);
+        firstRowConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
+        firstRowConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
+        wrapper.add(idfPathType, firstRowConstraints);
+        rowIndex++;
+
+        JLabel idfToolPrefixLabel = new JLabel($i18n("idf.path.title"));
+        wrapper.add(idfToolPrefixLabel, createConstraints(rowIndex, 0));
+        initIdfPathBrowser();
+        wrapper.add(idfToolPathBrowserButton, createConstraints(rowIndex, 1));
+        rowIndex++;
+
+        initIdfFrameworkComboBox();
+        wrapper.add(idfFrameworkLabel, createConstraints(rowIndex, 0));
+        idfFrameworkItemComboBox = new ComboBoxWithRefresh<>(idfFrameworks, this::refreshIdfIdSet);
+        wrapper.add(idfFrameworkItemComboBox, createConstraints(rowIndex, 1));
+        rowIndex++;
+
+        JLabel idfTargetLabel = new JLabel($i18n("idf.env.type.target"));
+        wrapper.add(idfTargetLabel, createConstraints(rowIndex, 0));
+        initIdfTargets();
+        wrapper.add(idfTargets, createConstraints(rowIndex, 1));
+        rowIndex++;
+
+        GridConstraints targetTipCell = createConstraints(rowIndex, 0);
+        targetTipCell.setColSpan(2);
+        JLabel idfTargetTipLabel = new JLabel($i18n("idf.env.type.target.tip"));
+        wrapper.add(idfTargetTipLabel, targetTipCell);
+
+        setLastValue(idfToolPathBrowserButton);
+        panel.add(wrapper, BorderLayout.WEST);
+        return panel;
+    }
+
+    private void initIdfFrameworkComboBox() {
+        idfFrameworks = new ComboBox<>();
+        idfFrameworks.addItemListener(e -> {
+            if (e.getStateChange() != ItemEvent.SELECTED) {
+                return;
+            }
+            IdfFrameworkItem item = (IdfFrameworkItem) e.getItem();
+            idfProjectGenerator.setIdfId(item.idfId);
+            checkValid();
+        });
+
+        idfFrameworkLabel = new JLabel($i18n("idf.framework"));
+    }
+
+    private void initIdfPathBrowser() {
         FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
-        final TextFieldWithBrowseButton idfToolPathBrowserButton = new TextFieldWithBrowseButton();
+        idfToolPathBrowserButton = new TextFieldWithBrowseButton();
         idfToolPathBrowserButton.getTextField().getDocument().addDocumentListener(new DocumentListener() {
             private void handleChange() {
                 idfToolPath = idfToolPathBrowserButton.getText();
@@ -88,50 +145,13 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
                 refreshIdfIdSet();
             }
         });
-        int rowIndex = 0;
-        JLabel installTypeLabel = new JLabel($i18n("idf.env.type.title"));
+    }
+
+    private void initIdfEnvType() {
         idfPathType = new ComboBox<>();
         idfPathType.addItem(IdfEnvType.IDF_TOOL);
         idfPathType.addItem(IdfEnvType.IDF_FRAMEWORK);
         idfPathType.addItemListener(this::envTypeChange);
-        wrapper.add(installTypeLabel, createConstraints(rowIndex, 0));
-        wrapper.add(idfPathType, createConstraints(rowIndex, 1));
-        rowIndex++;
-        JLabel idfToolPrefixLabel = new JLabel($i18n("idf.path.title"));
-        wrapper.add(idfToolPrefixLabel, createConstraints(rowIndex, 0));
-        GridConstraints firstRowConstraints = createConstraints(rowIndex, 1);
-        firstRowConstraints.setFill(1);
-        firstRowConstraints.setHSizePolicy(4);
-        wrapper.add(idfToolPathBrowserButton, firstRowConstraints);
-        rowIndex++;
-        idfFrameworks = new ComboBox<>();
-        idfFrameworks.addItemListener(e -> {
-            if (e.getStateChange() != ItemEvent.SELECTED) {
-                return;
-            }
-            IdfFrameworkItem item = (IdfFrameworkItem) e.getItem();
-            idfProjectGenerator.setIdfId(item.idfId);
-            checkValid();
-        });
-
-        idfFrameworkLabel = new JLabel($i18n("idf.framework"));
-        wrapper.add(idfFrameworkLabel, createConstraints(rowIndex, 0));
-        idfFrameworkItemComboBox = new ComboBoxWithRefresh<>(idfFrameworks, this::refreshIdfIdSet);
-        wrapper.add(idfFrameworkItemComboBox,
-                createConstraints(rowIndex, 1));
-        panel.add(wrapper, "West");
-        setLastValue(idfToolPathBrowserButton);
-        rowIndex++;
-        JLabel idfTargetLabel = new JLabel($i18n("idf.env.type.target"));
-        wrapper.add(idfTargetLabel, createConstraints(rowIndex, 0));
-        initIdfTargets();
-        wrapper.add(idfTargets, createConstraints(rowIndex, 1));
-        rowIndex++;
-        GridConstraints targetTipCell = createConstraints(rowIndex, 0);
-        targetTipCell.setColSpan(2);
-        JLabel idfTargetTipLabel = new JLabel($i18n("idf.env.type.target.tip"));
-        wrapper.add(idfTargetTipLabel, targetTipCell);
-        return panel;
     }
 
     private void setLastValue(TextFieldWithBrowseButton idfToolPathBrowserButton) {

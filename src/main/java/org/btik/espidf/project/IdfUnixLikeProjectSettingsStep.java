@@ -16,6 +16,7 @@ import org.btik.espidf.service.IdfToolConfService;
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
+import java.awt.*;
 import java.awt.event.ActionEvent;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
@@ -72,10 +73,10 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
         JLabel idfFrameworkPathLabel = new JLabel($i18n("idf.path.title"));
         wrapper.add(idfFrameworkPathLabel, createConstraints(0, 0));
         GridConstraints firstRowConstraints = createConstraints(0, 1);
-        firstRowConstraints.setFill(1);
-        firstRowConstraints.setHSizePolicy(4);
+        firstRowConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
+        firstRowConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         wrapper.add(idfFrameworkPathBrowserButton, firstRowConstraints);
-        panel.add(wrapper, "West");
+        panel.add(wrapper, BorderLayout.WEST);
         IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
         IdfToolConf idfToolConf = service.getLastActivedIdfToolConf();
         if (idfToolConf != null) {

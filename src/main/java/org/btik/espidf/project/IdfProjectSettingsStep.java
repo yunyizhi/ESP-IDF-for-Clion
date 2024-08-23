@@ -33,7 +33,7 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
         GridConstraints constraints = new GridConstraints();
         constraints.setRow(row);
         constraints.setColumn(column);
-        constraints.setAnchor(8);
+        constraints.setAnchor(GridConstraints.ANCHOR_WEST);
         return constraints;
     }
 
