@@ -43,5 +43,7 @@ Enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif
                             serviceImplementation="org.btik.espidf.conf.IdfToolConfManager"/>
         <projectService serviceImplementation="org.btik.espidf.environment.IdfEnvironmentServiceImpl"
                         serviceInterface="org.btik.espidf.service.IdfEnvironmentService"/>
+        <projectService serviceImplementation="org.btik.espidf.state.IdfProjectConfigComponent"
+                        serviceInterface="org.btik.espidf.service.IdfProjectConfigService"/>
     </extensions>
 </idea-plugin>

@@ -13,6 +13,7 @@ import com.intellij.platform.DirectoryProjectGenerator;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.intellij.util.ui.JBUI;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.project.component.ComboBoxWithRefresh;
 import org.btik.espidf.service.IdfToolConfService;
@@ -33,7 +34,6 @@ import java.util.ArrayList;
 
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
-import static org.btik.espidf.util.SysConf.$sys;
 
 /**
  * @author lustre
@@ -58,24 +58,23 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
     @Override
     public JPanel createAdvancedSettings() {
         JBPanel<?> panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(5, 3);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(5, 3, JBUI.emptyInsets(), 2 ,2);
         JPanel wrapper = new JPanel(gridLayoutManager);
-
         int rowIndex = 0;
 
         initIdfEnvType();
         JLabel installTypeLabel = new JLabel($i18n("idf.env.type.title"));
         wrapper.add(installTypeLabel, createConstraints(rowIndex, 0));
-        GridConstraints firstRowConstraints = createConstraints(rowIndex, 1);
-        firstRowConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
-        firstRowConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        wrapper.add(idfPathType, firstRowConstraints);
+        wrapper.add(idfPathType, createConstraints(rowIndex, 1));
         rowIndex++;
 
         JLabel idfToolPrefixLabel = new JLabel($i18n("idf.path.title"));
         wrapper.add(idfToolPrefixLabel, createConstraints(rowIndex, 0));
         initIdfPathBrowser();
-        wrapper.add(idfToolPathBrowserButton, createConstraints(rowIndex, 1));
+        GridConstraints pathCell = createConstraints(rowIndex, 1);
+        pathCell.setFill(GridConstraints.FILL_HORIZONTAL);
+        pathCell.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
+        wrapper.add(idfToolPathBrowserButton, pathCell);
         rowIndex++;
 
         initIdfFrameworkComboBox();
@@ -94,7 +93,7 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
         targetTipCell.setColSpan(2);
         JLabel idfTargetTipLabel = new JLabel($i18n("idf.env.type.target.tip"));
         wrapper.add(idfTargetTipLabel, targetTipCell);
-
+        gridLayoutManager.setRowStretch(rowIndex, 1);
         setLastValue(idfToolPathBrowserButton);
         panel.add(wrapper, BorderLayout.WEST);
         return panel;
