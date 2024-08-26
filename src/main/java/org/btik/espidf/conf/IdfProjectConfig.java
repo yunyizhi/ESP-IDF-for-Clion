@@ -51,7 +51,7 @@ public class IdfProjectConfig {
     }
 
     public boolean isEmpty() {
-        if (getPort() == null || getMonitorBaud() == null || getUploadBaud() == null) {
+        if (getPort() == null && getMonitorBaud() == null && getUploadBaud() == null) {
             return true;
         }
         return getPort().isEmpty() && getMonitorBaud().isEmpty() && getUploadBaud().isEmpty();

@@ -9,6 +9,7 @@ import org.btik.espidf.toolwindow.tree.model.EspIdfTaskActionNode;
 import org.btik.espidf.toolwindow.tree.model.EspIdfTaskCommandNode;
 import org.btik.espidf.toolwindow.tree.model.EspIdfTaskConsoleCommandNode;
 import org.btik.espidf.toolwindow.tree.model.RawCommandNode;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -24,7 +25,7 @@ import java.awt.event.MouseEvent;
 public class EspIdfToolWindowTaskPanel extends JPanel {
     private final Project project;
 
-    public EspIdfToolWindowTaskPanel(Project project) {
+    public EspIdfToolWindowTaskPanel(@NotNull Project project) {
         super(new BorderLayout());
         this.project = project;
         DefaultMutableTreeNode root = EspIdfTaskTreeFactory.load();

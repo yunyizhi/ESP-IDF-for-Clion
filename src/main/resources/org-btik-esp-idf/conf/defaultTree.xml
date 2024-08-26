@@ -4,7 +4,7 @@
         <folder name="General">
             <command name="Build" value="build" icon="ij:AllIcons.Actions.Compile" toolTip="${idf.tip.build}"/>
             <raw-command name="CMake Build" value="cmake --build build" icon="ij:AllIcons.Actions.Compile" toolTip="${idf.tip.cmake.build}"/>
-            <console-command name="Full Clean And Reconfigure" value="fullclean reconfigure" toolTip="${idf.tip.reconfigure}" icon="ij:AllIcons.Actions.Refresh" use-terminal="false"/>
+            <console-command name="Full Clean and Reconfigure" value="fullclean reconfigure" toolTip="${idf.tip.reconfigure}" icon="ij:AllIcons.Actions.Refresh" use-terminal="false"/>
             <command name="Flash" value="flash"/>
             <console-command name="Monitor" value="monitor" />
             <console-command name="Flash and Monitor" value="flash monitor"/>

@@ -13,6 +13,11 @@ public interface IdfEnvironmentService {
 
     String IDF_TOOLCHAIN_NAME_PREFIX = "EspIdfAutoGen";
 
+    String ESP_PORT = "ESPPORT";
+    String IDF_MONITOR_BAUD = "IDF_MONITOR_BAUD";
+    String MONITOR_BAUD = "MONITORBAUD";
+    String ESP_BAUD = "ESPBAUD";
+
     Map<String, String> getEnvironments();
 
     String getEnvironmentFile();

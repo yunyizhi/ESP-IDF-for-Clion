@@ -22,16 +22,11 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.Map;
 
+import static org.btik.espidf.service.IdfEnvironmentService.*;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
 
 public class EspIdfToolWindowSettingPanel extends JPanel {
-
-    private static final String ESP_PORT = "ESPPORT";
-    private static final String IDF_MONITOR_BAUD = "IDF_MONITOR_BAUD";
-    private static final String MONITOR_BAUD = "MONITORBAUD";
-    private static final String ESP_BAUD = "ESPBAUD";
-    private static final String AUTO = "Auto";
     private final Project project;
 
     private final JBTextField portField = new JBTextField();
