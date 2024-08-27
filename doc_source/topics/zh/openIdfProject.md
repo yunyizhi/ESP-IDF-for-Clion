@@ -16,4 +16,4 @@
 ![build_dir.png](build_dir.png)
 
 ## 设置target
-在`IDF Export Console` 中使用idf.pt set-target 设置芯片类型。 
+在`IDF Export Console` 中使用idf.py set-target 设置芯片类型。 
