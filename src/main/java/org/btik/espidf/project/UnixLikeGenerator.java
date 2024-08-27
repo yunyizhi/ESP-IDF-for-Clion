@@ -56,7 +56,7 @@ public class UnixLikeGenerator<T> extends SubGenerator<T> {
                 String toolChainName = idfToolConf.getToolchain().getName();
                 generateProject(readEnvironment, toolChainName);
             } catch (java.util.concurrent.ExecutionException | InterruptedException | ExecutionException e) {
-                I18nMessage.NOTIFICATION_GROUP.createNotification(I18nMessage.getMsg("idf.cmd.init.project.failed"),
+                I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.cmd.init.project.failed"),
                         e.getMessage(), NotificationType.ERROR).notify(project);
                 throw new RuntimeException(e);
             }

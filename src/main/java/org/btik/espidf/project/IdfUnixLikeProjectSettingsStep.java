@@ -10,14 +10,12 @@ import com.intellij.ui.components.JBPanel;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.btik.espidf.conf.IdfToolConf;
-import org.btik.espidf.project.component.ComboBoxWithRefresh;
 import org.btik.espidf.service.IdfToolConfService;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
 
@@ -29,7 +27,7 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
 
     private JBPanel<?> panel;
     private String idfFrameworkPath;
-
+    private TextFieldWithBrowseButton idfFrameworkPathBrowserButton;
 
     public IdfUnixLikeProjectSettingsStep(DirectoryProjectGenerator<T> projectGenerator, AbstractNewProjectStep.AbstractCallback<T> callback) {
         super(projectGenerator, callback);
@@ -38,10 +36,42 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
     @Override
     public JPanel createAdvancedSettings() {
         panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(2, 2);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(3, 2);
         JPanel wrapper = new JPanel(gridLayoutManager);
+        int rowIndex = 0;
+
+        JLabel idfFrameworkPathLabel = new JLabel($i18n("idf.path.title"));
+        wrapper.add(idfFrameworkPathLabel, createConstraints(rowIndex, 0));
+        initIdfPathBrowser();
+        GridConstraints firstRowConstraints = createConstraints(rowIndex, 1);
+        firstRowConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
+        firstRowConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
+        wrapper.add(idfFrameworkPathBrowserButton, firstRowConstraints);
+        rowIndex++;
+
+        JLabel idfTargetLabel = new JLabel($i18n("idf.env.type.target"));
+        wrapper.add(idfTargetLabel, createConstraints(rowIndex, 0));
+        initIdfTargets();
+        wrapper.add(idfTargets, createConstraints(rowIndex, 1));
+        rowIndex++;
+
+        GridConstraints targetTipCell = createConstraints(rowIndex, 0);
+        targetTipCell.setColSpan(2);
+        JLabel idfTargetTipLabel = new JLabel($i18n("idf.env.type.target.tip"));
+        wrapper.add(idfTargetTipLabel, targetTipCell);
+
+        panel.add(wrapper, BorderLayout.WEST);
+        IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
+        IdfToolConf idfToolConf = service.getLastActivedIdfToolConf();
+        if (idfToolConf != null) {
+            idfFrameworkPathBrowserButton.getTextField().setText(idfToolConf.getIdfToolPath());
+        }
+        return panel;
+    }
+
+    private void initIdfPathBrowser() {
         FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
-        final TextFieldWithBrowseButton idfFrameworkPathBrowserButton = new TextFieldWithBrowseButton();
+        idfFrameworkPathBrowserButton = new TextFieldWithBrowseButton();
         idfFrameworkPathBrowserButton.getTextField().getDocument().addDocumentListener(new DocumentListener() {
             private void handleChange() {
                 idfFrameworkPath = idfFrameworkPathBrowserButton.getText();
@@ -62,26 +92,7 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
             }
         });
         idfFrameworkPathBrowserButton.addActionListener(new ComponentWithBrowseButton.BrowseFolderActionListener<>(
-                $i18n("select.idf.tools.path"), $i18n("select.idf.tools.path.for.idf"),
-                idfFrameworkPathBrowserButton, null, descriptor, TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT) {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                super.actionPerformed(e);
-            }
-        });
-
-        JLabel idfFrameworkPathLabel = new JLabel($i18n("idf.path.title"));
-        wrapper.add(idfFrameworkPathLabel, createConstraints(0, 0));
-        GridConstraints firstRowConstraints = createConstraints(0, 1);
-        firstRowConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
-        firstRowConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        wrapper.add(idfFrameworkPathBrowserButton, firstRowConstraints);
-        panel.add(wrapper, BorderLayout.WEST);
-        IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
-        IdfToolConf idfToolConf = service.getLastActivedIdfToolConf();
-        if (idfToolConf != null) {
-            idfFrameworkPathBrowserButton.getTextField().setText(idfToolConf.getIdfToolPath());
-        }
-        return panel;
+                $i18n("select.idf.path"), $i18n("select.idf.path.for.idf"),
+                idfFrameworkPathBrowserButton, null, descriptor, TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT));
     }
 }

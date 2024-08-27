@@ -93,7 +93,6 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
         targetTipCell.setColSpan(2);
         JLabel idfTargetTipLabel = new JLabel($i18n("idf.env.type.target.tip"));
         wrapper.add(idfTargetTipLabel, targetTipCell);
-        gridLayoutManager.setRowStretch(rowIndex, 1);
         setLastValue(idfToolPathBrowserButton);
         panel.add(wrapper, BorderLayout.WEST);
         return panel;

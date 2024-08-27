@@ -21,7 +21,7 @@ public class I18nMessage extends DynamicBundle {
     public static String getMsg(String key) {
         checkInitNotificationGroup();
         if (key == null || key.isEmpty()) {
-            return null;
+            return "";
         }
 
         try {
