@@ -13,6 +13,7 @@
 
 ## 选择build目录
 和idf.py保存一致，使用build目录。
+
 ![build_dir.png](build_dir.png)
 
 ## 设置target

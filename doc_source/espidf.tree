@@ -10,4 +10,6 @@
     <toc-element topic="newProject.md"/>
     <toc-element topic="toolTree.md"/>
     <toc-element topic="openIdfProject.md"/>
+    <toc-element topic="settings.md"/>
+    <toc-element topic="toolchain.md"/>
 </instance-profile>

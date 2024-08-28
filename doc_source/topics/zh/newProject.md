@@ -42,10 +42,14 @@
 ### linux(和MACOS)
 需要手动安装一些组件，再使用install脚本。
 参考[Linux 和 macOS 平台工具链的标准设置](https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32/get-started/linux-macos-setup.html#linux-macos)
->本人暂无测试条件，本插件未在macOS下测试。
+>本人暂无MacOS测试条件，本插件未在macOS下测试。
 
 安装完成之后创建`ESP-IDF`项目时选择源码路径即可。
 
 ## 注意事项
-构建之前，使用`IDF Export Console`执行`idf.py set-target esp32xxx`来设置对应的esp32芯片类型。默认是esp32不用设置。
+在创建项目之后，会执行set-target,暂无法控制使其百分百成功，这个时候报错不代表失败，可以等待cmake窗是否会出现。
+
+我们也可以选择再次运行`set-target`
+
+![set_target](set_target.png)
 
