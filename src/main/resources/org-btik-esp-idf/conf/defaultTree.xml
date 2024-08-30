@@ -2,26 +2,26 @@
 <taskTree>
     <tree name="Tasks" icon="/org-btik-esp-idf/image/idf13_13.svg">
         <folder name="General">
-            <command name="Build" value="build" icon="ij:AllIcons.Actions.Compile" toolTip="${idf.tip.build}"/>
+            <console-command name="Build" value="build" icon="ij:AllIcons.Actions.Compile" toolTip="${idf.tip.build}"/>
             <raw-command name="CMake Build" value="cmake --build build" icon="ij:AllIcons.Actions.Compile" toolTip="${idf.tip.cmake.build}"/>
             <console-command name="Full Clean and Reconfigure" value="fullclean reconfigure" toolTip="${idf.tip.reconfigure}" icon="ij:AllIcons.Actions.Refresh" use-terminal="false"/>
-            <command name="Flash" value="flash"/>
+            <console-command name="Flash" value="flash"/>
             <console-command name="Monitor" value="monitor" />
             <console-command name="Flash and Monitor" value="flash monitor"/>
-            <command name="Clean" value="clean" icon="ij:AllIcons.General.Delete" toolTip="${idf.tip.clean}"/>
-            <command name="Full Clean" value="fullclean" icon="ij:AllIcons.General.Delete" toolTip="${idf.tip.full.clean}" />
+            <console-command name="Clean" value="clean" icon="ij:AllIcons.General.Delete" toolTip="${idf.tip.clean}"/>
+            <console-command name="Full Clean" value="fullclean" icon="ij:AllIcons.General.Delete" toolTip="${idf.tip.full.clean}" />
             <console-command name="Menu Config" value="menuconfig" />
             <console-command name="IDF Console" value="" />
             <action name="IDF Export Console" id="idf.export.console" terminal="true" />
         </folder>
         <folder name="Miscellaneous">
-            <command name="Erase" value="erase-flash"/>
+            <console-command name="Erase" value="erase-flash"/>
             <raw-command name="Export Environments"
                          win-value="SET"
                          unix-value="env" />
         </folder>
         <folder name="Help">
-            <command name="ESP-IDF Docs" value="docs" icon="ij:AllIcons.General.Web"/>
+            <console-command name="ESP-IDF Docs" value="docs" icon="ij:AllIcons.General.Web"/>
         </folder>
     </tree>
 </taskTree>
