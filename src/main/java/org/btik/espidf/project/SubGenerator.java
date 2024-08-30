@@ -29,7 +29,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -92,6 +91,7 @@ public abstract class SubGenerator<T> {
         generate.addParameters("set-target", idfTarget);
         IdfConsoleRunProfile setTargetProfile = new IdfConsoleRunProfile($i18n("idf.set.project.target"),
                 EspIdfIcon.IDF_16_16, generate);
+
         try {
             CmdTaskExecutor.execute(project, setTargetProfile,
                     nextTask, $i18n("idf.cmd.init.project.failed"), true);

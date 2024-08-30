@@ -3,7 +3,7 @@ package org.btik.espidf.command;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.*;
-import com.intellij.execution.process.KillableProcessHandler;
+import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.util.NlsSafe;
@@ -23,7 +23,6 @@ public class IdfConsoleRunProfile implements RunProfile {
 
     GeneralCommandLine commandLine;
 
-    private ProcessHandler processHandler;
 
     public IdfConsoleRunProfile(String name, Icon icon, GeneralCommandLine commandLine) {
         this.name = name;
@@ -44,17 +43,9 @@ public class IdfConsoleRunProfile implements RunProfile {
         return new CommandLineState(environment) {
             @Override
             protected @NotNull ProcessHandler startProcess() throws ExecutionException {
-                processHandler = new KillableProcessHandler(commandLine);
-                return processHandler;
+                return new KillableColoredProcessHandler(commandLine);
             }
         };
-    }
-
-    public boolean isRunning() {
-        if (processHandler == null) {
-            return false;
-        }
-        return !processHandler.isProcessTerminated();
     }
 
     @Override

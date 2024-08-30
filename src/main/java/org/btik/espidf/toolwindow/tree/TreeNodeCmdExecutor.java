@@ -54,7 +54,6 @@ public class TreeNodeCmdExecutor {
                     getIdfExe() + " " + commandNode.getCommand());
         }
 
-
         try {
             CmdTaskExecutor.execute(project, new IdfConsoleRunProfile(commandNode.getDisplayName(),
                     EspIdfIcon.IDF_16_16, commandLine), null);

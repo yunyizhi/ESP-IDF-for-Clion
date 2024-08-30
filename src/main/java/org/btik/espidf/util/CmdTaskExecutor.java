@@ -26,14 +26,14 @@ public class CmdTaskExecutor {
 
         ExecutionEnvironment environment = ExecutionEnvironmentBuilder.create(
                 project, DefaultRunExecutor.getRunExecutorInstance(),
-                idfConsoleRunProfile).build();
+                idfConsoleRunProfile).build(runContentDescriptor -> {
+                    ProcessHandler processHandler = runContentDescriptor.getProcessHandler();
+                    if (processHandler != null && processListener != null) {
+                        processHandler.addProcessListener(processListener);
+                    }
+                });
         environment.setExecutionId(ExecutionEnvironment.getNextUnusedExecutionId());
         environment.getRunner().execute(environment);
-        OSProcessHandler handler = new OSProcessHandler(idfConsoleRunProfile.getCommandLine());
-        if (processListener != null) {
-            handler.addProcessListener(processListener);
-        }
-        handler.startNotify();
     }
 
     /**
@@ -53,9 +53,6 @@ public class CmdTaskExecutor {
                     if (!continueWithError) {
                         return;
                     }
-                }
-                while (idfConsoleRunProfile.isRunning()) {
-                    Thread.yield();
                 }
                 terminatedCallBack.run();
             }
