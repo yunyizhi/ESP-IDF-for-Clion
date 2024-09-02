@@ -159,6 +159,26 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         return List.of(espIdfBuildTarget);
     }
 
+    @Override
+    public CPPToolchains.Toolchain getCurrentToolchain() {
+        String envFileName = environmentFile;
+        return ApplicationManager.getApplication().runReadAction((Computable<CPPToolchains.Toolchain>) () -> {
+            List<CPPToolchains.Toolchain> toolchains = CPPToolchains.getInstance().getToolchains();
+            if (toolchains.isEmpty()) {
+                return null;
+            }
+            if (StringUtil.isEmpty(envFileName)) {
+                return toolchains.get(0);
+            }
+            for (CPPToolchains.Toolchain toolchain : toolchains) {
+                if (Objects.equals(toolchain.getEnvironment(), envFileName)) {
+                    return toolchain;
+                }
+            }
+            return toolchains.get(0);
+        });
+    }
+
 
     private CPPToolchains.Toolchain getToolChain(String envFileName) {
         CPPToolchains.Toolchain existsToolChain = ApplicationManager.getApplication().runReadAction((Computable<CPPToolchains.Toolchain>) () -> {

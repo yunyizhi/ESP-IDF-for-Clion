@@ -1,5 +1,6 @@
 package org.btik.espidf.service;
 
+import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.run.config.build.EspIdfBuildTarget;
 
@@ -32,4 +33,6 @@ public interface IdfEnvironmentService {
     IdfToolConf getSourceToolConf(String idfFrameworkPath);
 
     List<EspIdfBuildTarget> getBuildTargets();
+
+    CPPToolchains.Toolchain getCurrentToolchain();
 }
