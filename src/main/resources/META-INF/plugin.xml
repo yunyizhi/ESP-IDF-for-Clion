@@ -45,5 +45,7 @@ Enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif
                         serviceInterface="org.btik.espidf.service.IdfEnvironmentService"/>
         <projectService serviceImplementation="org.btik.espidf.state.IdfProjectConfigComponent"
                         serviceInterface="org.btik.espidf.service.IdfProjectConfigService"/>
+        <configurationType order="last" id="platformio"
+                           implementation="org.btik.espidf.run.config.EspIdfRunConfigType"/>
     </extensions>
 </idea-plugin>

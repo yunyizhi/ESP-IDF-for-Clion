@@ -1,7 +1,9 @@
 package org.btik.espidf.service;
 
 import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.run.config.build.EspIdfBuildTarget;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,4 +30,6 @@ public interface IdfEnvironmentService {
     IdfToolConf getWinToolConf(String idfToolPath, String idfId);
 
     IdfToolConf getSourceToolConf(String idfFrameworkPath);
+
+    List<EspIdfBuildTarget> getBuildTargets();
 }

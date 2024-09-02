@@ -23,8 +23,10 @@ import java.awt.event.*;
 import java.util.Map;
 
 import static org.btik.espidf.service.IdfEnvironmentService.*;
+import static org.btik.espidf.util.UIUtils.createConstraints;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
+import static org.btik.espidf.util.UIUtils.i18nLabel;
 
 public class EspIdfToolWindowSettingPanel extends JPanel {
     private final Project project;
@@ -50,18 +52,18 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
 
         int rowIndex = 0;
 
-        wrapper.add(new JLabel($i18n("idf.project.setting.port")), createConstraints(rowIndex, 0));
+        wrapper.add(i18nLabel("idf.project.setting.port"), createConstraints(rowIndex, 0));
         GridConstraints firstRowConstraints = createConstraints(rowIndex, 1);
         firstRowConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         firstRowConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         wrapper.add(portField, firstRowConstraints);
         rowIndex++;
 
-        wrapper.add(new JLabel($i18n("idf.project.setting.monitor.baud")), createConstraints(rowIndex, 0));
+        wrapper.add(i18nLabel("idf.project.setting.monitor.baud"), createConstraints(rowIndex, 0));
         wrapper.add(monitorBaud, createConstraints(rowIndex, 1));
         rowIndex++;
 
-        wrapper.add(new JLabel($i18n("idf.project.setting.upload.baud")), createConstraints(rowIndex, 0));
+        wrapper.add(i18nLabel("idf.project.setting.upload.baud"), createConstraints(rowIndex, 0));
         wrapper.add(uploadBaud, createConstraints(rowIndex, 1));
 
         rowIndex++;
@@ -146,15 +148,6 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
                 saveButton.setEnabled(idfProjectConfigService.hasValueChange(projectConfigModel));
             }
         });
-    }
-
-
-    private static @NotNull GridConstraints createConstraints(int row, int column) {
-        GridConstraints constraints = new GridConstraints();
-        constraints.setRow(row);
-        constraints.setColumn(column);
-        constraints.setAnchor(GridConstraints.ANCHOR_WEST);
-        return constraints;
     }
 
     private static void setBaudStrFormObj(Object baudObj, @NotNull Consumer<String> setter) {

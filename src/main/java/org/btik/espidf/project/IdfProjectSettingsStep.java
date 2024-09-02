@@ -4,8 +4,6 @@ import com.intellij.ide.util.projectWizard.AbstractNewProjectStep;
 import com.intellij.ide.util.projectWizard.ProjectSettingsStepBase;
 import com.intellij.openapi.ui.*;
 import com.intellij.platform.DirectoryProjectGenerator;
-import com.intellij.uiDesigner.core.GridConstraints;
-import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.ItemEvent;
 
@@ -27,14 +25,6 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
     }
     public boolean isDumbAware() {
         return true;
-    }
-
-    protected static @NotNull GridConstraints createConstraints(int row, int column) {
-        GridConstraints constraints = new GridConstraints();
-        constraints.setRow(row);
-        constraints.setColumn(column);
-        constraints.setAnchor(GridConstraints.ANCHOR_WEST);
-        return constraints;
     }
 
     protected void initIdfTargets() {

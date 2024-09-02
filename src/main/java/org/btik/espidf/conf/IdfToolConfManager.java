@@ -92,7 +92,7 @@ public class IdfToolConfManager implements IdfToolConfService {
 
     @Override
     public IdfToolConf getLastActivedIdfToolConf() {
-        if (idfToolConfs == null || idfToolConfs.isEmpty()) {
+        if (idfToolConfs.isEmpty()) {
             return null;
         }
         return idfToolConfs.stream().max(Comparator.comparing(IdfToolConf::getActiveTime)).get();

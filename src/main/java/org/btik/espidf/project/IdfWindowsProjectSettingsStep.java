@@ -34,6 +34,8 @@ import java.util.ArrayList;
 
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.UIUtils.createConstraints;
+import static org.btik.espidf.util.UIUtils.i18nLabel;
 
 /**
  * @author lustre
@@ -63,13 +65,11 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
         int rowIndex = 0;
 
         initIdfEnvType();
-        JLabel installTypeLabel = new JLabel($i18n("idf.env.type.title"));
-        wrapper.add(installTypeLabel, createConstraints(rowIndex, 0));
+        wrapper.add(i18nLabel("idf.env.type.title"), createConstraints(rowIndex, 0));
         wrapper.add(idfPathType, createConstraints(rowIndex, 1));
         rowIndex++;
-
-        JLabel idfToolPrefixLabel = new JLabel($i18n("idf.path.title"));
-        wrapper.add(idfToolPrefixLabel, createConstraints(rowIndex, 0));
+        
+        wrapper.add(i18nLabel("idf.path.title"), createConstraints(rowIndex, 0));
         initIdfPathBrowser();
         GridConstraints pathCell = createConstraints(rowIndex, 1);
         pathCell.setFill(GridConstraints.FILL_HORIZONTAL);
@@ -83,16 +83,14 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
         wrapper.add(idfFrameworkItemComboBox, createConstraints(rowIndex, 1));
         rowIndex++;
 
-        JLabel idfTargetLabel = new JLabel($i18n("idf.env.type.target"));
-        wrapper.add(idfTargetLabel, createConstraints(rowIndex, 0));
+        wrapper.add(i18nLabel("idf.env.type.target"), createConstraints(rowIndex, 0));
         initIdfTargets();
         wrapper.add(idfTargets, createConstraints(rowIndex, 1));
         rowIndex++;
 
         GridConstraints targetTipCell = createConstraints(rowIndex, 0);
         targetTipCell.setColSpan(2);
-        JLabel idfTargetTipLabel = new JLabel($i18n("idf.env.type.target.tip"));
-        wrapper.add(idfTargetTipLabel, targetTipCell);
+        wrapper.add(i18nLabel("idf.env.type.target.tip"), targetTipCell);
         setLastValue(idfToolPathBrowserButton);
         panel.add(wrapper, BorderLayout.WEST);
         return panel;
@@ -109,7 +107,7 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
             checkValid();
         });
 
-        idfFrameworkLabel = new JLabel($i18n("idf.framework"));
+        idfFrameworkLabel = i18nLabel("idf.framework");
     }
 
     private void initIdfPathBrowser() {

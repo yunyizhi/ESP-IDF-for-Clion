@@ -10,6 +10,7 @@ import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.toolchains.OSType;
 import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.run.config.build.EspIdfBuildTarget;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfToolConfService;
 
@@ -38,8 +39,11 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
 
     private IdfToolConf idfToolConf;
 
+    private final EspIdfBuildTarget espIdfBuildTarget;
+
     public IdfEnvironmentServiceImpl(Project project) {
         this.project = project;
+        this.espIdfBuildTarget = new EspIdfBuildTarget(project.getName());
     }
 
     @Override
@@ -148,6 +152,11 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         service.store(newIdfToolConf);
         this.idfToolConf = newIdfToolConf;
         return newIdfToolConf;
+    }
+
+    @Override
+    public List<EspIdfBuildTarget> getBuildTargets() {
+        return List.of(espIdfBuildTarget);
     }
 
 

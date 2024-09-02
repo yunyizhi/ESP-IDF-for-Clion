@@ -18,6 +18,8 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.UIUtils.createConstraints;
+import static org.btik.espidf.util.UIUtils.i18nLabel;
 
 /**
  * @author lustre
@@ -40,8 +42,7 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
         JPanel wrapper = new JPanel(gridLayoutManager);
         int rowIndex = 0;
 
-        JLabel idfFrameworkPathLabel = new JLabel($i18n("idf.path.title"));
-        wrapper.add(idfFrameworkPathLabel, createConstraints(rowIndex, 0));
+        wrapper.add(i18nLabel("idf.path.title"), createConstraints(rowIndex, 0));
         initIdfPathBrowser();
         GridConstraints firstRowConstraints = createConstraints(rowIndex, 1);
         firstRowConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
@@ -49,16 +50,14 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
         wrapper.add(idfFrameworkPathBrowserButton, firstRowConstraints);
         rowIndex++;
 
-        JLabel idfTargetLabel = new JLabel($i18n("idf.env.type.target"));
-        wrapper.add(idfTargetLabel, createConstraints(rowIndex, 0));
+        wrapper.add(i18nLabel("idf.env.type.target"), createConstraints(rowIndex, 0));
         initIdfTargets();
         wrapper.add(idfTargets, createConstraints(rowIndex, 1));
         rowIndex++;
 
         GridConstraints targetTipCell = createConstraints(rowIndex, 0);
         targetTipCell.setColSpan(2);
-        JLabel idfTargetTipLabel = new JLabel($i18n("idf.env.type.target.tip"));
-        wrapper.add(idfTargetTipLabel, targetTipCell);
+        wrapper.add(i18nLabel("idf.env.type.target.tip"), targetTipCell);
 
         panel.add(wrapper, BorderLayout.WEST);
         IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
