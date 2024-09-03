@@ -5,6 +5,7 @@ import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.filters.ConsoleFilterProvider;
 import com.intellij.execution.filters.Filter;
+import com.intellij.execution.process.BaseProcessHandler;
 import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
@@ -39,14 +40,18 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Map;
 
 /**
  * @author lustre
  * @since 2024/9/2 23:05
  */
 public class EspIdfLauncher extends CLionLauncher {
+    private final EspIdfRunConfig espIdfRunConfig;
+
     public EspIdfLauncher(@NotNull ExecutionEnvironment executionEnvironment, @NotNull EspIdfRunConfig configuration) {
         super(executionEnvironment, configuration);
+        this.espIdfRunConfig = configuration;
     }
 
     @Override
@@ -141,15 +146,24 @@ public class EspIdfLauncher extends CLionLauncher {
                 });
     }
 
-    private static @NotNull DebuggerDriverConfiguration getDebuggerDriverConfiguration(IdfEnvironmentService idfEnvironmentService, Project project) {
+    private @NotNull DebuggerDriverConfiguration getDebuggerDriverConfiguration(IdfEnvironmentService idfEnvironmentService, Project project) {
         CPPToolchains.Toolchain currentToolchain = idfEnvironmentService.getCurrentToolchain();
         return new CLionGDBDriverConfiguration(project, currentToolchain) {
+            @NotNull
+            @Override
+            public BaseProcessHandler<?> createDebugProcessHandler(@NotNull GeneralCommandLine commandLine) throws ExecutionException {
+                return new KillableColoredProcessHandler(commandLine);
+            }
+
             @Override
             public @NotNull GeneralCommandLine createDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType) throws ExecutionException {
                 GeneralCommandLine commandLine = new GeneralCommandLine();
                 commandLine.setExePath(OsUtil.getIdfExe());
                 commandLine.setWorkDirectory(project.getBasePath());
-                commandLine.withEnvironment(idfEnvironmentService.getEnvironments());
+                Map<String, String> envs = espIdfRunConfig.getEnvData().getEnvs();
+                Map<String, String> environments = idfEnvironmentService.getEnvironments();
+                environments.putAll(envs);
+                commandLine.withEnvironment(environments);
                 commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
                 commandLine.addParameters("openocd", "gdb");
                 return commandLine;
