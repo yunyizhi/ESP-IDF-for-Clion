@@ -13,6 +13,7 @@ import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.run.config.build.EspIdfBuildTarget;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfToolConfService;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -177,6 +178,12 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
             }
             return toolchains.get(0);
         });
+    }
+
+    @Override
+    public @NotNull String getGdbExe() {
+        // todo get Gdb
+        return "xtensa-esp32s3-elf-gdb.exe";
     }
 
 

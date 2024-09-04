@@ -3,6 +3,7 @@ package org.btik.espidf.service;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.run.config.build.EspIdfBuildTarget;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -35,4 +36,6 @@ public interface IdfEnvironmentService {
     List<EspIdfBuildTarget> getBuildTargets();
 
     CPPToolchains.Toolchain getCurrentToolchain();
+
+    @NotNull String getGdbExe();
 }

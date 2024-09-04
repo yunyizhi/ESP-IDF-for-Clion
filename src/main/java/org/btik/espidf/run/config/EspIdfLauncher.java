@@ -158,14 +158,14 @@ public class EspIdfLauncher extends CLionLauncher {
             @Override
             public @NotNull GeneralCommandLine createDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType) throws ExecutionException {
                 GeneralCommandLine commandLine = new GeneralCommandLine();
-                commandLine.setExePath(OsUtil.getIdfExe());
+                commandLine.setExePath(idfEnvironmentService.getGdbExe());
                 commandLine.setWorkDirectory(project.getBasePath());
                 Map<String, String> envs = espIdfRunConfig.getEnvData().getEnvs();
                 Map<String, String> environments = idfEnvironmentService.getEnvironments();
                 environments.putAll(envs);
                 commandLine.withEnvironment(environments);
                 commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-                commandLine.addParameters("openocd", "gdb");
+                commandLine.addParameters("--interpreter=mi2", "-iex", "set mi-async", "-ix", "build/gdbinit/gdbinit");
                 return commandLine;
             }
         };
