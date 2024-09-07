@@ -31,6 +31,7 @@ import com.jetbrains.cidr.execution.debugger.CidrDebugProcess;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriverConfiguration;
 import kotlin.Pair;
+import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.util.OsUtil;
 import org.jetbrains.annotations.NotNull;
@@ -77,7 +78,7 @@ public class EspIdfLauncher extends CLionLauncher {
     }
 
     @Override
-    public @NotNull XDebugProcess createDebugProcess(@NotNull CommandLineState state, @NotNull XDebugSession session) throws ExecutionException {
+    public @NotNull XDebugProcess createDebugProcess(@NotNull CommandLineState state, @NotNull XDebugSession session) {
         Project project = getProject();
         @SystemIndependent final String projectPath = project.getBasePath();
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
@@ -156,15 +157,15 @@ public class EspIdfLauncher extends CLionLauncher {
             }
 
             @Override
-            public @NotNull GeneralCommandLine createDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType) throws ExecutionException {
+            public @NotNull GeneralCommandLine createDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType) {
                 GeneralCommandLine commandLine = new GeneralCommandLine();
-                commandLine.setExePath(idfEnvironmentService.getGdbExe());
+                DebugConfigModel configDataModel = espIdfRunConfig.getConfigDataModel();
+                commandLine.setExePath(configDataModel.getGdbExe());
                 commandLine.setWorkDirectory(project.getBasePath());
-                Map<String, String> envs = espIdfRunConfig.getEnvData().getEnvs();
-                Map<String, String> environments = idfEnvironmentService.getEnvironments();
-                environments.putAll(envs);
-                commandLine.withEnvironment(environments);
                 commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
+                Map<String, String> envs = configDataModel.getEnvData().getEnvs();
+                idfEnvironmentService.putTo(envs);
+                commandLine.withEnvironment(envs);
                 commandLine.addParameters("--interpreter=mi2", "-iex", "set mi-async", "-ix", "build/gdbinit/gdbinit");
                 return commandLine;
             }

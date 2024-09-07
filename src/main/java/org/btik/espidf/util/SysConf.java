@@ -18,13 +18,11 @@ public class SysConf extends DynamicBundle {
         return INSTANCE.getResourceBundle().getString(key);
     }
 
-    public static String $sys(String key){
+    public static String $sys(String key) {
         return INSTANCE.getResourceBundle().getString(key);
     }
 
     public static String getF(String key, @NotNull Object... params) {
         return String.format(get(key), params);
     }
-
-
 }

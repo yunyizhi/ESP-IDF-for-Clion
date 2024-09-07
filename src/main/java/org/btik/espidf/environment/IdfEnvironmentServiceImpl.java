@@ -13,7 +13,6 @@ import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.run.config.build.EspIdfBuildTarget;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfToolConfService;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,6 +59,16 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
             return Map.of();
         }
         return environments;
+    }
+
+    @Override
+    public void putTo(Map<String, String> newEnvironments) {
+        if (newEnvironments == null) {
+            return;
+        }
+        Map<String, String> environments1 = getEnvironments();
+        // 用户输入的同名环境变量比idf初始化变量优先级高 故保留用户输入值
+        environments1.forEach((k, v) -> newEnvironments.merge(k, v, (key, oldValue) -> oldValue));
     }
 
     @Override
@@ -178,12 +187,6 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
             }
             return toolchains.get(0);
         });
-    }
-
-    @Override
-    public @NotNull String getGdbExe() {
-        // todo get Gdb
-        return "xtensa-esp32s3-elf-gdb.exe";
     }
 
 

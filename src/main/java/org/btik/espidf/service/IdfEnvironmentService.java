@@ -3,7 +3,6 @@ package org.btik.espidf.service;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.run.config.build.EspIdfBuildTarget;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.Map;
@@ -22,13 +21,17 @@ public interface IdfEnvironmentService {
     String MONITOR_BAUD = "MONITORBAUD";
     String ESP_BAUD = "ESPBAUD";
 
+    String ESP_ROM_ELF_DIR = "ESP_ROM_ELF_DIR";
+
     Map<String, String> getEnvironments();
+
+    void putTo(Map<String, String> newEnvironments);
 
     String getEnvironmentFile();
 
     /**
      * 仅windows
-     * */
+     */
     IdfToolConf getWinToolConf(String idfToolPath, String idfId);
 
     IdfToolConf getSourceToolConf(String idfFrameworkPath);
@@ -37,5 +40,4 @@ public interface IdfEnvironmentService {
 
     CPPToolchains.Toolchain getCurrentToolchain();
 
-    @NotNull String getGdbExe();
 }

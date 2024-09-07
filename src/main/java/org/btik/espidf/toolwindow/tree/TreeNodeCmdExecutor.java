@@ -39,7 +39,7 @@ import static org.btik.espidf.util.OsUtil.Const.POWER_SHELL_ENV_PREFIX;
  * @since 2024/2/18 18:51
  */
 public class TreeNodeCmdExecutor {
-    public static void execute(EspIdfTaskCommandNode commandNode,@NotNull Project project) {
+    public static void execute(EspIdfTaskCommandNode commandNode, @NotNull Project project) {
         GeneralCommandLine commandLine = new GeneralCommandLine();
         commandLine.setExePath(getCmdEnv());
         commandLine.setWorkDirectory(project.getBasePath());
@@ -62,7 +62,7 @@ public class TreeNodeCmdExecutor {
         }
     }
 
-    public static void execute(EspIdfTaskConsoleCommandNode commandNode,@NotNull Project project) {
+    public static void execute(EspIdfTaskConsoleCommandNode commandNode, @NotNull Project project) {
         String basePath = project.getBasePath();
         if (basePath == null) {
             return;
@@ -102,7 +102,7 @@ public class TreeNodeCmdExecutor {
         }
     }
 
-    public static void execute(RawCommandNode commandNode,@NotNull Project project) {
+    public static void execute(RawCommandNode commandNode, @NotNull Project project) {
         GeneralCommandLine commandLine = new GeneralCommandLine();
         commandLine.setExePath(getCmdEnv());
         commandLine.setWorkDirectory(project.getBasePath());
@@ -123,25 +123,15 @@ public class TreeNodeCmdExecutor {
 
     private static Map<String, String> getEnvsWithProjectSettings(@NotNull Project project) {
         IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
-        Map<String, String> environments = environmentService.getEnvironments();
-
-        IdfProjectConfigService service = project.getService(IdfProjectConfigService.class);
-        IdfProjectConfig projectConfig = service.getProjectConfig();
-        if (projectConfig.isEmpty()) {
-            return environments;
-        }
-        // 避免使用Map.of的返回结果
-        if (environments.isEmpty()) {
-            environments = new HashMap<>();
-        }
+        IdfProjectConfig projectConfig = project.getService(IdfProjectConfigService.class).getProjectConfig();
         Map<String, String> projectEnvs = buildProjectSettingToEnvs(projectConfig);
-        environments.putAll(projectEnvs);
-        return environments;
+        environmentService.putTo(projectEnvs);
+        return projectEnvs;
     }
 
     private static Map<String, String> buildProjectSettingToEnvs(@NotNull IdfProjectConfig projectConfig) {
         if (projectConfig.isEmpty()) {
-            return Map.of();
+            return new HashMap<>();
         }
         Map<String, String> envs = new HashMap<>();
         String monitorBaud = projectConfig.getMonitorBaud();

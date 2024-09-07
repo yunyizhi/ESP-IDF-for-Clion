@@ -1,0 +1,95 @@
+package org.btik.espidf.run.config.model;
+
+import com.google.gson.annotations.SerializedName;
+import com.intellij.execution.configuration.EnvironmentVariablesData;
+
+/**
+ * @author lustre
+ * @since 2024/9/7 11:37
+ */
+public class DebugConfigModel {
+
+    private String openOcdArguments;
+
+    private String gdbExe;
+
+    @SerializedName("target")
+    private String target;
+
+    @SerializedName("bootloader_elf")
+    private String bootloaderElf;
+
+    @SerializedName("app_elf")
+    private String appElf;
+
+    private String romElfDir;
+
+    private String romElf;
+
+
+    private EnvironmentVariablesData envData = EnvironmentVariablesData.DEFAULT;
+
+    public String getOpenOcdArguments() {
+        return openOcdArguments;
+    }
+
+    public void setOpenOcdArguments(String openOcdArguments) {
+        this.openOcdArguments = openOcdArguments;
+    }
+
+    public String getGdbExe() {
+        return gdbExe;
+    }
+
+    public void setGdbExe(String gdbExe) {
+        this.gdbExe = gdbExe;
+    }
+
+    public EnvironmentVariablesData getEnvData() {
+        return envData;
+    }
+
+    public void setEnvData(EnvironmentVariablesData envData) {
+        this.envData = envData;
+    }
+
+    public String getTarget() {
+        return target;
+    }
+
+    public void setTarget(String target) {
+        this.target = target;
+    }
+
+    public String getBootloaderElf() {
+        return bootloaderElf;
+    }
+
+    public void setBootloaderElf(String bootloaderElf) {
+        this.bootloaderElf = bootloaderElf;
+    }
+
+    public String getAppElf() {
+        return appElf;
+    }
+
+    public void setAppElf(String appElf) {
+        this.appElf = appElf;
+    }
+
+    public String getRomElfDir() {
+        return romElfDir;
+    }
+
+    public void setRomElfDir(String romElfDir) {
+        this.romElfDir = romElfDir;
+    }
+
+    public String getRomElf() {
+        return romElf;
+    }
+
+    public void setRomElf(String romElf) {
+        this.romElf = romElf;
+    }
+}
