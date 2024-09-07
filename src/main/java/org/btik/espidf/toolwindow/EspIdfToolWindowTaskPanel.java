@@ -14,7 +14,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreePath;
-import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -22,19 +21,20 @@ import java.awt.event.MouseEvent;
  * @author lustre
  * @since 2024/2/18 13:05
  */
-public class EspIdfToolWindowTaskPanel extends JPanel {
+public class EspIdfToolWindowTaskPanel extends JScrollPane {
     private final Project project;
 
-    public EspIdfToolWindowTaskPanel(@NotNull Project project) {
-        super(new BorderLayout());
+    public EspIdfToolWindowTaskPanel( @NotNull Project project) {
         this.project = project;
         DefaultMutableTreeNode root = EspIdfTaskTreeFactory.load();
         if (root == null) {
             root = new DefaultMutableTreeNode("load Failed");
         }
+        viewport.setBorder(null);
+        setBorder(BorderFactory.createEmptyBorder());
         Tree tree = new Tree(root);
+        viewport.setView(tree);
         tree.setCellRenderer(new IconCellRenderer());
-        add(tree, BorderLayout.CENTER);
         tree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
