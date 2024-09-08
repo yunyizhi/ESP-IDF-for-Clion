@@ -109,7 +109,6 @@ public class IdfSysConfManager implements IdfSysConfService {
                 gdbMap.put(k, v);
                 gdbSet.add(v);
             });
-            ;
         }
     }
 

@@ -35,9 +35,7 @@ import static org.btik.espidf.util.SysConf.$sys;
  * @since 2024/9/2 21:17
  */
 public class EspIdfRunConfig extends CLionRunConfiguration<EspIdfBuildConf, EspIdfBuildTarget> {
-
-
-    private static final String OPEN_OCD_ARGUMENTS = "OPEN_OCD_ARGUMENTS";
+    
     private ExecutableData executableData;
     private DebugConfigModel configDataModel;
 
