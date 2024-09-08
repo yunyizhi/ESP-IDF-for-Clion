@@ -12,7 +12,7 @@ import com.jetbrains.cidr.toolchains.OSType;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.run.config.build.EspIdfBuildTarget;
 import org.btik.espidf.service.IdfEnvironmentService;
-import org.btik.espidf.service.IdfToolConfService;
+import org.btik.espidf.service.IdfSysConfService;
 
 import java.io.File;
 import java.io.IOException;
@@ -118,7 +118,7 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
 
     @Override
     public IdfToolConf getWinToolConf(String idfToolPath, String idfId) {
-        IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
+        IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         IdfToolConf toolConfByKey = service.getToolConfByKey(idfToolPath + idfId);
         if (toolConfByKey != null && toolConfByKey.getToolchain() != null) {
             return toolConfByKey;
@@ -148,7 +148,7 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
 
     @Override
     public IdfToolConf getSourceToolConf(String idfFrameworkPath) {
-        IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
+        IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         IdfToolConf toolConfByKey = service.getToolConfByKey(idfFrameworkPath);
         if (toolConfByKey != null && toolConfByKey.getToolchain() != null) {
             return toolConfByKey;

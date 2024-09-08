@@ -10,7 +10,7 @@ import com.intellij.ui.components.JBPanel;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.btik.espidf.conf.IdfToolConf;
-import org.btik.espidf.service.IdfToolConfService;
+import org.btik.espidf.service.IdfSysConfService;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
@@ -60,7 +60,7 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
         wrapper.add(i18nLabel("idf.env.type.target.tip"), targetTipCell);
 
         panel.add(wrapper, BorderLayout.WEST);
-        IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
+        IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         IdfToolConf idfToolConf = service.getLastActivedIdfToolConf();
         if (idfToolConf != null) {
             idfFrameworkPathBrowserButton.getTextField().setText(idfToolConf.getIdfToolPath());

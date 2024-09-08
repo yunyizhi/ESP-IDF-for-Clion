@@ -9,7 +9,9 @@ import java.nio.file.Path;
  * @author lustre
  * @since 2024/2/15 13:37
  */
-public interface IdfToolConfService {
+public interface IdfSysConfService {
+    String WINDOWS = "windows";
+    String UNIX_LIKE = "unixLike";
 
     IdfToolConf getLastActivedIdfToolConf();
 
@@ -21,4 +23,6 @@ public interface IdfToolConfService {
     IdfToolConf getToolConfByKey(String key);
 
     IdfToolConf getIdfConfByProject(Project project);
+
+    String getGdbExecutable(String target);
 }

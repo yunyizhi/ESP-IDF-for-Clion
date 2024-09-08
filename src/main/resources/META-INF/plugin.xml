@@ -39,8 +39,8 @@ Enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif
                            key="notification.group"/>
         <toolWindow id="ESP-IDF Quick Tools" icon="/org-btik-esp-idf/image/idf13_13.svg" anchor="right"
                     factoryClass="org.btik.espidf.toolwindow.EspIdfToolWindowFactory"/>
-        <applicationService serviceInterface="org.btik.espidf.service.IdfToolConfService"
-                            serviceImplementation="org.btik.espidf.conf.IdfToolConfManager"/>
+        <applicationService serviceInterface="org.btik.espidf.service.IdfSysConfService"
+                            serviceImplementation="org.btik.espidf.conf.IdfSysConfManager"/>
         <projectService serviceImplementation="org.btik.espidf.environment.IdfEnvironmentServiceImpl"
                         serviceInterface="org.btik.espidf.service.IdfEnvironmentService"/>
         <projectService serviceImplementation="org.btik.espidf.state.IdfProjectConfigComponent"

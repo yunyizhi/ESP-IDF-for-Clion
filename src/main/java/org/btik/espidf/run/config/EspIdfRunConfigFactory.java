@@ -5,6 +5,7 @@ import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import org.btik.espidf.run.config.model.DebugConfigModel;
@@ -15,6 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
@@ -61,24 +63,30 @@ public class EspIdfRunConfigFactory extends ConfigurationFactory {
         CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
         CMakeSettings settings = instance.getSettings();
         List<CMakeSettings.Profile> profiles = settings.getProfiles();
+        String basePath = project.getBasePath();
+        if (basePath == null) {
+            return null;
+        }
+        Path baseDir = Path.of(basePath);
+
         if (profiles.isEmpty()) {
-            return checkDescFile(new File($sys("esp.idf.build.project.build.dir")), projectDescFile);
+            return checkDescFile(baseDir.resolve($sys("esp.idf.build.project.build.dir")), projectDescFile);
         }
         File resolve;
         for (CMakeSettings.Profile profile : profiles) {
             File generationDir = profile.getGenerationDir();
-            if (generationDir != null && (resolve = checkDescFile(generationDir, projectDescFile)) != null) {
+            if (generationDir != null && (resolve = checkDescFile(baseDir.resolve(generationDir.getName()), projectDescFile)) != null) {
                 return resolve;
             }
         }
         return null;
     }
 
-    private static File checkDescFile(File buildDir, final String projectDescFile) {
-        if (!buildDir.exists()) {
+    private static File checkDescFile(Path buildDir, final String projectDescFile) {
+        if (!Files.exists(buildDir)) {
             return null;
         }
-        File projectDesc = buildDir.toPath().resolve(projectDescFile).toFile();
+        File projectDesc = buildDir.resolve(projectDescFile).toFile();
         return projectDesc.exists() && projectDesc.canRead() ? projectDesc : null;
 
     }

@@ -12,7 +12,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.sh.run.ShConfigurationType;
 import com.intellij.sh.run.ShRunConfiguration;
 import org.btik.espidf.conf.IdfToolConf;
-import org.btik.espidf.service.IdfToolConfService;
+import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.toolwindow.tree.model.EspIdfTaskActionNode;
 import org.btik.espidf.util.I18nMessage;
 
@@ -37,7 +37,7 @@ public class EspIdfActionMap {
     }
 
     private static void exportConsole(EspIdfTaskActionNode actionNode, Project project) {
-        IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
+        IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         IdfToolConf idfConfByProject = service.getIdfConfByProject(project);
         if (idfConfByProject == null) {
             I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.failed"),

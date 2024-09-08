@@ -2,7 +2,10 @@ package org.btik.espidf.conf;
 
 import com.google.common.reflect.TypeToken;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.stream.JsonReader;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PathManager;
@@ -11,10 +14,12 @@ import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
-import org.btik.espidf.service.IdfToolConfService;
+import org.btik.espidf.service.IdfSysConfService;
 import com.intellij.openapi.diagnostic.Logger;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -28,19 +33,27 @@ import static org.btik.espidf.util.I18nMessage.*;
  * @author lustre
  * @since 2024/2/14 23:17
  */
-public class IdfToolConfManager implements IdfToolConfService {
-    private static final Logger LOG = Logger.getInstance(IdfToolConfManager.class);
+public class IdfSysConfManager implements IdfSysConfService {
+    private static final Logger LOG = Logger.getInstance(IdfSysConfManager.class);
     private static final String IDF_FOLDER_NAME = "org.btik.espidf";
 
     private static final String IDF_JSON_NAME = "espidf.json";
 
+    private static final String GDB_MAP_CONF = "/org-btik-esp-idf/conf/esp32_gdb.json";
+
     private final HashSet<IdfToolConf> idfToolConfs = new HashSet<>();
 
     private final HashMap<String, IdfToolConf> idfToolConfMap = new HashMap<>();
-    private final Type type = new TypeToken<HashSet<IdfToolConf>>() {
+
+    private final HashMap<String, String> gdbMap = new HashMap<>();
+
+    private final Type toolConfSetType = new TypeToken<HashSet<IdfToolConf>>() {
     }.getType();
 
-    public IdfToolConfManager() {
+    private final Type gdbMapType = new TypeToken<HashMap<String, String>>() {
+    }.getType();
+
+    public IdfSysConfManager() {
 
         Path configDir = PathManager.getConfigDir();
         Path idfFolder = configDir.resolve(IDF_FOLDER_NAME);
@@ -51,14 +64,31 @@ public class IdfToolConfManager implements IdfToolConfService {
         if (!Files.exists(idfJson)) {
             return;
         }
-        parseConf(idfJson);
+        parseToolConf(idfJson);
+
+        parseGdbConf();
 
     }
 
-    private void parseConf(Path idfJson) {
+    private void parseGdbConf() {
+        InputStream gdpMapConfIn = IdfSysConfManager.class.getResourceAsStream(GDB_MAP_CONF);
+        if (gdpMapConfIn == null) {
+            return;
+        }
+        Gson gson = new Gson();
+        JsonElement jsonElement = gson.fromJson(new JsonReader(new InputStreamReader(gdpMapConfIn)), JsonElement.class);
+        JsonObject jsonObject = jsonElement.getAsJsonObject();
+        JsonElement gdbMapElement = jsonObject.get(IS_WINDOWS ? WINDOWS : UNIX_LIKE);
+        if (gdbMapElement != null) {
+            HashMap<String, String> result = gson.fromJson(gdbMapElement, gdbMapType);
+            gdbMap.putAll(result);
+        }
+    }
+
+    private void parseToolConf(Path idfJson) {
         try {
             String json = Files.readString(idfJson);
-            HashSet<IdfToolConf> idfToolConfSet = new Gson().fromJson(json, type);
+            HashSet<IdfToolConf> idfToolConfSet = new Gson().fromJson(json, toolConfSetType);
             if (idfToolConfSet == null || idfToolConfSet.isEmpty()) {
                 return;
             }
@@ -150,6 +180,11 @@ public class IdfToolConfManager implements IdfToolConfService {
             }
         });
         return idfToolConfRef[0];
+    }
+
+    @Override
+    public String getGdbExecutable(String target) {
+        return gdbMap.get(target);
     }
 
     private void saveConfig() {

@@ -16,7 +16,7 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.ui.JBUI;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.project.component.ComboBoxWithRefresh;
-import org.btik.espidf.service.IdfToolConfService;
+import org.btik.espidf.service.IdfSysConfService;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -151,7 +151,7 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
     }
 
     private void setLastValue(TextFieldWithBrowseButton idfToolPathBrowserButton) {
-        IdfToolConfService service = ApplicationManager.getApplication().getService(IdfToolConfService.class);
+        IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         IdfToolConf idfToolConf = service.getLastActivedIdfToolConf();
         if (idfToolConf != null) {
             idfToolPathBrowserButton.getTextField().setText(idfToolConf.getIdfToolPath());
