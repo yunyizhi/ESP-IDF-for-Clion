@@ -14,18 +14,24 @@ import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
+import org.btik.espidf.run.config.model.DebugConfigModel;
+import org.btik.espidf.run.config.model.Serial;
 import org.btik.espidf.service.IdfSysConfService;
 import com.intellij.openapi.diagnostic.Logger;
+import org.btik.espidf.util.ClassMetaUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Predicate;
 
+import static org.btik.espidf.util.ClassMetaUtils.isMod;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 import static org.btik.espidf.util.I18nMessage.*;
 
@@ -53,6 +59,10 @@ public class IdfSysConfManager implements IdfSysConfService {
     private final Type gdbMapType = new TypeToken<HashMap<String, String>>() {
     }.getType();
 
+    private final HashSet<String> gdbSet = new HashSet<>();
+
+    private List<ClassMetaUtils.PropOptMeta> propOptMetas;
+
     public IdfSysConfManager() {
 
         Path configDir = PathManager.getConfigDir();
@@ -68,6 +78,20 @@ public class IdfSysConfManager implements IdfSysConfService {
 
         parseGdbConf();
 
+        parseDebugModelSerialMeta();
+
+    }
+
+    private void parseDebugModelSerialMeta() {
+        propOptMetas = ClassMetaUtils.parseFieldsByAnnotation(DebugConfigModel.class, Serial.class);
+        for (ClassMetaUtils.PropOptMeta propOptMeta : propOptMetas) {
+            Method getter = propOptMeta.getter();
+            Method setter = propOptMeta.setter();
+            if (getter == null || !isMod(getter, Modifier.PUBLIC)
+                    || setter == null || !isMod(setter, Modifier.PUBLIC)) {
+                propOptMeta.field().setAccessible(true);
+            }
+        }
     }
 
     private void parseGdbConf() {
@@ -81,7 +105,11 @@ public class IdfSysConfManager implements IdfSysConfService {
         JsonElement gdbMapElement = jsonObject.get(IS_WINDOWS ? WINDOWS : UNIX_LIKE);
         if (gdbMapElement != null) {
             HashMap<String, String> result = gson.fromJson(gdbMapElement, gdbMapType);
-            gdbMap.putAll(result);
+            result.forEach((k, v) -> {
+                gdbMap.put(k, v);
+                gdbSet.add(v);
+            });
+            ;
         }
     }
 
@@ -185,6 +213,16 @@ public class IdfSysConfManager implements IdfSysConfService {
     @Override
     public String getGdbExecutable(String target) {
         return gdbMap.get(target);
+    }
+
+    @Override
+    public List<String> getAllGdbExecutables() {
+        return gdbSet.stream().sorted().toList();
+    }
+
+    @Override
+    public List<ClassMetaUtils.PropOptMeta> getPropOptMetas() {
+        return propOptMetas;
     }
 
     private void saveConfig() {

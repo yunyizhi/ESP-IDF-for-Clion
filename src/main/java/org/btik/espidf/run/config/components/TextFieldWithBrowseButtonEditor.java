@@ -1,6 +1,7 @@
 package org.btik.espidf.run.config.components;
 
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComponentWithBrowseButton;
 import com.intellij.openapi.ui.TextComponentAccessor;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
@@ -19,11 +20,12 @@ import java.awt.event.ActionListener;
 public class TextFieldWithBrowseButtonEditor implements ComboBoxEditor {
     private final TextFieldWithBrowseButton idfToolPathBrowserButton;
 
-    public TextFieldWithBrowseButtonEditor(FileChooserDescriptor descriptor, @Nullable @NlsContexts.DialogTitle String title, @Nullable @NlsContexts.Label String description) {
+    public TextFieldWithBrowseButtonEditor(FileChooserDescriptor descriptor, Project project, @Nullable @NlsContexts.DialogTitle String title, @Nullable @NlsContexts.Label String description) {
         this.idfToolPathBrowserButton = new TextFieldWithBrowseButton();
-        idfToolPathBrowserButton.addActionListener(new ComponentWithBrowseButton.BrowseFolderActionListener<>(
+        ComponentWithBrowseButton.BrowseFolderActionListener<JTextField> browseFolderActionListener = new ComponentWithBrowseButton.BrowseFolderActionListener<>(
                 title, description,
-                idfToolPathBrowserButton, null, descriptor, TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT));
+                idfToolPathBrowserButton, project, descriptor, TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT);
+        idfToolPathBrowserButton.addActionListener(browseFolderActionListener);
         idfToolPathBrowserButton.getTextField().setBorder(null);
 
     }

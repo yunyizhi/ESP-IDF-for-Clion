@@ -14,11 +14,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 public @interface Serial {
 
-    String name() default "";
-
-
-    String writer() default "string";
-
+    String value() default "";
 
 }
 

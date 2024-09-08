@@ -4,9 +4,10 @@ import com.intellij.execution.configuration.EnvironmentVariablesComponent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
-import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.ComponentWithBrowseButton;
+import com.intellij.openapi.ui.TextComponentAccessor;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.uiDesigner.core.GridConstraints;
@@ -20,6 +21,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.util.List;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.UIUtils.createConstraints;
@@ -63,7 +65,9 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         appElfConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         appElfConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         appElf = new TextFieldWithBrowseButton();
-
+        appElf.addActionListener(new ComponentWithBrowseButton.BrowseFolderActionListener<>(
+                $i18n("select.idf.path"), $i18n("select.idf.path.for.idf"),
+                appElf, project, newElfFileChooser(), TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT));
         wrapper.add(appElf, appElfConstraints);
         rowIndex++;
 
@@ -79,7 +83,7 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         GridConstraints romElfConstraints = createConstraints(rowIndex, 1);
         romElfConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         romElfConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        romElf = new ComboBoxWithBrowseButton(newElfFileChooser());
+        romElf = new ComboBoxWithBrowseButton(newElfFileChooser(), project);
         wrapper.add(romElf, romElfConstraints);
         rowIndex++;
 
@@ -87,8 +91,8 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         GridConstraints gdbArgConstraints = createConstraints(rowIndex, 1);
         gdbArgConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         gdbArgConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        FileChooserDescriptor gdbChooser = FileChooserDescriptorFactory.createSingleFolderDescriptor();
-        gdb = new ComboBoxWithBrowseButton(gdbChooser);
+        FileChooserDescriptor gdbChooser = FileChooserDescriptorFactory.createSingleFileDescriptor();
+        gdb = new ComboBoxWithBrowseButton(gdbChooser, project);
         wrapper.add(gdb, gdbArgConstraints);
         rowIndex++;
 
@@ -125,6 +129,8 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         }
         IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         String gdbExecutable = service.getGdbExecutable(target);
+        List<String> allGdbExecutables = service.getAllGdbExecutables();
+        allGdbExecutables.forEach(gdb::addItem);
         gdb.setText(gdbExecutable);
     }
 
@@ -137,13 +143,22 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         envComponent.setEnvData(configDataModel.getEnvData());
         arguments.setText(configDataModel.getOpenOcdArguments());
         appElf.setText(configDataModel.getAppElf());
+        romElf.setText(configDataModel.getRomElf());
+        bootloaderElf.setText(configDataModel.getBootloaderElf());
+        gdb.setText(configDataModel.getGdbExe());
     }
 
     @Override
-    protected void applyEditorTo(@NotNull EspIdfRunConfig espIdfRunConfig) throws ConfigurationException {
-        DebugConfigModel debugConfigModel = new DebugConfigModel();
-
+    protected void applyEditorTo(@NotNull EspIdfRunConfig espIdfRunConfig) {
+        DebugConfigModel configDataModel = espIdfRunConfig.getConfigDataModel();
+        DebugConfigModel debugConfigModel = configDataModel == null ? new DebugConfigModel() : configDataModel;
         espIdfRunConfig.setConfigDataModel(debugConfigModel);
+        debugConfigModel.setAppElf(appElf.getText());
+        debugConfigModel.setBootloaderElf(bootloaderElf.getText());
+        debugConfigModel.setRomElf(romElf.getText());
+        debugConfigModel.setOpenOcdArguments(arguments.getText());
+        debugConfigModel.setGdbExe(gdb.getText());
+        debugConfigModel.setEnvData(envComponent.getEnvData());
     }
 
     @Override

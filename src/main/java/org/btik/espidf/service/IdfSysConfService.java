@@ -2,8 +2,10 @@ package org.btik.espidf.service;
 
 import com.intellij.openapi.project.Project;
 import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.util.ClassMetaUtils;
 
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * @author lustre
@@ -15,7 +17,6 @@ public interface IdfSysConfService {
 
     IdfToolConf getLastActivedIdfToolConf();
 
-
     void store(IdfToolConf newIdfToolConf);
 
     Path getIdfConfFolder();
@@ -25,4 +26,8 @@ public interface IdfSysConfService {
     IdfToolConf getIdfConfByProject(Project project);
 
     String getGdbExecutable(String target);
+
+    List<String> getAllGdbExecutables();
+
+    List<ClassMetaUtils.PropOptMeta> getPropOptMetas();
 }

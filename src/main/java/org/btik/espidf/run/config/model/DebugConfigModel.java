@@ -1,5 +1,6 @@
 package org.btik.espidf.run.config.model;
 
+import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.intellij.execution.configuration.EnvironmentVariablesData;
 
@@ -9,24 +10,34 @@ import com.intellij.execution.configuration.EnvironmentVariablesData;
  */
 public class DebugConfigModel {
 
-    private String openOcdArguments;
-
-    private String gdbExe;
-
+    @Serial
     @SerializedName("target")
     private String target;
 
+    @Serial
     @SerializedName("bootloader_elf")
     private String bootloaderElf;
 
+    @Serial
     @SerializedName("app_elf")
     private String appElf;
 
+    @Expose(serialize = false, deserialize = false)
+    @Serial
+    private String openOcdArguments;
+
+    @Expose(serialize = false, deserialize = false)
+    @Serial
+    private String gdbExe;
+
+    @Expose(serialize = false, deserialize = false)
     private String romElfDir;
 
+    @Expose(serialize = false, deserialize = false)
+    @Serial
     private String romElf;
 
-
+    @Serial
     private EnvironmentVariablesData envData = EnvironmentVariablesData.DEFAULT;
 
     public String getOpenOcdArguments() {

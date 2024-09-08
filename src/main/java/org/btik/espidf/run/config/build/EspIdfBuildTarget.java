@@ -11,14 +11,16 @@ import java.util.List;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 
 /**
-* @author lustre
-*@since 2024/9/3 0:07
-*/
+ * @author lustre
+ * @since 2024/9/3 0:07
+ */
 public class EspIdfBuildTarget implements CidrBuildTarget<EspIdfBuildConf> {
     private final String projectName;
+    private final EspIdfBuildConf espIdfBuildConf;
 
     public EspIdfBuildTarget(String projectName) {
         this.projectName = projectName;
+        this.espIdfBuildConf = new EspIdfBuildConf();
     }
 
     @Override
@@ -43,6 +45,6 @@ public class EspIdfBuildTarget implements CidrBuildTarget<EspIdfBuildConf> {
 
     @Override
     public @NotNull List<EspIdfBuildConf> getBuildConfigurations() {
-        return List.of();
+        return List.of(espIdfBuildConf);
     }
 }
