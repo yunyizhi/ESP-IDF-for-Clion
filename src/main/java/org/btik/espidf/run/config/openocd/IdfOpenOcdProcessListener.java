@@ -36,6 +36,5 @@ public class IdfOpenOcdProcessListener implements ProcessListener {
             return;
         }
         processHandler.destroyProcess();
-        processHandler = null;
     }
 }

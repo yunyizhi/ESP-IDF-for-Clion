@@ -5,12 +5,15 @@ import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.util.NlsSafe;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author lustre
@@ -23,6 +26,9 @@ public class IdfConsoleRunProfile implements RunProfile {
 
     GeneralCommandLine commandLine;
 
+    private KillableColoredProcessHandler processHandler;
+
+    private List<ProcessListener> processListeners;
 
     public IdfConsoleRunProfile(String name, Icon icon, GeneralCommandLine commandLine) {
         this.name = name;
@@ -43,7 +49,13 @@ public class IdfConsoleRunProfile implements RunProfile {
         return new CommandLineState(environment) {
             @Override
             protected @NotNull ProcessHandler startProcess() throws ExecutionException {
-                return new KillableColoredProcessHandler(commandLine);
+                IdfConsoleRunProfile.this.processHandler = new KillableColoredProcessHandler(commandLine);
+                if (processListeners != null) {
+                    for (ProcessListener processListener : processListeners) {
+                        IdfConsoleRunProfile.this.processHandler.addProcessListener(processListener);
+                    }
+                }
+                return IdfConsoleRunProfile.this.processHandler;
             }
         };
     }
@@ -60,5 +72,12 @@ public class IdfConsoleRunProfile implements RunProfile {
 
     public GeneralCommandLine getCommandLine() {
         return commandLine;
+    }
+
+    public void addProcessListener(@NotNull ProcessListener listener) {
+        if (processListeners == null) {
+            processListeners = new ArrayList<>();
+        }
+        processListeners.add(listener);
     }
 }

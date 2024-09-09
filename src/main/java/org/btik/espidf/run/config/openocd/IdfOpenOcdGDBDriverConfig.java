@@ -2,10 +2,9 @@ package org.btik.espidf.run.config.openocd;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.configurations.PtyCommandLine;
 import com.intellij.execution.executors.DefaultRunExecutor;
-import com.intellij.execution.process.BaseProcessHandler;
-import com.intellij.execution.process.KillableColoredProcessHandler;
-import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.process.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.openapi.application.ApplicationManager;
@@ -14,6 +13,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.jetbrains.cidr.ArchitectureType;
 import com.jetbrains.cidr.cpp.execution.debugger.backend.CLionGDBDriverConfiguration;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
+import com.jetbrains.cidr.execution.debugger.backend.DebuggerCommandException;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.icon.EspIdfIcon;
@@ -39,7 +39,7 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
 
     private final Project project;
 
-    private final GeneralCommandLine openOcdCli = new GeneralCommandLine();
+    private final PtyCommandLine openOcdCli = new PtyCommandLine();
 
     private final IdfOpenOcdProcessListener openOcdProcessListener = new IdfOpenOcdProcessListener();
 
@@ -55,13 +55,9 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
         if (!openOcdProcessListener.isAlive()) {
             var idfOpenOcd = new IdfConsoleRunProfile($i18n("esp.idf.debug.openocd.run.title"),
                     EspIdfIcon.IDF_16_16, openOcdCli);
-            var environment = ExecutionEnvironmentBuilder.create(project, DefaultRunExecutor.getRunExecutorInstance(), idfOpenOcd)
-                    .build(runContentDescriptor -> {
-                        ProcessHandler processHandler = runContentDescriptor.getProcessHandler();
-                        if (processHandler != null) {
-                            processHandler.addProcessListener(openOcdProcessListener);
-                        }
-                    });
+            idfOpenOcd.addProcessListener(openOcdProcessListener);
+            var environment = ExecutionEnvironmentBuilder
+                    .create(project, DefaultRunExecutor.getRunExecutorInstance(), idfOpenOcd).build();
             environment.setExecutionId(ExecutionEnvironment.getNextUnusedExecutionId());
             ApplicationManager.getApplication().invokeLater(() -> {
                 try {
@@ -70,9 +66,18 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
                     throw new RuntimeException(e);
                 }
             });
-
         }
-        return new KillableColoredProcessHandler(commandLine);
+
+        KillableProcessHandler processHandler = new KillableProcessHandler(commandLine);
+        processHandler.addProcessListener(new ProcessListener() {
+            @Override
+            public void processTerminated(@NotNull ProcessEvent event) {
+                ProcessListener.super.processTerminated(event);
+                openOcdProcessListener.destroy();
+            }
+        });
+
+        return processHandler;
     }
 
     @Override
@@ -83,6 +88,7 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
         idfEnvironmentService.putTo(envs);
 
         openOcdCli.setExePath(OsUtil.getIdfExe());
+        openOcdCli.withConsoleMode(true);
         openOcdCli.setWorkDirectory(project.getBasePath());
         openOcdCli.withEnvironment(envs);
         openOcdCli.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
@@ -93,11 +99,14 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
         }
 
         GeneralCommandLine commandLine = new GeneralCommandLine()
-                .withWorkDirectory(configDataModel.getGdbExe())
+                .withExePath(configDataModel.getGdbExe())
                 .withWorkDirectory(project.getBasePath())
                 .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
                 .withEnvironment(envs)
-                .withParameters("--interpreter=mi2", "-iex", "set mi-async");
+                .withRedirectErrorStream(true)
+                .withParameters("--interpreter=mi2",
+                        "-iex", "set mi-async",
+                        "-iex", "set confirm off");
 
         String bootloaderElf = configDataModel.getBootloaderElf();
         if (checkElf(bootloaderElf)) {
@@ -107,33 +116,38 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
         String romElf = configDataModel.getRomElf();
         String romElfDir = idfEnvironmentService.getEnvironments().get(ESP_ROM_ELF_DIR);
         if (checkElf(romElf)) {
-            commandLine.addParameters("-iex", "add-symbol-file " + romElf);
+            commandLine.addParameters("-iex", "add-symbol-file " + gdbConsolePath(romElf));
         } else if (checkElf(Path.of(romElfDir, configDataModel.getRomElf()).toString())) {
-            commandLine.addParameters("-iex", "add-symbol-file " + Path.of(romElfDir, configDataModel.getRomElf()));
+            commandLine.addParameters("-iex", "add-symbol-file " + gdbConsolePath(Path.of(romElfDir, configDataModel.getRomElf()).toString()));
         }
 
         String appElf = configDataModel.getAppElf();
         if (checkElf(appElf)) {
-            commandLine.addParameters("-iex", "file " + appElf);
+            commandLine.addParameters("-iex", "file " + gdbConsolePath(appElf));
         } else {
-            File appElfInBuild = EspIdfRunConfigFactory.getFileInCmakeBuildDir(project, appElf);
+            File appElfInBuild = EspIdfRunConfigFactory.getFileInCmakeBuildDir(project, gdbConsolePath(appElf));
             if (appElfInBuild != null) {
-                commandLine.addParameters("-iex", "file " + appElfInBuild);
+                commandLine.addParameters("-iex", "file " + gdbConsolePath(appElfInBuild.getPath()));
             }
         }
-        commandLine.addParameters("-ex",
-                """
-                        set remotetimeout 10
-                        target remote :3333
-                        monitor reset halt
-                        maintenance flush register-cache
-                        thbreak app_main
-                        continue
-                        """);
+        String[] connect = {
+                "set confirm on",
+                "set remotetimeout 10",
+                "target remote :3333",
+                "monitor reset halt",
+                "maintenance flush register-cache",
+        };
+        for (String gdbCmd : connect) {
+            commandLine.addParameters("-ex", gdbCmd);
+        }
         return commandLine;
     }
 
     private boolean checkElf(String elfPath) {
         return elfPath != null && Files.exists(Path.of(elfPath));
+    }
+
+    private String gdbConsolePath(String path) {
+        return path.replace('\\', '/');
     }
 }
