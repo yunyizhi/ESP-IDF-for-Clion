@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.btik.espidf.service.IdfEnvironmentService.ESP_ROM_ELF_DIR;
 import static org.btik.espidf.util.SysConf.$sys;
@@ -84,6 +85,9 @@ public class EspIdfRunConfigFactory extends ConfigurationFactory {
     private static File checkDescFile(Path buildDir, final String fileName) {
         if (!Files.exists(buildDir)) {
             return null;
+        }
+        if (Objects.equals("/", fileName)) {
+            return buildDir.toFile();
         }
         File projectDesc = buildDir.resolve(fileName).toFile();
         return projectDesc.exists() && projectDesc.canRead() ? projectDesc : null;

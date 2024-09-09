@@ -3,6 +3,7 @@ package org.btik.espidf.run.config;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.configurations.PtyCommandLine;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.filters.ConsoleFilterProvider;
 import com.intellij.execution.filters.Filter;
@@ -69,12 +70,13 @@ public class EspIdfLauncher extends CLionLauncher {
     @Override
     public @NotNull ProcessHandler createProcess(@NotNull CommandLineState state) throws ExecutionException {
         Project project = getProject();
-        GeneralCommandLine showVersion = new GeneralCommandLine();
-        showVersion.setExePath(OsUtil.getIdfExe());
-        showVersion.setWorkDirectory(project.getBasePath());
-        showVersion.withEnvironment(project.getService(IdfEnvironmentService.class).getEnvironments());
-        showVersion.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-        showVersion.addParameters("--help");
+        GeneralCommandLine showVersion = new PtyCommandLine()
+                .withConsoleMode(true)
+                .withExePath(OsUtil.getIdfExe())
+                .withWorkDirectory(project.getBasePath())
+                .withEnvironment(project.getService(IdfEnvironmentService.class).getEnvironments())
+                .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
+                .withParameters("flash");
         return new KillableColoredProcessHandler(showVersion);
     }
 

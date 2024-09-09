@@ -14,6 +14,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.ui.JBUI;
 import org.btik.espidf.run.config.components.ComboBoxWithBrowseButton;
+import org.btik.espidf.run.config.components.TextFieldFileChooser;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfSysConfService;
 import org.jetbrains.annotations.NotNull;
@@ -38,8 +39,8 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
     private final EnvironmentVariablesComponent envComponent;
 
     private final JTextField arguments = new JTextField();
-    private final TextFieldWithBrowseButton appElf;
-    private final TextFieldWithBrowseButton bootloaderElf;
+    private final TextFieldFileChooser appElf;
+    private final TextFieldFileChooser bootloaderElf;
     private final ComboBoxWithBrowseButton romElf;
     private final ComboBoxWithBrowseButton gdb;
     private final Project project;
@@ -64,10 +65,8 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         GridConstraints appElfConstraints = createConstraints(rowIndex, 1);
         appElfConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         appElfConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        appElf = new TextFieldWithBrowseButton();
-        appElf.addActionListener(new ComponentWithBrowseButton.BrowseFolderActionListener<>(
-                $i18n("select.idf.path"), $i18n("select.idf.path.for.idf"),
-                appElf, project, newElfFileChooser(), TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT));
+        appElf = new TextFieldFileChooser();
+        appElf.addActionListener(project, newElfFileChooser(), $i18n("select.elf.path"), $i18n("select.idf.path.for.idf"));
         wrapper.add(appElf, appElfConstraints);
         rowIndex++;
 
@@ -75,7 +74,8 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         GridConstraints bootLoaderConstraints = createConstraints(rowIndex, 1);
         bootLoaderConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         bootLoaderConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        bootloaderElf = new TextFieldWithBrowseButton();
+        bootloaderElf = new TextFieldFileChooser();
+        bootloaderElf.addActionListener(project, newElfFileChooser(), $i18n("select.elf.path"), $i18n("esp.idf.debug.bootloader_elf.select"));
         wrapper.add(bootloaderElf, bootLoaderConstraints);
         rowIndex++;
 
@@ -113,6 +113,7 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
             return;
         }
         appElf.setText(debugConfigModel.getAppElf());
+        appElf.setRootDir(EspIdfRunConfigFactory.getFileInCmakeBuildDir(project, "/"));
         bootloaderElf.setText(debugConfigModel.getBootloaderElf());
         String target = debugConfigModel.getTarget();
 
@@ -167,7 +168,7 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
     }
 
     private FileChooserDescriptor newElfFileChooser() {
-        return FileChooserDescriptorFactory.createSingleFileDescriptor(".elf");
+        return FileChooserDescriptorFactory.createSingleFileDescriptor("elf");
     }
 
 }
