@@ -1,14 +1,12 @@
 package org.btik.espidf.run.config;
 
 import com.intellij.execution.configuration.EnvironmentVariablesComponent;
+import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.ui.ComponentWithBrowseButton;
-import com.intellij.openapi.ui.TextComponentAccessor;
-import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -16,6 +14,7 @@ import com.intellij.util.ui.JBUI;
 import org.btik.espidf.run.config.components.ComboBoxWithBrowseButton;
 import org.btik.espidf.run.config.components.TextFieldFileChooser;
 import org.btik.espidf.run.config.model.DebugConfigModel;
+import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfSysConfService;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,6 +22,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.File;
 import java.util.List;
+import java.util.Map;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.UIUtils.createConstraints;
@@ -83,7 +83,7 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         GridConstraints romElfConstraints = createConstraints(rowIndex, 1);
         romElfConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         romElfConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        romElf = new ComboBoxWithBrowseButton(newElfFileChooser(), project);
+        romElf = new ComboBoxWithBrowseButton(newElfFileChooser(), project, $i18n("select.elf.path"), $i18n("esp.idf.debug.rom_elf.select"));
         wrapper.add(romElf, romElfConstraints);
         rowIndex++;
 
@@ -91,8 +91,8 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         GridConstraints gdbArgConstraints = createConstraints(rowIndex, 1);
         gdbArgConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         gdbArgConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        FileChooserDescriptor gdbChooser = FileChooserDescriptorFactory.createSingleFileDescriptor();
-        gdb = new ComboBoxWithBrowseButton(gdbChooser, project);
+        FileChooserDescriptor gdbChooser = new FileChooserDescriptor(true, false, false, false, false, false);
+        gdb = new ComboBoxWithBrowseButton(gdbChooser, project, $i18n("select.esp.gdb.path"), $i18n("select.esp.gdb.path"));
         wrapper.add(gdb, gdbArgConstraints);
         rowIndex++;
 
@@ -119,7 +119,8 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
 
         String romElfDir = debugConfigModel.getRomElfDir();
         String romElfPeFix = target + '_';
-        String[] list = new File(romElfDir).list();
+        File romElfDirFile = new File(romElfDir);
+        String[] list = romElfDirFile.list();
         if (list != null) {
             for (String elfFiles : list) {
                 romElf.addItem(elfFiles);
@@ -127,12 +128,25 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
                     romElf.setSelectedItem(elfFiles);
                 }
             }
+            romElf.setRootDir(romElfDirFile);
         }
         IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         String gdbExecutable = service.getGdbExecutable(target);
         List<String> allGdbExecutables = service.getAllGdbExecutables();
         allGdbExecutables.forEach(gdb::addItem);
         gdb.setText(gdbExecutable);
+        Map<String, String> environments = project.getService(IdfEnvironmentService.class).getEnvironments();
+        String path = environments.get("Path");
+
+        File gdbFile = PathEnvironmentVariableUtil.findInPath(gdbExecutable, path, null);
+        if (gdbFile != null) {
+            gdb.setRootDir(gdbFile.getParentFile());
+        }
+        String path1 = environments.get("PATH");
+        gdbFile = PathEnvironmentVariableUtil.findInPath(gdbExecutable, path1, null);
+        if (gdbFile != null) {
+            gdb.setRootDir(gdbFile.getParentFile());
+        }
     }
 
     @Override

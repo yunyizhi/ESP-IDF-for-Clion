@@ -7,7 +7,6 @@ import com.intellij.openapi.ui.TextComponentAccessor;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.openapi.vfs.newvfs.impl.VirtualDirectoryImpl;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
