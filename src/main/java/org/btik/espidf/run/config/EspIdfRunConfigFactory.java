@@ -58,7 +58,7 @@ public class EspIdfRunConfigFactory extends ConfigurationFactory {
         return gson.fromJson(json, DebugConfigModel.class);
     }
 
-    private static File getProjectDescFile(Project project, final String projectDescFile) {
+    public static File getFileInCmakeBuildDir(Project project, final String fileName) {
         CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
         CMakeSettings settings = instance.getSettings();
         List<CMakeSettings.Profile> profiles = settings.getProfiles();
@@ -69,30 +69,30 @@ public class EspIdfRunConfigFactory extends ConfigurationFactory {
         Path baseDir = Path.of(basePath);
 
         if (profiles.isEmpty()) {
-            return checkDescFile(baseDir.resolve($sys("esp.idf.build.project.build.dir")), projectDescFile);
+            return checkDescFile(baseDir.resolve($sys("esp.idf.build.project.build.dir")), fileName);
         }
         File resolve;
         for (CMakeSettings.Profile profile : profiles) {
             File generationDir = profile.getGenerationDir();
-            if (generationDir != null && (resolve = checkDescFile(baseDir.resolve(generationDir.getName()), projectDescFile)) != null) {
+            if (generationDir != null && (resolve = checkDescFile(baseDir.resolve(generationDir.getName()), fileName)) != null) {
                 return resolve;
             }
         }
         return null;
     }
 
-    private static File checkDescFile(Path buildDir, final String projectDescFile) {
+    private static File checkDescFile(Path buildDir, final String fileName) {
         if (!Files.exists(buildDir)) {
             return null;
         }
-        File projectDesc = buildDir.resolve(projectDescFile).toFile();
+        File projectDesc = buildDir.resolve(fileName).toFile();
         return projectDesc.exists() && projectDesc.canRead() ? projectDesc : null;
 
     }
 
     public static DebugConfigModel syncProjectDesc(Project project) {
         String projectDescFileName = $sys("esp.idf.build.project.description");
-        File projectDescFile = getProjectDescFile(project, projectDescFileName);
+        File projectDescFile = getFileInCmakeBuildDir(project, projectDescFileName);
         if (projectDescFile == null) {
             return null;
         }

@@ -3,12 +3,14 @@ package org.btik.espidf.run.config;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.filters.ConsoleFilterProvider;
 import com.intellij.execution.filters.Filter;
 import com.intellij.execution.process.BaseProcessHandler;
 import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.execution.ui.ExecutionConsole;
@@ -31,7 +33,7 @@ import com.jetbrains.cidr.execution.debugger.CidrDebugProcess;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriverConfiguration;
 import kotlin.Pair;
-import org.btik.espidf.run.config.model.DebugConfigModel;
+import org.btik.espidf.run.config.openocd.IdfOpenOcdGDBDriverConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.util.OsUtil;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +43,6 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Map;
 
 /**
  * @author lustre
@@ -82,7 +83,8 @@ public class EspIdfLauncher extends CLionLauncher {
         Project project = getProject();
         @SystemIndependent final String projectPath = project.getBasePath();
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
-        DebuggerDriverConfiguration debuggerDriverConfiguration = getDebuggerDriverConfiguration(idfEnvironmentService, project);
+        DebuggerDriverConfiguration debuggerDriverConfiguration = new IdfOpenOcdGDBDriverConfig(project,
+                idfEnvironmentService.getCurrentToolchain(), espIdfRunConfig);
 
         GeneralCommandLine commandLine = new GeneralCommandLine("").withWorkDirectory(project.getBasePath());
         TrivialRunParameters parameters = new TrivialRunParameters(debuggerDriverConfiguration, commandLine, ArchitectureType.UNKNOWN);
@@ -145,31 +147,6 @@ public class EspIdfLauncher extends CLionLauncher {
                         };
                     }
                 });
-    }
-
-    private @NotNull DebuggerDriverConfiguration getDebuggerDriverConfiguration(IdfEnvironmentService idfEnvironmentService, Project project) {
-        CPPToolchains.Toolchain currentToolchain = idfEnvironmentService.getCurrentToolchain();
-        return new CLionGDBDriverConfiguration(project, currentToolchain) {
-            @NotNull
-            @Override
-            public BaseProcessHandler<?> createDebugProcessHandler(@NotNull GeneralCommandLine commandLine) throws ExecutionException {
-                return new KillableColoredProcessHandler(commandLine);
-            }
-
-            @Override
-            public @NotNull GeneralCommandLine createDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType) {
-                GeneralCommandLine commandLine = new GeneralCommandLine();
-                DebugConfigModel configDataModel = espIdfRunConfig.getConfigDataModel();
-                commandLine.setExePath(configDataModel.getGdbExe());
-                commandLine.setWorkDirectory(project.getBasePath());
-                commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-                Map<String, String> envs = configDataModel.getEnvData().getEnvs();
-                idfEnvironmentService.putTo(envs);
-                commandLine.withEnvironment(envs);
-                commandLine.addParameters("--interpreter=mi2", "-iex", "set mi-async", "-ix", "build/gdbinit/gdbinit");
-                return commandLine;
-            }
-        };
     }
 
 }

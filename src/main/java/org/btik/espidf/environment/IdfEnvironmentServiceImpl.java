@@ -18,6 +18,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,13 +51,13 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
     public Map<String, String> getEnvironments() {
         CPPToolchains.Toolchain toolchain = getCMakeToolchain();
         if (toolchain == null) {
-            return Map.of();
+            return new HashMap<>();
         }
         if (!Objects.equals(environmentFile, toolchain.getEnvironment())) {
             generateEnvironment();
         }
         if (environments == null) {
-            return Map.of();
+            return new HashMap<>();
         }
         return environments;
     }
