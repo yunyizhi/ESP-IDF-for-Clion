@@ -13,7 +13,6 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.jetbrains.cidr.ArchitectureType;
 import com.jetbrains.cidr.cpp.execution.debugger.backend.CLionGDBDriverConfiguration;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
-import com.jetbrains.cidr.execution.debugger.backend.DebuggerCommandException;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.icon.EspIdfIcon;
@@ -52,21 +51,17 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
     @NotNull
     @Override
     public BaseProcessHandler<?> createDebugProcessHandler(@NotNull GeneralCommandLine commandLine) throws ExecutionException {
-        if (!openOcdProcessListener.isAlive()) {
-            var idfOpenOcd = new IdfConsoleRunProfile($i18n("esp.idf.debug.openocd.run.title"),
-                    EspIdfIcon.IDF_16_16, openOcdCli);
-            idfOpenOcd.addProcessListener(openOcdProcessListener);
-            var environment = ExecutionEnvironmentBuilder
-                    .create(project, DefaultRunExecutor.getRunExecutorInstance(), idfOpenOcd).build();
-            environment.setExecutionId(ExecutionEnvironment.getNextUnusedExecutionId());
-            ApplicationManager.getApplication().invokeLater(() -> {
-                try {
-                    environment.getRunner().execute(environment);
-                } catch (ExecutionException e) {
-                    throw new RuntimeException(e);
-                }
-            });
-        }
+        var idfOpenOcd = new IdfConsoleRunProfile($i18n("esp.idf.debug.openocd.run.title"), EspIdfIcon.IDF_16_16, openOcdCli);
+        idfOpenOcd.addProcessListener(openOcdProcessListener);
+        var environment = ExecutionEnvironmentBuilder.create(project, DefaultRunExecutor.getRunExecutorInstance(), idfOpenOcd).build();
+        environment.setExecutionId(ExecutionEnvironment.getNextUnusedExecutionId());
+        ApplicationManager.getApplication().invokeLater(() -> {
+            try {
+                environment.getRunner().execute(environment);
+            } catch (ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        });
 
         KillableProcessHandler processHandler = new KillableProcessHandler(commandLine);
         processHandler.addProcessListener(new ProcessListener() {
@@ -110,7 +105,7 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
 
         String bootloaderElf = configDataModel.getBootloaderElf();
         if (checkElf(bootloaderElf)) {
-            commandLine.addParameters("-iex", "add-symbol-file " + bootloaderElf);
+            commandLine.addParameters("-iex", "add-symbol-file " + gdbConsolePath(bootloaderElf));
         }
         // 添加rom的 elf这里 可能在 ESP_ROM_ELF_DIR对应目录下 也可能 是一个其他全路径
         String romElf = configDataModel.getRomElf();

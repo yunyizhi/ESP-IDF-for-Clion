@@ -59,7 +59,6 @@ public class IdfSysConfManager implements IdfSysConfService {
     private final Type gdbMapType = new TypeToken<HashMap<String, String>>() {
     }.getType();
 
-    private final HashSet<String> gdbSet = new HashSet<>();
 
     private List<ClassMetaUtils.PropOptMeta> propOptMetas;
 
@@ -105,10 +104,7 @@ public class IdfSysConfManager implements IdfSysConfService {
         JsonElement gdbMapElement = jsonObject.get(IS_WINDOWS ? WINDOWS : UNIX_LIKE);
         if (gdbMapElement != null) {
             HashMap<String, String> result = gson.fromJson(gdbMapElement, gdbMapType);
-            result.forEach((k, v) -> {
-                gdbMap.put(k, v);
-                gdbSet.add(v);
-            });
+            gdbMap.putAll(result);
         }
     }
 
@@ -212,11 +208,6 @@ public class IdfSysConfManager implements IdfSysConfService {
     @Override
     public String getGdbExecutable(String target) {
         return gdbMap.get(target);
-    }
-
-    @Override
-    public List<String> getAllGdbExecutables() {
-        return gdbSet.stream().sorted().toList();
     }
 
     @Override

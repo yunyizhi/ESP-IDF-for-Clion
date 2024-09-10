@@ -11,7 +11,6 @@ import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.ui.JBUI;
-import org.btik.espidf.run.config.components.ComboBoxWithBrowseButton;
 import org.btik.espidf.run.config.components.TextFieldFileChooser;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
@@ -21,7 +20,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
-import java.util.List;
 import java.util.Map;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
@@ -41,8 +39,8 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
     private final JTextField arguments = new JTextField();
     private final TextFieldFileChooser appElf;
     private final TextFieldFileChooser bootloaderElf;
-    private final ComboBoxWithBrowseButton romElf;
-    private final ComboBoxWithBrowseButton gdb;
+    private final TextFieldFileChooser romElf;
+    private final TextFieldFileChooser gdb;
     private final Project project;
 
     public EspIdfDebugSettingEditor(@NotNull Project project) {
@@ -83,7 +81,8 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         GridConstraints romElfConstraints = createConstraints(rowIndex, 1);
         romElfConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         romElfConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        romElf = new ComboBoxWithBrowseButton(newElfFileChooser(), project, $i18n("select.elf.path"), $i18n("esp.idf.debug.rom_elf.select"));
+        romElf = new TextFieldFileChooser();
+        romElf.addActionListener(project, newElfFileChooser(), $i18n("select.elf.path"), $i18n("esp.idf.debug.rom_elf.select"));
         wrapper.add(romElf, romElfConstraints);
         rowIndex++;
 
@@ -91,8 +90,9 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         GridConstraints gdbArgConstraints = createConstraints(rowIndex, 1);
         gdbArgConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         gdbArgConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
+        gdb = new TextFieldFileChooser();
         FileChooserDescriptor gdbChooser = new FileChooserDescriptor(true, false, false, false, false, false);
-        gdb = new ComboBoxWithBrowseButton(gdbChooser, project, $i18n("select.esp.gdb.path"), $i18n("select.esp.gdb.path"));
+        gdb.addActionListener(project, gdbChooser, $i18n("select.esp.gdb.path"), $i18n("select.esp.gdb.path"));
         wrapper.add(gdb, gdbArgConstraints);
         rowIndex++;
 
@@ -123,17 +123,14 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         String[] list = romElfDirFile.list();
         if (list != null) {
             for (String elfFiles : list) {
-                romElf.addItem(elfFiles);
                 if (elfFiles.startsWith(romElfPeFix)) {
-                    romElf.setSelectedItem(elfFiles);
+                    romElf.setText(elfFiles);
                 }
             }
             romElf.setRootDir(romElfDirFile);
         }
         IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         String gdbExecutable = service.getGdbExecutable(target);
-        List<String> allGdbExecutables = service.getAllGdbExecutables();
-        allGdbExecutables.forEach(gdb::addItem);
         gdb.setText(gdbExecutable);
         Map<String, String> environments = project.getService(IdfEnvironmentService.class).getEnvironments();
         String path = environments.get("Path");

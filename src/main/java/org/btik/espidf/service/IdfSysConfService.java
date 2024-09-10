@@ -27,7 +27,5 @@ public interface IdfSysConfService {
 
     String getGdbExecutable(String target);
 
-    List<String> getAllGdbExecutables();
-
     List<ClassMetaUtils.PropOptMeta> getPropOptMetas();
 }
