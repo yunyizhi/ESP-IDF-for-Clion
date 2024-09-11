@@ -2,6 +2,7 @@ package org.btik.espidf.run.config;
 
 import com.intellij.execution.configuration.EnvironmentVariablesComponent;
 import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
+
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
@@ -102,13 +103,13 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         envConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         wrapper.add(envComponent, envConstraints);
 
-        initValue();
-
         rootPanel.add(wrapper, BorderLayout.CENTER);
     }
 
-    private void initValue() {
-        DebugConfigModel debugConfigModel = EspIdfRunConfigFactory.syncProjectDesc(project);
+    private void initValue(DebugConfigModel debugConfigModel) {
+        if (debugConfigModel == null) {
+            debugConfigModel = EspIdfRunConfigFactory.syncProjectDesc(project);
+        }
         if (debugConfigModel == null) {
             return;
         }
@@ -138,18 +139,20 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         File gdbFile = PathEnvironmentVariableUtil.findInPath(gdbExecutable, path, null);
         if (gdbFile != null) {
             gdb.setRootDir(gdbFile.getParentFile());
+        } else {
+            gdbFile = PathEnvironmentVariableUtil.findInPath(gdbExecutable, environments.get("PATH"), null);
+            if (gdbFile != null) {
+                gdb.setRootDir(gdbFile.getParentFile());
+            }
         }
-        String path1 = environments.get("PATH");
-        gdbFile = PathEnvironmentVariableUtil.findInPath(gdbExecutable, path1, null);
-        if (gdbFile != null) {
-            gdb.setRootDir(gdbFile.getParentFile());
-        }
+
     }
 
     @Override
     protected void resetEditorFrom(@NotNull EspIdfRunConfig espIdfRunConfig) {
         DebugConfigModel configDataModel = espIdfRunConfig.getConfigDataModel();
-        if (configDataModel == null) {
+        if (configDataModel == null || configDataModel.isCreateByFactory()) {
+            initValue(configDataModel);
             return;
         }
         envComponent.setEnvData(configDataModel.getEnvData());
