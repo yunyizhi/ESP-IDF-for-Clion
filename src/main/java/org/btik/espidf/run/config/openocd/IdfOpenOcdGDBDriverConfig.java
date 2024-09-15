@@ -20,6 +20,7 @@ import org.btik.espidf.run.config.EspIdfRunConfig;
 import org.btik.espidf.run.config.EspIdfRunConfigFactory;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.util.OsUtil;
+import org.btik.espidf.util.SysConf;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.btik.espidf.service.IdfEnvironmentService.ESP_ROM_ELF_DIR;
+import static org.btik.espidf.service.IdfEnvironmentService.OPENOCD_COMMANDS;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 
 public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
@@ -81,18 +83,18 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
         Map<String, String> envs = new HashMap<>(configDataModel.getEnvData().getEnvs());
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         idfEnvironmentService.putTo(envs);
-
+        openOcdCli.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 120));
         openOcdCli.setExePath(OsUtil.getIdfExe());
         openOcdCli.withConsoleMode(true);
         openOcdCli.setWorkDirectory(project.getBasePath());
-        openOcdCli.withEnvironment(envs);
+
         openOcdCli.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
         openOcdCli.addParameters("openocd");
         String openOcdArguments = configDataModel.getOpenOcdArguments();
         if (StringUtil.isNotEmpty(openOcdArguments)) {
-            openOcdCli.addParameters("--openocd_commands", openOcdArguments);
+            envs.put(OPENOCD_COMMANDS, openOcdArguments);
         }
-
+        openOcdCli.withEnvironment(envs);
         GeneralCommandLine commandLine = new GeneralCommandLine()
                 .withExePath(configDataModel.getGdbExe())
                 .withWorkDirectory(project.getBasePath())

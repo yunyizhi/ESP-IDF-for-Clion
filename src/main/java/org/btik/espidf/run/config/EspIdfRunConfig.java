@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 
 import static org.btik.espidf.util.SysConf.$sys;
 
@@ -35,9 +36,11 @@ import static org.btik.espidf.util.SysConf.$sys;
  * @since 2024/9/2 21:17
  */
 public class EspIdfRunConfig extends CLionRunConfiguration<EspIdfBuildConf, EspIdfBuildTarget> {
-    
+
     private ExecutableData executableData;
     private DebugConfigModel configDataModel;
+    private int historyConfigModelHash = 0;
+    private int thisHistoryHash = 0;
 
     public EspIdfRunConfig(Project project, ConfigurationFactory factory) {
         super(project, factory, $sys("esp.idf.debug.name"));
@@ -51,23 +54,26 @@ public class EspIdfRunConfig extends CLionRunConfiguration<EspIdfBuildConf, EspI
     @Override
     public void readExternal(@NotNull Element element) throws InvalidDataException {
         super.readExternal(element);
-        if (configDataModel == null) {
-            configDataModel = new DebugConfigModel();
-        }
+        var historyConfigDataModel = new DebugConfigModel();
         IdfSysConfService sysConfService = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         List<ClassMetaUtils.PropOptMeta> propOptMetas = sysConfService.getPropOptMetas();
         for (ClassMetaUtils.PropOptMeta propOptMeta : propOptMetas) {
             Class<?> aClass = ClassMetaUtils.propType(propOptMeta);
             if (aClass == String.class) {
                 String stringValue = JDOMExternalizerUtil.readField(element, propOptMeta.propName());
-                ClassMetaUtils.set(propOptMeta, configDataModel, stringValue);
+                ClassMetaUtils.set(propOptMeta, historyConfigDataModel, stringValue);
                 continue;
             }
             if (aClass == EnvironmentVariablesData.class) {
                 EnvironmentVariablesData environmentVariablesData = EnvironmentVariablesData.readExternal(element);
-                ClassMetaUtils.set(propOptMeta, configDataModel, environmentVariablesData);
+                ClassMetaUtils.set(propOptMeta, historyConfigDataModel, environmentVariablesData);
             }
 
+        }
+        if (configDataModel == null || Objects.equals(historyConfigDataModel.getTarget(), configDataModel.getTarget())) {
+            setConfigDataModel(historyConfigDataModel);
+            this.historyConfigModelHash = System.identityHashCode(historyConfigDataModel);
+            this.thisHistoryHash = System.identityHashCode(this);
         }
     }
 
@@ -132,5 +138,15 @@ public class EspIdfRunConfig extends CLionRunConfiguration<EspIdfBuildConf, EspI
 
     public void setConfigDataModel(DebugConfigModel configDataModel) {
         this.configDataModel = configDataModel;
+    }
+
+    public boolean isFromHistory() {
+        if (configDataModel == null) {
+            return false;
+        }
+        if (System.identityHashCode(this) != this.thisHistoryHash) {
+            return false;
+        }
+        return historyConfigModelHash != 0 && historyConfigModelHash == System.identityHashCode(configDataModel);
     }
 }

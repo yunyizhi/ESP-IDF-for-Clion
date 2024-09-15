@@ -3,16 +3,22 @@
     "esp32": "xtensa-esp32-elf-gdb.exe",
     "esp32s2": "xtensa-esp32s2-elf-gdb.exe",
     "esp32s3": "xtensa-esp32s3-elf-gdb.exe",
+    "esp32c2": "riscv32-esp-elf-gdb.exe",
     "esp32c3": "riscv32-esp-elf-gdb.exe",
     "esp32c6": "riscv32-esp-elf-gdb.exe",
-    "esp32p4": "riscv32-esp-elf-gdb.exe"
+    "esp32h2": "riscv32-esp-elf-gdb.exe",
+    "esp32p4": "riscv32-esp-elf-gdb.exe",
+    "default": "riscv32-esp-elf-gdb.exe"
   },
   "unixLike": {
     "esp32": "xtensa-esp32-elf-gdb",
     "esp32s2": "xtensa-esp32s2-elf-gdb",
     "esp32s3": "xtensa-esp32s3-elf-gdb",
+    "esp32c2": "riscv32-esp-elf-gdb",
     "esp32c3": "riscv32-esp-elf-gdb",
     "esp32c6": "riscv32-esp-elf-gdb",
-    "esp32p4": "riscv32-esp-elf-gdb"
+    "esp32h2": "riscv32-esp-elf-gdb",
+    "esp32p4": "riscv32-esp-elf-gdb",
+    "default": "riscv32-esp-elf-gdb"
   }
 }

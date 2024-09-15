@@ -37,13 +37,7 @@ public class EspIdfRunConfigFactory extends ConfigurationFactory {
 
     @Override
     public @NotNull RunConfiguration createTemplateConfiguration(@NotNull Project project) {
-        EspIdfRunConfig espIdfRunConfig = new EspIdfRunConfig(project, this);
-        DebugConfigModel configDataModel = syncProjectDesc(project);
-        if (configDataModel != null) {
-            configDataModel.setCreateByFactory(true);
-        }
-        espIdfRunConfig.setConfigDataModel(configDataModel);
-        return espIdfRunConfig;
+        return new EspIdfRunConfig(project, this);
     }
 
     @Override

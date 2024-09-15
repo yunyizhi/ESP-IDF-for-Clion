@@ -37,10 +37,9 @@ public class DebugConfigModel {
     @Serial
     private String romElf;
 
+    @Expose(serialize = false, deserialize = false)
     @Serial
     private EnvironmentVariablesData envData = EnvironmentVariablesData.DEFAULT;
-
-    private boolean createByFactory = false;
 
     public String getOpenOcdArguments() {
         return openOcdArguments;
@@ -104,13 +103,5 @@ public class DebugConfigModel {
 
     public void setRomElf(String romElf) {
         this.romElf = romElf;
-    }
-
-    public boolean isCreateByFactory() {
-        return createByFactory;
-    }
-
-    public void setCreateByFactory(boolean createByFactory) {
-        this.createByFactory = createByFactory;
     }
 }

@@ -16,6 +16,7 @@
         </folder>
         <folder name="Miscellaneous">
             <console-command name="Erase" value="erase-flash"/>
+            <console-command name="Size" value="size"/>
             <raw-command name="Export Environments"
                          win-value="SET"
                          unix-value="env" />

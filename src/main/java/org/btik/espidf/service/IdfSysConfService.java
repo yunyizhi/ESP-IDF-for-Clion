@@ -14,6 +14,7 @@ import java.util.List;
 public interface IdfSysConfService {
     String WINDOWS = "windows";
     String UNIX_LIKE = "unixLike";
+    String DEFAULT_GDB = "default";
 
     IdfToolConf getLastActivedIdfToolConf();
 

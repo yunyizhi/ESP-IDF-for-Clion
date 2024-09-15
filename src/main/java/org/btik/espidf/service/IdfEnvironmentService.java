@@ -23,6 +23,8 @@ public interface IdfEnvironmentService {
 
     String ESP_ROM_ELF_DIR = "ESP_ROM_ELF_DIR";
 
+    String OPENOCD_COMMANDS = "OPENOCD_COMMANDS";
+
     Map<String, String> getEnvironments();
 
     void putTo(Map<String, String> newEnvironments);

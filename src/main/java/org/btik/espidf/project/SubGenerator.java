@@ -2,7 +2,10 @@ package org.btik.espidf.project;
 
 
 import com.intellij.execution.ExecutionException;
+import com.intellij.execution.RunManager;
+import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.facet.ui.ValidationResult;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
@@ -20,6 +23,11 @@ import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.icon.EspIdfIcon;
+import org.btik.espidf.run.config.EspIdfRunConfig;
+import org.btik.espidf.run.config.EspIdfRunConfigType;
+import org.btik.espidf.run.config.model.DebugConfigModel;
+import org.btik.espidf.service.IdfEnvironmentService;
+import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.I18nMessage;
 import org.btik.espidf.util.OsUtil;
@@ -32,7 +40,9 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
+import static org.btik.espidf.service.IdfEnvironmentService.ESP_ROM_ELF_DIR;
 import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.SysConf.$sys;
 
 
 /**
@@ -126,6 +136,44 @@ public abstract class SubGenerator<T> {
 
             }
         });
+        createDebugRunConfig();
+    }
+
+    protected void createDebugRunConfig() {
+        RunManager instance = RunManager.getInstance(project);
+        RunnerAndConfigurationSettings idfDebug = instance.createConfiguration($i18n("esp.idf.debug.type"), EspIdfRunConfigType.class);
+        RunConfiguration configuration = idfDebug.getConfiguration();
+        if (!(configuration instanceof EspIdfRunConfig espIdfRunConfig)) {
+            return;
+        }
+        DebugConfigModel debugConfigModel = new DebugConfigModel();
+        espIdfRunConfig.setConfigDataModel(debugConfigModel);
+        debugConfigModel.setTarget(idfTarget);
+        IdfSysConfService idfSysConfService = ApplicationManager.getApplication().getService(IdfSysConfService.class);
+        debugConfigModel.setGdbExe(idfSysConfService.getGdbExecutable(idfTarget));
+        Path baseDirPath = baseDir.toNioPath();
+        debugConfigModel.setBootloaderElf(baseDirPath
+                .resolve($sys("esp.idf.build.project.build.dir"))
+                .resolve($sys("esp.idf.debug.default.bootloader.dir"))
+                .resolve($sys("esp.idf.debug.default.bootloader.name"))
+                .toString());
+
+        IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
+        String romElfDir = idfEnvironmentService.getEnvironments().get(ESP_ROM_ELF_DIR);
+        String romElfPeFix = idfTarget + '_';
+        File romElfDirFile = new File(romElfDir);
+        String[] list = romElfDirFile.list();
+        if (list != null) {
+            for (String elfFile : list) {
+                if (elfFile.startsWith(romElfPeFix)) {
+                    debugConfigModel.setRomElf(elfFile);
+                    break;
+                }
+            }
+        }
+        debugConfigModel.setAppElf(baseDir.getName() + ".elf");
+        instance.addConfiguration(idfDebug);
+        instance.setSelectedConfiguration(idfDebug);
     }
 
     protected void moveTmpDir(Path idfGenerateTmpDir, Runnable nextTask) {

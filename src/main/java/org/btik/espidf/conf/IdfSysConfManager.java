@@ -207,7 +207,11 @@ public class IdfSysConfManager implements IdfSysConfService {
 
     @Override
     public String getGdbExecutable(String target) {
-        return gdbMap.get(target);
+        String gdb = gdbMap.get(target);
+        if (gdb != null) {
+            return gdb;
+        }
+        return gdbMap.get(DEFAULT_GDB);
     }
 
     @Override

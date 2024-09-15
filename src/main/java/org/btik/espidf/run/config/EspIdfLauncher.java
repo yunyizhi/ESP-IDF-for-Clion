@@ -4,14 +4,11 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.CommandLineState;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.PtyCommandLine;
-import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.filters.ConsoleFilterProvider;
 import com.intellij.execution.filters.Filter;
-import com.intellij.execution.process.BaseProcessHandler;
 import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.execution.ui.ExecutionConsole;
@@ -23,10 +20,8 @@ import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.ui.XDebugTabLayouter;
 import com.jetbrains.cidr.ArchitectureType;
 import com.jetbrains.cidr.cpp.execution.CLionLauncher;
-import com.jetbrains.cidr.cpp.execution.debugger.backend.CLionGDBDriverConfiguration;
 import com.jetbrains.cidr.cpp.execution.debugger.peripheralview.SvdPanel;
 import com.jetbrains.cidr.cpp.toolchains.CPPEnvironment;
-import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.execution.CidrCoroutineHelper;
 import com.jetbrains.cidr.execution.CidrPathConsoleFilter;
 import com.jetbrains.cidr.execution.TrivialRunParameters;
@@ -37,6 +32,7 @@ import kotlin.Pair;
 import org.btik.espidf.run.config.openocd.IdfOpenOcdGDBDriverConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.util.OsUtil;
+import org.btik.espidf.util.SysConf;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.SystemIndependent;
 
@@ -72,6 +68,7 @@ public class EspIdfLauncher extends CLionLauncher {
         Project project = getProject();
         GeneralCommandLine showVersion = new PtyCommandLine()
                 .withConsoleMode(true)
+                .withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 120))
                 .withExePath(OsUtil.getIdfExe())
                 .withWorkDirectory(project.getBasePath())
                 .withEnvironment(project.getService(IdfEnvironmentService.class).getEnvironments())

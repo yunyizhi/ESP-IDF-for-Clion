@@ -20,6 +20,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.Map;
 
@@ -42,6 +44,7 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
     private final TextFieldFileChooser bootloaderElf;
     private final TextFieldFileChooser romElf;
     private final TextFieldFileChooser gdb;
+    private final JButton setDefault = new JButton();
     private final Project project;
 
     public EspIdfDebugSettingEditor(@NotNull Project project) {
@@ -49,7 +52,7 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         rootPanel = new JPanel(new VerticalFlowLayout(0, 2));
         envComponent = new EnvironmentVariablesComponent();
         envComponent.getLabel().setVisible(false);
-        JPanel wrapper = new JPanel(new GridLayoutManager(6, 2, JBUI.insetsTop(16), -1, -1));
+        JPanel wrapper = new JPanel(new GridLayoutManager(7, 2, JBUI.insetsTop(16), -1, -1));
 
         int rowIndex = 0;
 
@@ -97,16 +100,39 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         wrapper.add(gdb, gdbArgConstraints);
         rowIndex++;
 
-        wrapper.add(new JLabel($i18n("esp.idf.debug.openocd.environment.variables")), createConstraints(rowIndex, 0));
+        wrapper.add(i18nLabel("esp.idf.debug.openocd.environment.variables"), createConstraints(rowIndex, 0));
         GridConstraints envConstraints = createConstraints(rowIndex, 1);
         envConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         envConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         wrapper.add(envComponent, envConstraints);
+        rowIndex++;
+
+        wrapper.add(new JLabel(""), createConstraints(rowIndex, 0));
+        wrapper.add(setDefault, createConstraints(rowIndex, 1));
+        setDefault.setText($i18n("esp.idf.debug.set.default"));
 
         rootPanel.add(wrapper, BorderLayout.CENTER);
+
+        bindAction();
     }
 
-    private void initValue(DebugConfigModel debugConfigModel) {
+
+    private void bindAction() {
+        setDefault.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                try {
+                    setDefault.setEnabled(false);
+                    initValue();
+                } finally {
+                    setDefault.setEnabled(true);
+                }
+            }
+        });
+    }
+
+    private void initValue() {
+        DebugConfigModel debugConfigModel = EspIdfRunConfigFactory.syncProjectDesc(project);
         if (debugConfigModel == null) {
             debugConfigModel = EspIdfRunConfigFactory.syncProjectDesc(project);
         }
@@ -151,8 +177,8 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
     @Override
     protected void resetEditorFrom(@NotNull EspIdfRunConfig espIdfRunConfig) {
         DebugConfigModel configDataModel = espIdfRunConfig.getConfigDataModel();
-        if (configDataModel == null || configDataModel.isCreateByFactory()) {
-            initValue(configDataModel);
+        if (!espIdfRunConfig.isFromHistory()) {
+            initValue();
             return;
         }
         envComponent.setEnvData(configDataModel.getEnvData());
