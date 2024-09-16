@@ -11,7 +11,7 @@
 
 ### 功能
 
-### 自动配置
+#### 新建项目
 
 安装好IDF之后，无需配置环境变量，ToolChain, Cmake Profile.
 
