@@ -2,7 +2,7 @@
 
 这是一个非官方的ESP-IDF CLion插件。
 
-当前文档对应插件版本:3.0。
+当前文档对应插件版本:0.4。
 
 在clion官方文档中[clion可无插件配置ESP-IDF](https://www.jetbrains.com/help/clion/esp-idf.html)。
 
@@ -37,6 +37,10 @@ release仓会出现预览版，插件市场一般需要两个工作日审核，�
 > 多个ESP-IDF共存的前提是多个ESP-IDF本身不会冲突，请保证每个ESP-IDF的命令行可用，才被能选择用于新建项目。
 > （当前发现使用windows下IDF5.3离线版本会与同期的其他版本冲突。）
 
+### 调试
+0.4 新增调试功能 可以断点调试 查看线程、变量，集成gdb控制台，内存视图，和外设寄存器查看。
+
+![debug.png](debug.png)
 ## 快捷命令树
 
 本插件封装了一些常用ESP-IDF命令。
