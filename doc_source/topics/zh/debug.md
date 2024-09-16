@@ -1,4 +1,4 @@
-# debug
+# Debug
 集成了openocd调试。可以断点调试 查看线程、变量，集成gdb控制台，内存视图，和外设寄存器查看。
 
 默认的openocd未设置参数，如esp32c3 esp32c6 esp32s3 esp32h2 esp32p4 等含 内置jtag对于这些 idf.py openocd会自动选择内置jtag进行调试，
@@ -85,3 +85,24 @@ set {uint32_t } 0x6000400c |= (1 << 2)
 需要搜索可以使用以csv编辑器打开的功能。写入寄存器可以复制地址到gdb控制台进行操作。
 
 
+### 注意事项
+
+linux可能启动openocd失败 会有如下报错
+
+`libusb_open() failed with LIBUSB_ERROR_ACCESS`
+
+在idf命令行 执行`LIBUSB_DEBUG=1 idf.py openocd`
+```text
+libusb: error [get_usbfs_fd] libusb couldn't open USB device /dev/bus/usb/001/005, errno=13
+libusb: error [get_usbfs_fd] libusb requires write access to USB device nodes
+Error: libusb_open() failed with LIBUSB_ERROR_ACCESS
+Error: esp_usb_jtag: could not find or open device!
+/home/lustre/.espressif/tools/openocd-esp32/v0.12.0-esp32-20230921/openocd-esp32/share/openocd/scripts/target/esp_common.cfg:9: Error:
+at file "/home/lustre/.espressif/tools/openocd-esp32/v0.12.0-esp32-20230921/openocd-esp32/share/openocd/scripts/target/esp_common.cfg", line 9
+"openocd" exited with 1
+HINT: Please check the wire connection to debugging device or access rights to a serial port.
+HINT: OpenOCD process does not have permissions to access the USB JTAG/serial device. Please use 'LIBUSB_DEBUG=1 idf.py openocd' to find out the device name and check its access rights.
+```
+找到报错的设备
+
+使用chmod给 其他用户和用户组赋 读写权限 sudo chmod 766 /dev/bus/usb/具体数字/具体数字 。当然 777也是可以的。
