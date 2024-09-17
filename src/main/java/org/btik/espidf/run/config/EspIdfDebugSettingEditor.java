@@ -177,7 +177,7 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
     @Override
     protected void resetEditorFrom(@NotNull EspIdfRunConfig espIdfRunConfig) {
         DebugConfigModel configDataModel = espIdfRunConfig.getConfigDataModel();
-        if (!espIdfRunConfig.isFromHistory()) {
+        if (configDataModel == null) {
             initValue();
             return;
         }
