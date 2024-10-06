@@ -13,4 +13,5 @@
     <toc-element topic="settings.md"/>
     <toc-element topic="debug.md"/>
     <toc-element topic="toolchain.md"/>
+    <toc-element topic="adf.md"/>
 </instance-profile>
