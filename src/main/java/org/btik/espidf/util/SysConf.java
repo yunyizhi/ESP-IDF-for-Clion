@@ -1,6 +1,7 @@
 package org.btik.espidf.util;
 
 import com.intellij.DynamicBundle;
+import com.intellij.openapi.util.text.StringUtil;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -15,11 +16,11 @@ public class SysConf extends DynamicBundle {
     }
 
     public static String get(String key) {
-        return INSTANCE.getResourceBundle().getString(key);
+        return INSTANCE.messageOrDefault(key, key);
     }
 
     public static String $sys(String key) {
-        return INSTANCE.getResourceBundle().getString(key);
+        return INSTANCE.messageOrDefault(key, key);
     }
 
     public static String getF(String key, @NotNull Object... params) {
@@ -27,8 +28,9 @@ public class SysConf extends DynamicBundle {
     }
 
     public static int getInt(String key, int defaultValue) {
-        String intStr = INSTANCE.getResourceBundle().getString(key);
-        if (intStr.isEmpty()) {
+
+        String intStr = INSTANCE.messageOrDefault(key, "");
+        if (StringUtil.isEmpty(intStr)) {
             return defaultValue;
         }
         try {
