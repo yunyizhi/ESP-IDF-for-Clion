@@ -25,7 +25,7 @@ public class I18nMessage extends DynamicBundle {
         }
 
         try {
-            return INSTANCE.getResourceBundle().getString(key);
+            return INSTANCE.messageOrDefault(key, key);
         } catch (Exception e) {
             NOTIFICATION_GROUP.createNotification("Failed to get the message",
                     e.getMessage(), NotificationType.ERROR).notify(null);
