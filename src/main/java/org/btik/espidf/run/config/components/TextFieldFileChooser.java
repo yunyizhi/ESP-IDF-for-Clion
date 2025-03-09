@@ -19,8 +19,8 @@ public class TextFieldFileChooser extends TextFieldWithBrowseButton {
     private FileChooserDescriptor descriptor;
 
     public void addActionListener(@NotNull Project project, FileChooserDescriptor descriptor, String title, String tip) {
-        super.addActionListener(new ComponentWithBrowseButton.BrowseFolderActionListener<>(
-                title, tip, this, project, descriptor, TextComponentAccessor.TEXT_FIELD_SELECTED_TEXT));
+        super.addActionListener(new ComponentWithBrowseButton.BrowseFolderActionListener<>(this, project,
+                descriptor.withTitle(title).withDescription(tip), TextComponentAccessor.TEXT_FIELD_SELECTED_TEXT));
         this.descriptor = descriptor;
     }
 
