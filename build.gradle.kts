@@ -2,7 +2,7 @@ import java.io.File
 
 plugins {
     id("java")
-    id("org.jetbrains.intellij.platform") version "2.3.0"
+    id("org.jetbrains.intellij.platform") version "2.5.0"
 }
 
 group = "org.btik"
@@ -11,6 +11,7 @@ repositories {
     mavenCentral()
     maven {
         url = uri("https://maven.aliyun.com/repository/public/")
+        url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
     }
     intellijPlatform {
         defaultRepositories()
@@ -25,7 +26,8 @@ dependencies {
             "com.intellij.cidr.base",
             "com.intellij.clion",
             "com.intellij.clion.embedded",
-            "com.jetbrains.sh"
+            "com.jetbrains.sh",
+            "com.intellij.nativeDebug"
         )
         pluginVerifier()
     }
