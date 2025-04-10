@@ -108,8 +108,9 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
             return;
         }
         try {
-            environments = ApplicationManager.getApplication()
+            Map<String, String> rawEnv = ApplicationManager.getApplication()
                     .executeOnPooledThread(() -> readEnvironment(toolchain, environment)).get();
+            environments = sanitizeEnv(rawEnv);
             environmentFile = environment;
 
         } catch (InterruptedException | ExecutionException e) {
@@ -217,6 +218,19 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
                         }
                 ));
         return idfToolChain;
+    }
+    private Map<String, String> sanitizeEnv(Map<String, String> env) {
+        Map<String, String> cleanEnv = new HashMap<>();
+        for (Map.Entry<String, String> entry : env.entrySet()) {
+            String key = entry.getKey();
+            String value = entry.getValue();
+            if (key.equalsIgnoreCase("PATH")) {
+                // making sure to remove extra quotes and semicolon-prefixes
+                value = value.replace("\"", "").replaceAll("^;+|;+$", "");
+            }
+            cleanEnv.put(key, value);
+        }
+        return cleanEnv;
     }
 
 }
