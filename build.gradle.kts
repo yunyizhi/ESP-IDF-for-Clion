@@ -21,7 +21,7 @@ repositories {
 
 dependencies {
     intellijPlatform {
-        clion("LATEST-EAP-SNAPSHOT", useInstaller = false)
+        clion("2025.1", useInstaller = false)
         bundledPlugins(
             "com.intellij.cidr.base",
             "com.intellij.clion",
