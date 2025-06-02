@@ -85,3 +85,36 @@ tasks {
         gradleVersion = providers.gradleProperty("gradleVersion").get()
     }
 }
+sourceSets {
+    main {
+        resources.srcDirs("${project.projectDir}/web_src/dist")
+    }
+}
+
+tasks.register<Exec>("npmBuild") {
+    group = "build"
+    description = "Run npm build for web assets"
+    workingDir = file("${project.projectDir}/web_src")
+
+    val profile = project.properties["profile"]?.toString() ?: "dev"
+
+    val isWindows = System.getProperty("os.name").contains("Windows", ignoreCase = true)
+    commandLine = if (isWindows) {
+        listOf("cmd", "/c", "npm", "run", "build", "--", "--mode=$profile")
+    } else {
+        listOf("bash", "-c", "npm run build -- --mode=$profile")
+    }
+}
+
+// 2. 将 npmBuild 任务挂载到 processResources 阶段
+tasks.named("processResources") {
+    dependsOn("npmBuild") // 在资源处理前执行前端构建
+}
+
+tasks.register<Delete>("cleanWeb") {
+    delete("${project.projectDir}/web_src/dist") // 删除前端输出目录
+}
+
+tasks.named("clean") {
+    dependsOn("cleanWeb")
+}
