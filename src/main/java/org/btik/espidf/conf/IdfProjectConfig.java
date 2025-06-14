@@ -13,6 +13,7 @@ public class IdfProjectConfig {
     private String port;
     private String monitorBaud;
     private String uploadBaud;
+    private String buildDir;
 
     public String getPort() {
         return port;
@@ -38,16 +39,23 @@ public class IdfProjectConfig {
         this.uploadBaud = uploadBaud;
     }
 
+    public String getBuildDir() {
+        return buildDir;
+    }
+
+    public void setBuildDir(String buildDir) {
+        this.buildDir = buildDir;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
         if (!(o instanceof IdfProjectConfig that)) return false;
-        return Objects.equals(getPort(), that.getPort()) && Objects.equals(getMonitorBaud(), that.getMonitorBaud()) && Objects.equals(getUploadBaud(), that.getUploadBaud());
+        return Objects.equals(getPort(), that.getPort()) && Objects.equals(getMonitorBaud(), that.getMonitorBaud()) && Objects.equals(getUploadBaud(), that.getUploadBaud()) && Objects.equals(getBuildDir(), that.getBuildDir());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getPort(), getMonitorBaud(), getUploadBaud());
+        return Objects.hash(getPort(), getMonitorBaud(), getUploadBaud(), getBuildDir());
     }
 
     public boolean isEmpty() {

@@ -1,6 +1,7 @@
 package org.btik.espidf.toolwindow.tree;
 
 import com.intellij.notification.NotificationType;
+import org.btik.espidf.toolwindow.common.NodeModel;
 import org.btik.espidf.toolwindow.tree.model.*;
 import org.btik.espidf.util.DomUtil;
 import org.w3c.dom.Document;
@@ -23,7 +24,7 @@ import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
  * @since 2024/2/18 15:16
  */
 public class EspIdfTaskTreeFactory {
-    private static final HashMap<String, Function<Element, XmlNode>> factories = new HashMap<>();
+    private static final HashMap<String, Function<Element, NodeModel<Element>>> factories = new HashMap<>();
 
     static {
         factories.put(FOLDER_TAG, EspIdfTaskTreeFactory::newFolder);
@@ -56,51 +57,41 @@ public class EspIdfTaskTreeFactory {
     }
 
     private static DefaultMutableTreeNode build(Element treeRoot) {
-        XmlNode rootNode = newFolder(treeRoot);
-        LinkedList<XmlNode> treeNodeQueue = new LinkedList<>();
+        NodeModel<Element> rootNode = newFolder(treeRoot);
+        LinkedList<NodeModel<Element>> treeNodeQueue = new LinkedList<>();
         treeNodeQueue.add(rootNode);
         while (!treeNodeQueue.isEmpty()) {
-            XmlNode xmlNode = treeNodeQueue.removeFirst();
-            eachChildrenElement(xmlNode.element, (child) -> {
+            NodeModel<Element> xmlNode = treeNodeQueue.removeFirst();
+            eachChildrenElement(xmlNode.getModel(), (child) -> {
                 String type = child.getTagName();
-                XmlNode childXmlNode = factories.get(type).apply(child);
-                xmlNode.node.add(childXmlNode.node);
+                NodeModel<Element> childXmlNode = factories.get(type).apply(child);
+                xmlNode.getNode().add(childXmlNode.getNode());
                 treeNodeQueue.add(childXmlNode);
             });
         }
 
-        return rootNode.node;
+        return rootNode.getNode();
     }
 
-    static class XmlNode {
-        Element element;
-        DefaultMutableTreeNode node;
-
-        public XmlNode(Element element, DefaultMutableTreeNode parent) {
-            this.element = element;
-            this.node = parent;
-        }
-    }
-
-    private static XmlNode newFolder(Element element) {
+    private static NodeModel<Element> newFolder(Element element) {
         String name = element.getAttribute(NAME);
         return buildNode(element, new EspIdfTaskFolderNode(name));
     }
 
-    private static XmlNode newCmd(Element element) {
+    private static NodeModel<Element> newCmd(Element element) {
         String name = element.getAttribute(NAME);
         String command = element.getAttribute(VALUE);
         EspIdfTaskCommandNode taskTreeNode = new EspIdfTaskCommandNode(name, command);
         return buildNode(element, taskTreeNode);
     }
 
-    private static XmlNode newAction(Element element) {
+    private static NodeModel<Element> newAction(Element element) {
         String name = element.getAttribute(NAME);
         EspIdfTaskActionNode espIdfTaskActionNode = new EspIdfTaskActionNode(name);
         return buildNode(element, espIdfTaskActionNode);
     }
 
-    private static XmlNode newConsoleCmd(Element element) {
+    private static NodeModel<Element> newConsoleCmd(Element element) {
         String name = element.getAttribute(NAME);
         String command = element.getAttribute(VALUE);
         String useTerminalStr = element.getAttribute(USE_TERMINAL);
@@ -109,7 +100,7 @@ public class EspIdfTaskTreeFactory {
         return buildNode(element, taskTreeNode);
     }
 
-    private static XmlNode newRawCmd(Element element) {
+    private static NodeModel<Element> newRawCmd(Element element) {
         String name = element.getAttribute(NAME);
         String command = element.getAttribute(IS_WINDOWS ? WIN_VALUE : UNIX_VALUE);
         String commandDefault = element.getAttribute(VALUE);
@@ -119,7 +110,7 @@ public class EspIdfTaskTreeFactory {
         return buildNode(element, new RawCommandNode(name, command));
     }
 
-    private static XmlNode buildNode(Element element, EspIdfTaskTreeNode taskTreeNode) {
+    private static NodeModel<Element> buildNode(Element element, EspIdfTaskTreeNode taskTreeNode) {
         String toolTip = element.getAttribute(TOOL_TIP);
         if (toolTip.startsWith(RES_BUNDLE_EXP_START) && toolTip.endsWith(RES_BUNDLE_EXP_END)) {
             toolTip = $i18n(toolTip.substring(RES_BUNDLE_EXP_START.length(), toolTip.length() - 1));
@@ -127,8 +118,7 @@ public class EspIdfTaskTreeFactory {
         taskTreeNode.setToolTip(toolTip);
         taskTreeNode.setId(element.getAttribute(ID));
         taskTreeNode.setIcon(element.getAttribute(ICON));
-        return new XmlNode(element,
-                new DefaultMutableTreeNode(taskTreeNode));
+        return new NodeModel<>(new DefaultMutableTreeNode(taskTreeNode),element);
     }
 
 }

@@ -6,7 +6,11 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import com.intellij.ui.content.ContentManager;
+import org.btik.espidf.toolwindow.kconfig.EspIdfMenuConfigPanel;
 import org.jetbrains.annotations.NotNull;
+
+import static org.btik.espidf.util.I18nMessage.$i18n;
 
 /**
  * @author lustre
@@ -14,17 +18,16 @@ import org.jetbrains.annotations.NotNull;
  */
 public class EspIdfToolWindowFactory implements ToolWindowFactory {
 
-    String ESP_IDF_TASK_TREE = "Tasks";
-
-    String PIO_HOME_SETTINGS_CONTENT_ID = "Settings";
 
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-        ContentFactory contentFactory =  ApplicationManager.getApplication().getService(ContentFactory.class);
-        Content taskContent = contentFactory.createContent(new EspIdfToolWindowTaskPanel(project), ESP_IDF_TASK_TREE, false);
-        toolWindow.getContentManager().addContent(taskContent);
-
-        Content setttingsContent = contentFactory.createContent(new EspIdfToolWindowSettingPanel(project), PIO_HOME_SETTINGS_CONTENT_ID, false);
-        toolWindow.getContentManager().addContent(setttingsContent);
+        ContentFactory contentFactory = ApplicationManager.getApplication().getService(ContentFactory.class);
+        ContentManager contentManager = toolWindow.getContentManager();
+        Content taskContent = contentFactory.createContent(new EspIdfToolWindowTaskPanel(project), $i18n("esp.idf.tool.window.tasks"), false);
+        contentManager.addContent(taskContent);
+        Content setttingsContent = contentFactory.createContent(new EspIdfToolWindowSettingPanel(project), $i18n("esp.idf.tool.window.settings"), false);
+        contentManager.addContent(setttingsContent);
+        Content kconfigContent = contentFactory.createContent(new EspIdfMenuConfigPanel(project), $i18n("esp.idf.tool.window.sdk.config"), false);
+        contentManager.addContent(kconfigContent);
     }
 }

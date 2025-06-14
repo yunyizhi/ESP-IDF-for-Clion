@@ -57,6 +57,9 @@ public class EspIdfRunConfig extends CLionRunConfiguration<EspIdfBuildConf, EspI
         var historyConfigDataModel = new DebugConfigModel();
         IdfSysConfService sysConfService = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         List<ClassMetaUtils.PropOptMeta> propOptMetas = sysConfService.getPropOptMetas();
+        if (propOptMetas == null) {
+            return;
+        }
         for (ClassMetaUtils.PropOptMeta propOptMeta : propOptMetas) {
             Class<?> aClass = ClassMetaUtils.propType(propOptMeta);
             if (aClass == String.class) {

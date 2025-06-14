@@ -1,0 +1,92 @@
+package org.btik.espidf.toolwindow.kconfig;
+
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * @author lustre
+ * @since 2025/6/14 14:16
+ */
+public class ConfModel {
+    private KconfigType type;
+    private String name;
+    private String title;
+    private String help;
+    private String id;
+    private int[] range;
+    private List<ConfModel> children;
+
+    public KconfigType getType() {
+        return type;
+    }
+
+    public void setType(KconfigType type) {
+        this.type = type;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getTitle() {
+        return title;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public String getHelp() {
+        return help;
+    }
+
+    public void setHelp(String help) {
+        this.help = help;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public int[] getRange() {
+        return range;
+    }
+
+    public void setRange(int[] range) {
+        this.range = range;
+    }
+
+    public List<ConfModel> getChildren() {
+        return children;
+    }
+
+    public void setChildren(List<ConfModel> children) {
+        this.children = children;
+    }
+
+
+    public String dump() {
+        return "ConfModel{" +
+                "type=" + type +
+                ", name='" + name + '\'' +
+                ", title='" + title + '\'' +
+                ", help='" + help + '\'' +
+                ", id='" + id + '\'' +
+                ", range=" + Arrays.toString(range) +
+                ", children=" + children +
+                '}';
+    }
+
+    @Override
+    public String toString() {
+        return title == null ? name : title;
+    }
+}
