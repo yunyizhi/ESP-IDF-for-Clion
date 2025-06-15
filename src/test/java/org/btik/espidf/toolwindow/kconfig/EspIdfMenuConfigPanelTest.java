@@ -8,10 +8,13 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import javax.swing.*;
+
+import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.File;
 import java.net.URISyntaxException;
-import java.util.Arrays;
+import java.net.URL;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import static org.mockito.Mockito.when;
@@ -22,7 +25,8 @@ public class EspIdfMenuConfigPanelTest {
     Project project;
 
     @Mock
-    IdfProjectConfigService  projectConfigService;
+    IdfProjectConfigService projectConfigService;
+
     @Before
     public void setUp() throws URISyntaxException {
         MockitoAnnotations.openMocks(this);
@@ -39,7 +43,17 @@ public class EspIdfMenuConfigPanelTest {
 
     @Test
     public void load() throws InterruptedException {
-        EspIdfMenuConfigPanel panel = new EspIdfMenuConfigPanel(project);
-
+        URL url = getClass().getResource("/project_root/build/config/kconfig_menus.json");
+        List<ConfModel> confModel = KConfParser.parseKconfig(new File(url.getPath().replace("%20", " ")).toPath());
+        assert !confModel.isEmpty();
+        for (ConfModel model : confModel) {
+            DefaultMutableTreeNode treeNode = KConfParser.buildTree(model);
+            System.out.println(treeNode.toString());
+        }
+        url = getClass().getResource("/project_root/build/config/sdkconfig.json");
+        Map<String, Object> stringObjectMap = KConfParser.parseSdkConfig(new File(url.getPath().replace("%20", " ")).toPath());
+        stringObjectMap.forEach((k,v)->{
+            System.out.println(k+":"+v);
+        });
     }
 }
