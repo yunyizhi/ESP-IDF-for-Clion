@@ -11,6 +11,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.Consumer;
 
 /**
  * @author lustre
@@ -87,5 +88,19 @@ public class KConfParser {
             }
         }
         return treeNode;
+    }
+
+    public static void treeEach(ConfModel confModel, Consumer<ConfModel> consumer){
+        LinkedList<ConfModel> queue = new LinkedList<>();
+        queue.add(confModel);
+        while (!queue.isEmpty()) {
+            ConfModel nodeModel = queue.removeFirst();
+            consumer.accept(nodeModel);
+            List<ConfModel> children = nodeModel.getChildren();
+            if (CollectionUtils.isEmpty(children)) {
+                continue;
+            }
+            queue.addAll(children);
+        }
     }
 }

@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static org.btik.espidf.toolwindow.kconfig.KConfParser.treeEach;
 import static org.mockito.Mockito.when;
 
 
@@ -52,8 +53,12 @@ public class EspIdfMenuConfigPanelTest {
         }
         url = getClass().getResource("/project_root/build/config/sdkconfig.json");
         Map<String, Object> stringObjectMap = KConfParser.parseSdkConfig(new File(url.getPath().replace("%20", " ")).toPath());
-        stringObjectMap.forEach((k,v)->{
-            System.out.println(k+":"+v);
-        });
+        stringObjectMap.forEach((k,v)-> System.out.println(k+":"+v));
+        for (ConfModel model : confModel) {
+            treeEach(model, (node) ->{
+
+
+            });
+        }
     }
 }

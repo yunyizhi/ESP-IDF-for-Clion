@@ -13,6 +13,7 @@ public class ConfModel {
     private String title;
     private String help;
     private String id;
+    private boolean isMenuconfig;
     private int[] range;
     private List<ConfModel> children;
 
@@ -64,6 +65,14 @@ public class ConfModel {
         this.range = range;
     }
 
+    public boolean isMenuconfig() {
+        return isMenuconfig;
+    }
+
+    public void setMenuconfig(boolean menuconfig) {
+        isMenuconfig = menuconfig;
+    }
+
     public List<ConfModel> getChildren() {
         return children;
     }
@@ -81,6 +90,7 @@ public class ConfModel {
                 ", help='" + help + '\'' +
                 ", id='" + id + '\'' +
                 ", range=" + Arrays.toString(range) +
+                ", isMenuconfig=" + isMenuconfig +
                 ", children=" + children +
                 '}';
     }

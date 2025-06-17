@@ -69,7 +69,8 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
     }
 
     private void initIdfPathBrowser() {
-        FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
+        FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor().
+                withTitle($i18n("select.idf.path")).withDescription($i18n("select.idf.path.for.idf"));
         idfFrameworkPathBrowserButton = new TextFieldWithBrowseButton();
         idfFrameworkPathBrowserButton.getTextField().getDocument().addDocumentListener(new DocumentListener() {
             private void handleChange() {
@@ -91,7 +92,6 @@ public class IdfUnixLikeProjectSettingsStep<T> extends IdfProjectSettingsStep<T>
             }
         });
         idfFrameworkPathBrowserButton.addActionListener(new ComponentWithBrowseButton.BrowseFolderActionListener<>(
-                $i18n("select.idf.path"), $i18n("select.idf.path.for.idf"),
                 idfFrameworkPathBrowserButton, null, descriptor, TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT));
     }
 }

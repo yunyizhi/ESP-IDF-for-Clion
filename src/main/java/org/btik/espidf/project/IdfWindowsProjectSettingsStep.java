@@ -111,7 +111,8 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
     }
 
     private void initIdfPathBrowser() {
-        FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor();
+        FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor()
+                .withTitle( $i18n("select.idf.tools.path")).withDescription($i18n("select.idf.tools.path.for.idf"));
         idfToolPathBrowserButton = new TextFieldWithBrowseButton();
         idfToolPathBrowserButton.getTextField().getDocument().addDocumentListener(new DocumentListener() {
             private void handleChange() {
@@ -133,7 +134,6 @@ public class IdfWindowsProjectSettingsStep<T> extends IdfProjectSettingsStep<T> 
             }
         });
         idfToolPathBrowserButton.addActionListener(new ComponentWithBrowseButton.BrowseFolderActionListener<>(
-                $i18n("select.idf.tools.path"), $i18n("select.idf.tools.path.for.idf"),
                 idfToolPathBrowserButton, null, descriptor, TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT) {
             @Override
             public void actionPerformed(ActionEvent e) {

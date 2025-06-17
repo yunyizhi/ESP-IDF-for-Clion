@@ -1,0 +1,105 @@
+package org.btik.espidf.toolwindow.kconfig;
+
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.project.Project;
+import org.btik.espidf.service.IdfEnvironmentService;
+import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.util.OsUtil;
+
+import java.io.*;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * @author lustre
+ * @since 2025/6/17 23:38
+ */
+public class KConfServer {
+    private static final Logger LOG = Logger.getInstance(KConfServer.class);
+    private Project project;
+
+    private OutputStream processStdIn;
+    private InputStream processStdOut;
+    private Process process;
+
+
+    public KConfServer(Project project) {
+        this.project = project;
+    }
+
+    public void start() {
+        IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
+        String cmakeBuildDir = projectConfigService.getCmakeBuildDir();
+        IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
+        List<String> args = new ArrayList<String>();
+        String idfExe = OsUtil.getIdfExe();
+        args.add(idfExe);
+        args.add("confserver");
+        args.add("-B");
+        args.add(cmakeBuildDir);
+        ProcessBuilder processBuilder = new ProcessBuilder(args);
+        processBuilder.environment().putAll(environmentService.getEnvironments());
+        if (project.getBasePath() == null) {
+            LOG.error("Project base path is null");
+            return;
+        }
+        processBuilder.directory(Path.of(project.getBasePath()).toFile());
+        processBuilder.redirectErrorStream(true);
+        try {
+            Process process = processBuilder.start();
+            startStdOut(process);
+        } catch (IOException e) {
+            LOG.error("start KConfServer failed", e);
+        }
+    }
+
+    public void startStdOut(Process process) {
+        processStdIn = process.getOutputStream();
+        processStdOut = process.getInputStream();
+        ApplicationManager.getApplication().executeOnPooledThread(this::stdOutReadTask);
+    }
+
+    private void stdOutReadTask() {
+        try(var reader = new BufferedReader(new InputStreamReader(processStdOut))) {
+            String firstLine = reader.readLine();
+            if (firstLine == null || !firstLine.contains("Server running, waiting for requests on stdin")) {
+                LOG.warn("Unexpected initial output: " + firstLine);
+                return;
+            }
+
+            StringBuilder jsonBuffer = new StringBuilder();
+            int braceCount = 0;
+            boolean inString = false;
+            boolean escape = false;
+
+            while (process.isAlive()) {
+                int ch = reader.read();
+                if (ch == -1) break; // 流结束
+
+                char c = (char) ch;
+                jsonBuffer.append(c);
+
+                if (!inString) {
+                    if (c == '{') braceCount++;
+                    else if (c == '}') braceCount--;
+                    else if (c == '"') inString = true;
+                } else {
+                    if (escape) escape = false;
+                    else if (c == '\\') escape = true;
+                    else if (c == '"') inString = false;
+                }
+
+                // 5. 检测完整JSON对象
+                if (braceCount == 0 && !jsonBuffer.isEmpty()) {
+                    String jsonStr = jsonBuffer.toString();
+                    jsonBuffer.setLength(0); // 重置缓冲区
+                    System.out.println(jsonStr);
+                }
+            }
+        } catch (IOException e) {
+            LOG.error("Error reading process output", e);
+        }
+    }
+}

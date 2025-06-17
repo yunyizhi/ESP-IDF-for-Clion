@@ -9,6 +9,7 @@ import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.VerticalFlowLayout;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.ui.JBUI;
@@ -68,7 +69,7 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         appElfConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         appElfConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         appElf = new TextFieldFileChooser();
-        appElf.addActionListener(project, newElfFileChooser(), $i18n("select.elf.path"), $i18n("select.idf.path.for.idf"));
+        appElf.addActionListener(project, newElfFileChooser($i18n("select.elf.path"), $i18n("select.idf.path.for.idf")));
         wrapper.add(appElf, appElfConstraints);
         rowIndex++;
 
@@ -77,7 +78,7 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         bootLoaderConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         bootLoaderConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         bootloaderElf = new TextFieldFileChooser();
-        bootloaderElf.addActionListener(project, newElfFileChooser(), $i18n("select.elf.path"), $i18n("esp.idf.debug.bootloader_elf.select"));
+        bootloaderElf.addActionListener(project, newElfFileChooser($i18n("select.elf.path"), $i18n("esp.idf.debug.bootloader_elf.select")));
         wrapper.add(bootloaderElf, bootLoaderConstraints);
         rowIndex++;
 
@@ -86,7 +87,7 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         romElfConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         romElfConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         romElf = new TextFieldFileChooser();
-        romElf.addActionListener(project, newElfFileChooser(), $i18n("select.elf.path"), $i18n("esp.idf.debug.rom_elf.select"));
+        romElf.addActionListener(project, newElfFileChooser($i18n("select.elf.path"), $i18n("esp.idf.debug.rom_elf.select")));
         wrapper.add(romElf, romElfConstraints);
         rowIndex++;
 
@@ -95,8 +96,9 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         gdbArgConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         gdbArgConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         gdb = new TextFieldFileChooser();
-        FileChooserDescriptor gdbChooser = new FileChooserDescriptor(true, false, false, false, false, false);
-        gdb.addActionListener(project, gdbChooser, $i18n("select.esp.gdb.path"), $i18n("select.esp.gdb.path"));
+        FileChooserDescriptor gdbChooser = new FileChooserDescriptor(true, false, false, false, false, false)
+                .withTitle($i18n("select.esp.gdb.path")).withDescription($i18n("select.esp.gdb.path"));
+        gdb.addActionListener(project, gdbChooser);
         wrapper.add(gdb, gdbArgConstraints);
         rowIndex++;
 
@@ -207,8 +209,15 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         return rootPanel;
     }
 
-    private FileChooserDescriptor newElfFileChooser() {
-        return FileChooserDescriptorFactory.createSingleFileDescriptor("elf");
+    private FileChooserDescriptor newElfFileChooser(String title, String description) {
+        FileChooserDescriptor elf = FileChooserDescriptorFactory.createSingleFileDescriptor("elf");
+        if (StringUtil.isNotEmpty(description)) {
+            elf.setDescription(description);
+        }
+        if (StringUtil.isNotEmpty(title)) {
+            elf.setTitle(title);
+        }
+        return elf;
     }
 
 }
