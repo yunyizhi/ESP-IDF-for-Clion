@@ -18,4 +18,6 @@ platformio项目中使用idf命令行。
 
 * 在CLion的终端里面的使用MenuConfig 中使用ESC会导致，当前鼠标回到上方编辑文件。
 可以使用左箭头代替<kbd>ESC</kbd>回到上一级菜单的功能，使用`Q`代替退出MenuConfig的功能。
+或者移除终端的<kdb>ESC</kbd>按键功能进入Settings ->keymap -> Plugins | Terminal | Switch Focus To Editor
+中文版本是 设置->按键映射->插件 | Terminal | 将焦点切换到编辑器
 
