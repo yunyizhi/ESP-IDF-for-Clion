@@ -216,7 +216,7 @@ public class IdfSysConfManager implements IdfSysConfService {
 
     @Override
     public List<ClassMetaUtils.PropOptMeta> getPropOptMetas() {
-        return propOptMetas;
+        return propOptMetas == null ? List.of() : propOptMetas;
     }
 
     private void saveConfig() {

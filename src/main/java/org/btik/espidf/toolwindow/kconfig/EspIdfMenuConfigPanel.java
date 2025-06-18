@@ -25,9 +25,12 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
     private final KconfigTreePanel kconfigTreePanel;
 
+    private KConfServer kconfServer;
+
     public EspIdfMenuConfigPanel(Project project) {
         super(new BorderLayout());
         this.project = project;
+        kconfServer = new KConfServer(project);
         kconfigTreePanel = new KconfigTreePanel();
         add(kconfigTreePanel, BorderLayout.CENTER);
         loadPage();
@@ -53,6 +56,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
             return;
         }
         Map<String, Object> sdkConfig = KConfParser.parseSdkConfig(sdkConfigPath);
+        kconfServer.start();
         // kconfigTreePanel.setRoot(root);
     }
 

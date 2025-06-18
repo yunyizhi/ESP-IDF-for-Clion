@@ -12,13 +12,15 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.btik.espidf.util.OsUtil.getCmdEnv;
+
 /**
  * @author lustre
  * @since 2025/6/17 23:38
  */
 public class KConfServer {
     private static final Logger LOG = Logger.getInstance(KConfServer.class);
-    private Project project;
+    private final Project project;
 
     private OutputStream processStdIn;
     private InputStream processStdOut;
@@ -29,11 +31,31 @@ public class KConfServer {
         this.project = project;
     }
 
+    private void stopLast(){
+        if (process == null) {
+            return;
+        }
+        try {
+            processStdOut.close();
+            for (int i = 0; i < 10 && process.isAlive(); i++) {
+                Thread.sleep(200);
+            }
+            if (process.isAlive()) {
+                process.destroy();
+            }
+        } catch (IOException | InterruptedException e) {
+            LOG.error(e);
+        }
+    }
+
     public void start() {
+        stopLast();
         IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
         String cmakeBuildDir = projectConfigService.getCmakeBuildDir();
         IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
         List<String> args = new ArrayList<String>();
+        args.add(getCmdEnv());
+        args.add("-c");
         String idfExe = OsUtil.getIdfExe();
         args.add(idfExe);
         args.add("confserver");
@@ -48,7 +70,7 @@ public class KConfServer {
         processBuilder.directory(Path.of(project.getBasePath()).toFile());
         processBuilder.redirectErrorStream(true);
         try {
-            Process process = processBuilder.start();
+            process = processBuilder.start();
             startStdOut(process);
         } catch (IOException e) {
             LOG.error("start KConfServer failed", e);
@@ -64,9 +86,10 @@ public class KConfServer {
     private void stdOutReadTask() {
         try(var reader = new BufferedReader(new InputStreamReader(processStdOut))) {
             String firstLine = reader.readLine();
-            if (firstLine == null || !firstLine.contains("Server running, waiting for requests on stdin")) {
-                LOG.warn("Unexpected initial output: " + firstLine);
-                return;
+            while (firstLine == null || !firstLine.contains("Server running, waiting for requests on stdin")) {
+                //LOG.warn("Unexpected initial output: " + firstLine);
+                System.out.println(firstLine);
+                firstLine = reader.readLine();
             }
 
             StringBuilder jsonBuffer = new StringBuilder();
