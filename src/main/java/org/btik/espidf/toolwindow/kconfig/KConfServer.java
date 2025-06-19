@@ -90,7 +90,7 @@ public class KConfServer {
                 return;
             }
             LOG.info("exec confserver");
-            while (!firstLine.contains("Server running, waiting for requests on stdin")) {
+            while (!firstLine.contains("Server running")) {
                 LOG.info(firstLine);
                 firstLine = reader.readLine();
                 if (firstLine == null) {
