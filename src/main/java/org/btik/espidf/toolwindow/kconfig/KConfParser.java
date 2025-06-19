@@ -103,4 +103,8 @@ public class KConfParser {
             queue.addAll(children);
         }
     }
+
+    public static void parseInitStatus(String jsonStr) {
+
+    }
 }

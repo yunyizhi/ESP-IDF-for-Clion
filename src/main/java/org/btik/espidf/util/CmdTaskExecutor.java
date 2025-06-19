@@ -13,7 +13,7 @@ import org.jetbrains.annotations.NotNull;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.I18nMessage.$i18nF;
-import static org.btik.espidf.util.StringUtils.safeNull;
+import static org.btik.espidf.util.StringTools.safeNull;
 
 /**
  * @author lustre

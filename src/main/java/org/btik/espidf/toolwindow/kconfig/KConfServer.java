@@ -5,14 +5,14 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
-import org.btik.espidf.util.OsUtil;
+import org.btik.espidf.util.EnvironmentVarUtil;
 
 import java.io.*;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
-import static org.btik.espidf.util.OsUtil.getCmdEnv;
+import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * @author lustre
@@ -25,13 +25,15 @@ public class KConfServer {
     private OutputStream processStdIn;
     private InputStream processStdOut;
     private Process process;
+    private final Consumer<String> onMsg;
 
 
-    public KConfServer(Project project) {
+    public KConfServer(Project project, Consumer<String> onMsg) {
         this.project = project;
+        this.onMsg = onMsg;
     }
 
-    private void stopLast(){
+    private void stopLast() {
         if (process == null) {
             return;
         }
@@ -53,16 +55,14 @@ public class KConfServer {
         IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
         String cmakeBuildDir = projectConfigService.getCmakeBuildDir();
         IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
-        List<String> args = new ArrayList<String>();
-        args.add(getCmdEnv());
-        args.add("-c");
-        String idfExe = OsUtil.getIdfExe();
-        args.add(idfExe);
-        args.add("confserver");
+        Map<String, String> environments = environmentService.getEnvironments();
+        List<String> args = new ArrayList<>();
+        args.add(EnvironmentVarUtil.findIdfFullPath(environments));
         args.add("-B");
         args.add(cmakeBuildDir);
+        args.add("confserver");
         ProcessBuilder processBuilder = new ProcessBuilder(args);
-        processBuilder.environment().putAll(environmentService.getEnvironments());
+        processBuilder.environment().putAll(environments);
         if (project.getBasePath() == null) {
             LOG.error("Project base path is null");
             return;
@@ -84,12 +84,18 @@ public class KConfServer {
     }
 
     private void stdOutReadTask() {
-        try(var reader = new BufferedReader(new InputStreamReader(processStdOut))) {
+        try (var reader = new BufferedReader(new InputStreamReader(processStdOut))) {
             String firstLine = reader.readLine();
-            while (firstLine == null || !firstLine.contains("Server running, waiting for requests on stdin")) {
-                //LOG.warn("Unexpected initial output: " + firstLine);
-                System.out.println(firstLine);
+            if (firstLine == null) {
+                return;
+            }
+            LOG.info("exec confserver");
+            while (!firstLine.contains("Server running, waiting for requests on stdin")) {
+                LOG.info(firstLine);
                 firstLine = reader.readLine();
+                if (firstLine == null) {
+                    return;
+                }
             }
 
             StringBuilder jsonBuffer = new StringBuilder();
@@ -118,7 +124,7 @@ public class KConfServer {
                 if (braceCount == 0 && !jsonBuffer.isEmpty()) {
                     String jsonStr = jsonBuffer.toString();
                     jsonBuffer.setLength(0); // 重置缓冲区
-                    System.out.println(jsonStr);
+                    onMsg.accept(jsonStr);
                 }
             }
         } catch (IOException e) {

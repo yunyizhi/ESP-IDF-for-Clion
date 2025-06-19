@@ -26,11 +26,17 @@ public class EspIdfMenuConfigPanel extends JPanel {
     private final KconfigTreePanel kconfigTreePanel;
 
     private KConfServer kconfServer;
+    private boolean initOk = false;
+    List<ConfModel> confModels;
+    Map<String, Object> sdkConfig;
+
+
+
 
     public EspIdfMenuConfigPanel(Project project) {
         super(new BorderLayout());
         this.project = project;
-        kconfServer = new KConfServer(project);
+        kconfServer = new KConfServer(project, this::onKConfMsg);
         kconfigTreePanel = new KconfigTreePanel();
         add(kconfigTreePanel, BorderLayout.CENTER);
         loadPage();
@@ -49,15 +55,26 @@ public class EspIdfMenuConfigPanel extends JPanel {
             LOG.error(menuConfigPath + " does not exist");
             return;
         }
-        List<ConfModel> root = KConfParser.parseKconfig(menuConfigPath);
+        confModels = KConfParser.parseKconfig(menuConfigPath);
         Path sdkConfigPath = Path.of(basePath, cmakeBuildDir, $sys("esp.idf.kconfig.menus.dir")).resolve($sys("esp.idf.kconfig.sdk.config.file"));
         if (!sdkConfigPath.toFile().exists()) {
             LOG.error(sdkConfigPath + " does not exist");
             return;
         }
-        Map<String, Object> sdkConfig = KConfParser.parseSdkConfig(sdkConfigPath);
+        sdkConfig = KConfParser.parseSdkConfig(sdkConfigPath);
         kconfServer.start();
         // kconfigTreePanel.setRoot(root);
+    }
+
+    private void onKConfMsg(String jsonStr) {
+        if (!initOk){
+            initOk = true;
+            onInitOk(jsonStr);
+        }
+    }
+
+    private void onInitOk(String jsonStr) {
+        KConfParser.parseInitStatus(jsonStr);
     }
 
 
