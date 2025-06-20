@@ -4,6 +4,8 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.treeStructure.Tree;
 import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
+import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -12,6 +14,7 @@ import java.awt.BorderLayout;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.btik.espidf.util.SysConf.$sys;
 
@@ -29,8 +32,6 @@ public class EspIdfMenuConfigPanel extends JPanel {
     private boolean initOk = false;
     List<ConfModel> confModels;
     Map<String, Object> sdkConfig;
-
-
 
 
     public EspIdfMenuConfigPanel(Project project) {
@@ -63,18 +64,28 @@ public class EspIdfMenuConfigPanel extends JPanel {
         }
         sdkConfig = KConfParser.parseSdkConfig(sdkConfigPath);
         kconfServer.start();
-        // kconfigTreePanel.setRoot(root);
     }
 
-    private void onKConfMsg(String jsonStr) {
-        if (!initOk){
+    private void onKConfMsg(KconfigStatus status) {
+        if (!initOk) {
             initOk = true;
-            onInitOk(jsonStr);
+            onInitOk(status);
         }
     }
 
-    private void onInitOk(String jsonStr) {
-        KConfParser.parseInitStatus(jsonStr);
+    private void onInitOk(KconfigStatus status) {
+        for (ConfModel confModel : confModels) {
+            Map<String, Boolean> visible = status.getVisible();
+            String id = confModel.getId();
+            if (visible.containsKey(id) && !visible.get(id)) {
+                confModel.setVisible(false);
+            }
+        }
+        List<DefaultMutableTreeNode> root = confModels.stream()
+                .map(KConfParser::buildTree)
+                .filter(Objects::nonNull)
+                .toList();
+        kconfigTreePanel.setRoot(root);
     }
 
 
@@ -88,7 +99,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
         public void setRoot(List<DefaultMutableTreeNode> root) {
             this.root = root;
-            DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode("1111");
+            DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode("Menu Config");
             Tree tree = new Tree(treeNode);
             root.forEach(treeNode::add);
             viewport.setView(tree);

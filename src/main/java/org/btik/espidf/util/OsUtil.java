@@ -16,7 +16,7 @@ public class OsUtil {
 
         String UNIX_BASH_ARG = "-c";
 
-        String UNIX_IDF_EXE = "idf.py";
+        String IDF_EXE = "idf.py";
 
         String POWER_SHELL_ENV_PREFIX = "$env:";
     }
@@ -33,6 +33,6 @@ public class OsUtil {
     }
 
     public static String getIdfExe() {
-        return IS_WINDOWS ? Const.WIN_IDF_EXE : Const.UNIX_IDF_EXE;
+        return IS_WINDOWS ? Const.WIN_IDF_EXE : Const.IDF_EXE;
     }
 }

@@ -1,18 +1,36 @@
 package org.btik.espidf.util;
 
 
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class EnvironmentVarUtilTest {
 
+    Map<String, String> env;
+
+    @Before
+    public void setUp() {
+        String path;
+        if (OsUtil.IS_WINDOWS) {
+            path = Objects.requireNonNull(getClass().getResource("/idf_fake_path/windows")).getPath();
+        } else {
+            path = Objects.requireNonNull(getClass().getResource("/idf_fake_path")).getPath();
+        }
+        path = path.replace("%20", " ");
+        File file = new File(path);
+        env = new HashMap<>();
+        env.put("PATH", file.getAbsolutePath());
+    }
+
     @Test
     public void getIdf() {
-        Map<String, String> map = new HashMap<>();
-        map.put("PATH", "D:\\Espressif1\\frameworks\\esp-idf-v5.4.1\\components\\espcoredump;D:\\Espressif1\\frameworks\\esp-idf-v5.4.1\\components\\partition_table;D:\\Espressif1\\frameworks\\esp-idf-v5.4.1\\components\\app_update;D:\\Espressif1\\tools\\xtensa-esp-elf-gdb\\14.2_20240403\\xtensa-esp-elf-gdb\\bin;D:\\Espressif1\\tools\\riscv32-esp-elf-gdb\\14.2_20240403\\riscv32-esp-elf-gdb\\bin;D:\\Espressif1\\tools\\xtensa-esp-elf\\esp-14.2.0_20241119\\xtensa-esp-elf\\bin;D:\\Espressif1\\tools\\esp-clang\\esp-18.1.2_20240912\\esp-clang\\bin;D:\\Espressif1\\tools\\riscv32-esp-elf\\esp-14.2.0_20241119\\riscv32-esp-elf\\bin;D:\\Espressif1\\tools\\esp32ulp-elf\\2.38_20240113\\esp32ulp-elf\\bin;D:\\Espressif1\\tools\\cmake\\3.30.2\\bin;D:\\Espressif1\\tools\\openocd-esp32\\v0.12.0-esp32-20241016\\openocd-esp32\\bin;D:\\Espressif1\\tools\\ninja\\1.12.1\\;D:\\Espressif1\\tools\\idf-exe\\1.0.3\\;D:\\Espressif1\\tools\\ccache\\4.10.2\\ccache-4.10.2-windows-x86_64;D:\\Espressif1\\tools\\dfu-util\\0.11\\dfu-util-0.11-win64;D:\\Espressif1\\frameworks\\esp-idf-v5.4.1\\tools;D:\\Espressif1\\python_env\\idf5.4_py3.11_env\\Scripts\\;D:\\Espressif1\\tools\\idf-git\\2.44.0\\cmd\\;D:\\Espressif1;D:\\Program Files\\Microsoft\\jdk-21.0.7.6-hotspot\\bin;C:\\ProgramData\\Oracle\\Java\\javapath;D:\\Program Files\\Microsoft\\jdk-17.0.6.10-hotspot\\bin;D:\\cygwin64\\bin;C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\Windows\\System32\\OpenSSH\\;D:\\Program Files\\apache-maven-3.6.3\\bin;D:\\Program Files\\apache-ant-1.10.9\\bin;C:\\ProgramData\\chocolatey\\bin;C:\\WINDOWS\\system32;C:\\WINDOWS;C:\\WINDOWS\\System32\\Wbem;C:\\WINDOWS\\System32\\WindowsPowerShell\\v1.0\\;C:\\WINDOWS\\System32\\OpenSSH\\;D:\\Program Files\\Microsoft\\jdk-21.0.7.6-hotspot\\\\bin;D:\\Users\\immor\\AppData\\Local\\Programs\\Python\\Python310\\Scripts\\;D:\\Users\\immor\\AppData\\Local\\Programs\\Python\\Python310;C:\\Users\\immor\\.platformio\\penv\\Scripts;C:\\Program Files\\Pandoc\\;C:\\Program Files\\Microsoft SQL Server\\Client SDK\\ODBC\\170\\Tools\\Binn\\;C:\\Program Files (x86)\\Microsoft SQL Server\\150\\Tools\\Binn\\;C:\\Program Files\\Microsoft SQL Server\\150\\Tools\\Binn\\;C:\\Program Files\\Microsoft SQL Server\\150\\DTS\\Binn\\;C:\\Program Files (x86)\\Windows Kits\\8.1\\Windows Performance Toolkit\\;C:\\Program Files\\Microsoft Network Monitor 3\\;C:\\Program Files\\dotnet\\;D:\\Qt\\Qt5.12.2\\5.12.2\\msvc2017_64\\bin;C:\\Program Files (x86)\\NVIDIA Corporation\\PhysX\\Common;C:\\Program Files\\Common Files\\Autodesk Shared\\;D:\\ffmpeg-7.0-essentials_build\\bin;D:\\Program Files\\TortoiseGit\\bin;D:\\Program Files\\Git\\cmd;;C:\\Program Files\\NVIDIA Corporation\\NVIDIA App\\NvDLISR;D:\\Program Files\\nodejs\\;D:\\Users\\immor\\AppData\\Local\\Programs\\Python\\Python310\\;C:\\Users\\immor\\AppData\\Local\\Microsoft\\WindowsApps;D:\\Users\\immor\\AppData\\Local\\Programs\\Microsoft VS Code\\bin;C:\\Users\\immor\\AppData\\Local\\JetBrains\\Toolbox\\scripts;C:\\Users\\immor\\AppData\\Local\\Microsoft\\WindowsApps;C:\\Users\\immor\\AppData\\Roaming\\npm");
-        String idfFullPath = EnvironmentVarUtil.findIdfFullPath(map);
+        String idfFullPath = EnvironmentVarUtil.findIdfFullPath(env);
         System.out.println(idfFullPath);
+        assert idfFullPath != null && !idfFullPath.isEmpty();
     }
 }

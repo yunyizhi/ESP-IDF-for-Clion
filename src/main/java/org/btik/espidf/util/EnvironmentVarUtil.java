@@ -49,8 +49,10 @@ public class EnvironmentVarUtil {
     }
 
     public static String findIdfFullPath(String path) {
-        return safe2String(
-                PathEnvironmentVariableUtil.findInPath(OsUtil.getIdfExe(), path, null),
-                File::getPath);
+        File idfPyFile = PathEnvironmentVariableUtil.findInPath(OsUtil.getIdfExe(), path, null);
+        if ((idfPyFile == null || !idfPyFile.exists()) && OsUtil.IS_WINDOWS) {
+            idfPyFile = PathEnvironmentVariableUtil.findInPath(OsUtil.Const.IDF_EXE, path, null);
+        }
+        return safe2String(idfPyFile, File::getPath);
     }
 }

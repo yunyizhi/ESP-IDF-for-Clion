@@ -1,4 +1,4 @@
-package org.btik.espidf.toolwindow.kconfig;
+package org.btik.espidf.toolwindow.kconfig.model;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,6 +16,8 @@ public class ConfModel {
     private boolean isMenuconfig;
     private int[] range;
     private List<ConfModel> children;
+
+    private boolean visible = true;
 
     public KconfigType getType() {
         return type;
@@ -81,6 +83,13 @@ public class ConfModel {
         this.children = children;
     }
 
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
+    }
 
     public String dump() {
         return "ConfModel{" +

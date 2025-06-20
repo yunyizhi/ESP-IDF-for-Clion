@@ -91,7 +91,7 @@ public class TreeNodeCmdExecutor {
                     envPrefix : envPrefix + Const.WIN_IDF_EXE + " " + command);
         } else {
             runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, false));
-            runConfiguration.setScriptText(StringUtil.isEmpty(command) ? "" : Const.UNIX_IDF_EXE + " " + command);
+            runConfiguration.setScriptText(StringUtil.isEmpty(command) ? "" : Const.IDF_EXE + " " + command);
         }
         runConfiguration.setScriptWorkingDirectory(basePath);
 

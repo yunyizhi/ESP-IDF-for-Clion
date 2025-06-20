@@ -1,10 +1,17 @@
 package org.btik.espidf.toolwindow.kconfig;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.toolwindow.kconfig.model.KconfigMeta;
+import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 import org.btik.espidf.util.EnvironmentVarUtil;
 
 import java.io.*;
@@ -25,10 +32,10 @@ public class KConfServer {
     private OutputStream processStdIn;
     private InputStream processStdOut;
     private Process process;
-    private final Consumer<String> onMsg;
+    private final Consumer<KconfigStatus> onMsg;
 
 
-    public KConfServer(Project project, Consumer<String> onMsg) {
+    public KConfServer(Project project, Consumer<KconfigStatus> onMsg) {
         this.project = project;
         this.onMsg = onMsg;
     }
@@ -85,48 +92,38 @@ public class KConfServer {
 
     private void stdOutReadTask() {
         try (var reader = new BufferedReader(new InputStreamReader(processStdOut))) {
-            String firstLine = reader.readLine();
-            if (firstLine == null) {
+            String beforeContent = reader.readLine();
+            if (beforeContent == null) {
                 return;
             }
             LOG.info("exec confserver");
-            while (!firstLine.contains("Server running")) {
-                LOG.info(firstLine);
-                firstLine = reader.readLine();
-                if (firstLine == null) {
+            while (!beforeContent.contains("Server running")) {
+                System.out.println(beforeContent);
+                beforeContent = reader.readLine();
+                if (beforeContent == null) {
                     return;
                 }
             }
-
-            StringBuilder jsonBuffer = new StringBuilder();
-            int braceCount = 0;
-            boolean inString = false;
-            boolean escape = false;
-
+            ObjectMapper mapper = new ObjectMapper();
+            JsonParser jsonParser = mapper.getFactory().createParser(reader);
             while (process.isAlive()) {
-                int ch = reader.read();
-                if (ch == -1) break; // 流结束
+                try {
+                    JsonToken token = jsonParser.nextToken();
+                    if (token == null) break;
 
-                char c = (char) ch;
-                jsonBuffer.append(c);
-
-                if (!inString) {
-                    if (c == '{') braceCount++;
-                    else if (c == '}') braceCount--;
-                    else if (c == '"') inString = true;
-                } else {
-                    if (escape) escape = false;
-                    else if (c == '\\') escape = true;
-                    else if (c == '"') inString = false;
-                }
-
-                // 5. 检测完整JSON对象
-                if (braceCount == 0 && !jsonBuffer.isEmpty()) {
-                    String jsonStr = jsonBuffer.toString();
-                    jsonBuffer.setLength(0); // 重置缓冲区
-                    onMsg.accept(jsonStr);
+                    if (token == JsonToken.START_OBJECT) {
+                        JsonNode node = jsonParser.readValueAsTree();
+                        KconfigStatus status = mapper.treeToValue(node, KconfigStatus.class);
+                        if (node.has(KconfigMeta.ERROR)) {
+                            status.setError(true);
+                        }
+                        onMsg.accept(status);
+                    }
+                } catch (JsonParseException e) {
+                    jsonParser.skipChildren();
                 }
             }
+            LOG.info("KConfServer exited");
         } catch (IOException e) {
             LOG.error("Error reading process output", e);
         }

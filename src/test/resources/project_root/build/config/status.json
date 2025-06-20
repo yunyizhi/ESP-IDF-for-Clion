@@ -1,0 +1,18 @@
+{
+  "version": 2,
+  "ranges": {
+    "TEST_CONDITIONAL_RANGES": [
+      0,
+      10
+    ]
+  },
+  "visible": {
+    "TEST_CONDITIONAL_RANGES": true,
+    "CHOICE_A": true,
+    "test-config-submenu": true
+  },
+  "values": {
+    "TEST_CONDITIONAL_RANGES": 1,
+    "CHOICE_A": true
+  }
+}

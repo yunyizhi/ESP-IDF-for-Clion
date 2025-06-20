@@ -1,4 +1,4 @@
-package org.btik.espidf.toolwindow.kconfig;
+package org.btik.espidf.toolwindow.kconfig.model;
 
 import java.util.HashMap;
 import java.util.Map;
