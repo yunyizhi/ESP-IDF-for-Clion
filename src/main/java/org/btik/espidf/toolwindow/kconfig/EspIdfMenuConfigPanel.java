@@ -3,6 +3,7 @@ package org.btik.espidf.toolwindow.kconfig;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.treeStructure.Tree;
+import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
@@ -75,11 +76,24 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
     private void onInitOk(KconfigStatus status) {
         for (ConfModel confModel : confModels) {
-            Map<String, Boolean> visible = status.getVisible();
-            String id = confModel.getId();
-            if (visible.containsKey(id) && !visible.get(id)) {
-                confModel.setVisible(false);
-            }
+            KConfParser.treeEach(confModel, (item)->{
+                Map<String, Boolean> visible = status.getVisible();
+                String id = item.getId();
+                if (visible.containsKey(id)) {
+                    if (!visible.get(id)) {
+                        item.setVisible(false);
+                    }
+                }else {
+                    item.setVisible(false);
+                }
+                if (CollectionUtils.isEmpty(item.getChildren())) {
+                    // 叶子节点留倒数第二级在树上，真叶子节点作为另一个面板
+                    ConfModel parent = item.getParent();
+                    if (parent != null) {
+                        parent.setLeaf(true);
+                    }
+                }
+            });
         }
         List<DefaultMutableTreeNode> root = confModels.stream()
                 .map(KConfParser::buildTree)
@@ -101,6 +115,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
             this.root = root;
             DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode("Menu Config");
             Tree tree = new Tree(treeNode);
+            tree.expandRow(0);
             root.forEach(treeNode::add);
             viewport.setView(tree);
         }

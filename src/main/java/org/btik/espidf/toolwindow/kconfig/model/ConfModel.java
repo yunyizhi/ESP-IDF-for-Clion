@@ -16,8 +16,14 @@ public class ConfModel {
     private boolean isMenuconfig;
     private int[] range;
     private List<ConfModel> children;
+    /**
+     * 原始叶子节点放入右侧面板，留在树上叶子节点为json叶子节点父节点
+     * */
+    private boolean isLeaf;
 
     private boolean visible = true;
+
+    private ConfModel parent;
 
     public KconfigType getType() {
         return type;
@@ -91,6 +97,14 @@ public class ConfModel {
         this.visible = visible;
     }
 
+    public ConfModel getParent() {
+        return parent;
+    }
+
+    public void setParent(ConfModel parent) {
+        this.parent = parent;
+    }
+
     public String dump() {
         return "ConfModel{" +
                 "type=" + type +
@@ -107,5 +121,13 @@ public class ConfModel {
     @Override
     public String toString() {
         return title == null ? name : title;
+    }
+
+    public boolean isLeaf() {
+        return isLeaf;
+    }
+
+    public void setLeaf(boolean leaf) {
+        isLeaf = leaf;
     }
 }

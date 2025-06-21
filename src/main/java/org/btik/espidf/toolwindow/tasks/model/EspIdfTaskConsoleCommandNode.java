@@ -1,4 +1,4 @@
-package org.btik.espidf.toolwindow.tree.model;
+package org.btik.espidf.toolwindow.tasks.model;
 
 /**
  * 和普通的启动进程区别在与有终端的环境，如果是TUI操作和快捷键响应需要控制台

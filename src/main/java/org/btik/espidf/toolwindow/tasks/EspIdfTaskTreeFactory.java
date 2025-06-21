@@ -1,8 +1,8 @@
-package org.btik.espidf.toolwindow.tree;
+package org.btik.espidf.toolwindow.tasks;
 
 import com.intellij.notification.NotificationType;
 import org.btik.espidf.toolwindow.common.NodeModel;
-import org.btik.espidf.toolwindow.tree.model.*;
+import org.btik.espidf.toolwindow.tasks.model.*;
 import org.btik.espidf.util.DomUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -12,7 +12,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.function.Function;
 
-import static org.btik.espidf.toolwindow.tree.TreeXmlMeta.*;
+import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.*;
 import static org.btik.espidf.util.DomUtil.eachChildrenElement;
 import static org.btik.espidf.util.DomUtil.getFirstElementByName;
 import static org.btik.espidf.util.I18nMessage.$i18n;

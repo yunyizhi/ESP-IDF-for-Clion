@@ -1,4 +1,4 @@
-package org.btik.espidf.toolwindow.tree;
+package org.btik.espidf.toolwindow.tasks;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionManager;
@@ -17,10 +17,10 @@ import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.service.IdfProjectConfigService;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskActionNode;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskCommandNode;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskConsoleCommandNode;
-import org.btik.espidf.toolwindow.tree.model.RawCommandNode;
+import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskActionNode;
+import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskCommandNode;
+import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskConsoleCommandNode;
+import org.btik.espidf.toolwindow.tasks.model.RawCommandNode;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.jetbrains.annotations.NotNull;
 

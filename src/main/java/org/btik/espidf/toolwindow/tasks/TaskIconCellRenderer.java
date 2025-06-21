@@ -1,10 +1,10 @@
-package org.btik.espidf.toolwindow.tree;
+package org.btik.espidf.toolwindow.tasks;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.util.IconLoader;
 import com.intellij.ui.CheckedTreeNode;
 
-import org.btik.espidf.toolwindow.tree.model.*;
+import org.btik.espidf.toolwindow.tasks.model.*;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -16,7 +16,7 @@ import java.util.HashMap;
  * @author lustre
  * @since 2022/10/11 21:24
  */
-public class IconCellRenderer extends DefaultTreeCellRenderer {
+public class TaskIconCellRenderer extends DefaultTreeCellRenderer {
     private static final HashMap<String, Icon> ijIconMap = new HashMap<>();
 
     private static final HashMap<Class<? extends EspIdfTaskTreeNode>, Icon> metaIconMap = new HashMap<>();

@@ -83,6 +83,7 @@ public class KConfParser {
         queue.add(rootNodeModel);
         while (!queue.isEmpty()) {
             NodeModel<ConfModel> nodeModel = queue.removeFirst();
+            DefaultMutableTreeNode node = nodeModel.getNode();
             List<ConfModel> children = nodeModel.getModel().getChildren();
             if (CollectionUtils.isEmpty(children)) {
                 continue;

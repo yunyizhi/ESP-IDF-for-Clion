@@ -2,13 +2,13 @@ package org.btik.espidf.toolwindow;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.ui.treeStructure.Tree;
-import org.btik.espidf.toolwindow.tree.EspIdfTaskTreeFactory;
-import org.btik.espidf.toolwindow.tree.IconCellRenderer;
-import org.btik.espidf.toolwindow.tree.TreeNodeCmdExecutor;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskActionNode;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskCommandNode;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskConsoleCommandNode;
-import org.btik.espidf.toolwindow.tree.model.RawCommandNode;
+import org.btik.espidf.toolwindow.tasks.EspIdfTaskTreeFactory;
+import org.btik.espidf.toolwindow.tasks.TaskIconCellRenderer;
+import org.btik.espidf.toolwindow.tasks.TreeNodeCmdExecutor;
+import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskActionNode;
+import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskCommandNode;
+import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskConsoleCommandNode;
+import org.btik.espidf.toolwindow.tasks.model.RawCommandNode;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -34,7 +34,8 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
         setBorder(BorderFactory.createEmptyBorder());
         Tree tree = new Tree(root);
         viewport.setView(tree);
-        tree.setCellRenderer(new IconCellRenderer());
+        tree.expandRow(0);
+        tree.setCellRenderer(new TaskIconCellRenderer());
         tree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {

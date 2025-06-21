@@ -1,4 +1,4 @@
-package org.btik.espidf.toolwindow.tree.model;
+package org.btik.espidf.toolwindow.tasks.model;
 
 /**
  * @author lustre

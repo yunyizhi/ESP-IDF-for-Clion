@@ -1,4 +1,4 @@
-package org.btik.espidf.toolwindow.tree;
+package org.btik.espidf.toolwindow.tasks;
 
 import com.intellij.execution.ExecutionManager;
 import com.intellij.execution.RunManager;
@@ -13,7 +13,7 @@ import com.intellij.sh.run.ShConfigurationType;
 import com.intellij.sh.run.ShRunConfiguration;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.service.IdfSysConfService;
-import org.btik.espidf.toolwindow.tree.model.EspIdfTaskActionNode;
+import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskActionNode;
 import org.btik.espidf.util.I18nMessage;
 
 import java.nio.file.Path;
