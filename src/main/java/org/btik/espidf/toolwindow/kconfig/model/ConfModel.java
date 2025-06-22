@@ -16,9 +16,6 @@ public class ConfModel {
     private boolean isMenuconfig;
     private int[] range;
     private List<ConfModel> children;
-    /**
-     * 原始叶子节点放入右侧面板，留在树上叶子节点为json叶子节点父节点
-     * */
     private boolean isLeaf;
 
     private boolean visible = true;

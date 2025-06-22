@@ -6,8 +6,6 @@ import com.intellij.openapi.diagnostic.Logger;
 import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.toolwindow.common.NodeModel;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
-import org.btik.espidf.toolwindow.kconfig.model.KconfigMeta;
-import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.FileNotFoundException;
@@ -74,7 +72,7 @@ public class KConfParser {
 
 
     public static DefaultMutableTreeNode buildTree(ConfModel confModel){
-        if (!confModel.isVisible()){
+        if (!confModel.isVisible() || confModel.isLeaf()){
             return null;
         }
         DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(confModel);
@@ -83,13 +81,12 @@ public class KConfParser {
         queue.add(rootNodeModel);
         while (!queue.isEmpty()) {
             NodeModel<ConfModel> nodeModel = queue.removeFirst();
-            DefaultMutableTreeNode node = nodeModel.getNode();
             List<ConfModel> children = nodeModel.getModel().getChildren();
             if (CollectionUtils.isEmpty(children)) {
                 continue;
             }
             for (ConfModel child : children) {
-                if (!child.isVisible()){
+                if (!child.isVisible() || child.isLeaf()) {
                     continue;
                 }
                 DefaultMutableTreeNode childTreeNode = new DefaultMutableTreeNode(child);
