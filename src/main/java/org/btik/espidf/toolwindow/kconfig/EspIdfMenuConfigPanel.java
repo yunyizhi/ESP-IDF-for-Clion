@@ -13,10 +13,12 @@ import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
+import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeSelectionModel;
 
 import java.awt.*;
 import java.nio.file.Path;
@@ -25,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
 import static org.btik.espidf.util.UIUtils.createConstraints;
 
@@ -47,17 +50,23 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
     private final KConfServer kconfServer;
     private boolean initOk = false;
+    private final ConfModel treeRootModel = new ConfModel();
     List<ConfModel> confModels;
     Map<String, Object> sdkConfig;
 
 
     public EspIdfMenuConfigPanel(Project project) {
         super(new BorderLayout());
+        treeRootModel.setId("EspIdfMenuConfigPanelTreeRoot");
+        treeRootModel.setName($i18n("esp.idf.tool.window.sdk.config.root.name"));
+        treeRootModel.setTitle($i18n("esp.idf.tool.window.sdk.config.root.name"));
+        treeRootModel.setType(KconfigType.MENU);
+
         setBorder(null);
         this.project = project;
         initToolBar();
         kconfServer = new KConfServer(project, this::onKConfMsg);
-        kconfigTreePanel = new KconfigTreePanel();
+        kconfigTreePanel = new KconfigTreePanel(treeRootModel);
         kconfigTreePanel.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
         kconfigTreePanel.setPreferredSize(new Dimension(350, Integer.MAX_VALUE));
 
@@ -68,6 +77,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
         add(contentPanel, BorderLayout.CENTER);
         kconfigTreePanel.addTreeSelectionListener(this::onTreeCheck);
     }
+
 
     private void initToolBar() {
         JPanel toolBar = new JPanel(new GridLayoutManager(1, 6, JBUI.insets(16, 16, 0, 16), -1, -1));
@@ -121,6 +131,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
             return;
         }
         confModels = KConfParser.parseKconfig(menuConfigPath);
+        treeRootModel.setChildren(confModels);
         Path sdkConfigPath = Path.of(basePath, cmakeBuildDir, $sys("esp.idf.kconfig.menus.dir")).resolve($sys("esp.idf.kconfig.sdk.config.file"));
         if (!sdkConfigPath.toFile().exists()) {
             LOG.error(sdkConfigPath + " does not exist");
@@ -151,6 +162,10 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 }
                 if (CollectionUtils.isEmpty(item.getChildren())) {
                     item.setLeaf(true);
+                    ConfModel parent = item.getParent();
+                    if (parent != null){
+                        parent.setHasLeafChildren(true);
+                    }
                 }
             });
         }
@@ -163,9 +178,9 @@ public class EspIdfMenuConfigPanel extends JPanel {
     }
 
     static class KconfigContentPanel extends JScrollPane {
-        private CardLayout cardLayout;
-        private JPanel contentCards;
-        private HashMap<String, Component> viewMap = new HashMap<>();
+        private final CardLayout cardLayout;
+        private final JPanel contentCards;
+        private final HashMap<String, Component> viewMap = new HashMap<>();
 
         public KconfigContentPanel(JPanel view, CardLayout cardLayout) {
             super(view);
@@ -179,8 +194,16 @@ public class EspIdfMenuConfigPanel extends JPanel {
         }
 
         public void showCard(ConfModel confModel) {
+            if(!confModel.isHasLeafChildren()) {
+                return;
+            }
             if (!viewMap.containsKey(confModel.getId())) {
-                // todo 创建新的组件
+                Component kConfPanel = KConfPanelFactory.createKConfPanel(confModel);
+                if (kConfPanel == null) {
+                  return;
+                }
+                viewMap.put(confModel.getId(), kConfPanel);
+                addToCard(kConfPanel, confModel.getId());
             }
             cardLayout.show(contentCards, confModel.getId());
         }
@@ -193,11 +216,12 @@ public class EspIdfMenuConfigPanel extends JPanel {
         private final Tree tree;
         private final DefaultMutableTreeNode rootNode;
 
-        public KconfigTreePanel() {
+        public KconfigTreePanel(ConfModel treeRootModel) {
             viewport.setBorder(null);
             setBorder(BorderFactory.createEmptyBorder());
-            rootNode = new DefaultMutableTreeNode("Menu Config");
+            rootNode = new DefaultMutableTreeNode(treeRootModel);
             tree = new Tree(rootNode);
+            tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         }
 
         public void setRoot(List<DefaultMutableTreeNode> root) {

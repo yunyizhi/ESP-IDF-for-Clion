@@ -20,6 +20,8 @@ public class ConfModel {
 
     private boolean visible = true;
 
+    private boolean hasLeafChildren = false;
+
     private ConfModel parent;
 
     public KconfigType getType() {
@@ -100,6 +102,14 @@ public class ConfModel {
 
     public void setParent(ConfModel parent) {
         this.parent = parent;
+    }
+
+    public boolean isHasLeafChildren() {
+        return hasLeafChildren;
+    }
+
+    public void setHasLeafChildren(boolean hasLeafChildren) {
+        this.hasLeafChildren = hasLeafChildren;
     }
 
     public String dump() {
