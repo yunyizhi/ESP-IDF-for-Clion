@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -108,6 +109,21 @@ public class KConfParser {
                 continue;
             }
             queue.addAll(children);
+        }
+    }
+
+    public static void eachWithParent(ConfModel confModel, BiConsumer<ConfModel,ConfModel> consumer){
+        LinkedList<ConfModel> queue = new LinkedList<>();
+        queue.add(confModel);
+        while (!queue.isEmpty()) {
+            ConfModel nodeModel = queue.removeFirst();
+            List<ConfModel> children = nodeModel.getChildren();
+            if (CollectionUtils.isEmpty(children)) {
+                continue;
+            }
+            for (ConfModel child : children) {
+                consumer.accept(nodeModel, child);
+            }
         }
     }
 }

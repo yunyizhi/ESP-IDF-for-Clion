@@ -13,7 +13,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.ui.JBUI;
-import org.btik.espidf.run.config.components.TextFieldFileChooser;
+import org.btik.espidf.ui.componets.TextFieldFileChooser;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfSysConfService;

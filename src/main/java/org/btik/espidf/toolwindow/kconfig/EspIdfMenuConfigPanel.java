@@ -1,19 +1,18 @@
 package org.btik.espidf.toolwindow.kconfig;
 
+import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.components.JBTextField;
+import com.intellij.ui.SearchTextField;
 import com.intellij.ui.treeStructure.Tree;
 import com.intellij.icons.AllIcons;
-import com.intellij.uiDesigner.core.GridConstraints;
-import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.intellij.util.ui.JBUI;
 import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
@@ -29,7 +28,6 @@ import java.util.Objects;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
-import static org.btik.espidf.util.UIUtils.createConstraints;
 
 /**
  * @author lustre
@@ -38,12 +36,7 @@ import static org.btik.espidf.util.UIUtils.createConstraints;
 public class EspIdfMenuConfigPanel extends JPanel {
     private static final Logger LOG = Logger.getInstance(EspIdfMenuConfigPanel.class);
     private final Project project;
-    private final JButton startConfServer = new JButton();
-    private final JBTextField searchInputBox = new JBTextField();
-    private final JButton search = new JButton();
-    private final JButton discard = new JButton();
-    private final JButton reset = new JButton();
-    private final JButton save = new JButton();
+    private final SearchTextField searchInputBox = new SearchTextField();
 
     private final KconfigTreePanel kconfigTreePanel;
     private final KconfigContentPanel contentPanel;
@@ -80,35 +73,54 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
 
     private void initToolBar() {
-        JPanel toolBar = new JPanel(new GridLayoutManager(1, 6, JBUI.insets(16, 16, 0, 16), -1, -1));
-        int index = 0;
-        toolBar.add(startConfServer, createConstraints(0, index++));
-        startConfServer.setMinimumSize(new Dimension(0, 0));
-        startConfServer.setIcon(AllIcons.Actions.Execute);
-        GridConstraints searchBoxConstraint = createConstraints(0, index++);
-        searchBoxConstraint.setFill(GridConstraints.FILL_HORIZONTAL);
-        searchBoxConstraint.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        toolBar.add(searchInputBox, searchBoxConstraint);
-        toolBar.add(search,  createConstraints(0, index++));
-        search.setText("Search");
-        toolBar.add(discard,  createConstraints(0, index++));
-        discard.setText("Discard");
-        toolBar.add(reset,  createConstraints(0, index++));
-        reset.setText("Reset");
-        toolBar.add(save,  createConstraints(0, index));
-        save.setText("Save");
+        JPanel toolBar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        ActionToolbar runToolBar = getRunToolbar();
+        runToolBar.setTargetComponent(toolBar);
+        toolBar.add(runToolBar.getComponent());
+        toolBar.add(searchInputBox);
+        ActionToolbar actionToolbar = getActionToolbar(toolBar);
+        toolBar.add(actionToolbar.getComponent());
         toolBar.setBorder(null);
         add(toolBar, BorderLayout.NORTH);
-        startConfServer.addActionListener(e -> {
-            startConfServer.setEnabled(false);
-            if (!initOk) {
-                startConfServer.setIcon(AllIcons.Run.Stop);
-                loadPage();
-            }else {
-                startConfServer.setIcon(AllIcons.Actions.Execute);
+    }
+
+    private static @NotNull ActionToolbar getActionToolbar(JPanel toolBar) {
+        var actionManager = ActionManager.getInstance();
+        ActionGroup actionGroup = new DefaultActionGroup(new AnAction(AllIcons.General.Reset) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent e) {
+
+            }
+        }, new AnAction(AllIcons.Actions.MenuSaveall) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent e) {
+
             }
         });
+        ActionToolbar actionToolbar = actionManager.createActionToolbar(ActionPlaces.TOOLBAR, actionGroup, true);
+        actionToolbar.setTargetComponent(toolBar);
+        return actionToolbar;
     }
+
+    private @NotNull ActionToolbar getRunToolbar() {
+        var actionManager = ActionManager.getInstance();
+        ActionGroup actionGroup = new DefaultActionGroup(new AnAction("Start Conf Server", "Start conf server",AllIcons.Actions.Execute) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent e) {
+                Presentation presentation = e.getPresentation();
+                if (!initOk) {
+                    presentation.setIcon(AllIcons.Run.Stop);
+                    presentation.setText("Stop Conf Server");
+                    loadPage();
+                } else {
+                    presentation.setIcon(AllIcons.Actions.Execute);
+                    presentation.setText("Start Conf Server");
+                }
+            }
+        });
+        return actionManager.createActionToolbar(ActionPlaces.TOOLWINDOW_TOOLBAR_BAR, actionGroup, true);
+    }
+
 
     private void onTreeCheck(TreeSelectionEvent e, ConfModel confModel) {
         if (CollectionUtils.isEmpty(confModel.getChildren())) {
@@ -132,6 +144,12 @@ public class EspIdfMenuConfigPanel extends JPanel {
         }
         confModels = KConfParser.parseKconfig(menuConfigPath);
         treeRootModel.setChildren(confModels);
+        for (ConfModel confModel : confModels) {
+            confModel.setParent(treeRootModel);
+            KConfParser.eachWithParent(confModel, (parent, child) -> {
+                child.setParent(parent);
+            });
+        }
         Path sdkConfigPath = Path.of(basePath, cmakeBuildDir, $sys("esp.idf.kconfig.menus.dir")).resolve($sys("esp.idf.kconfig.sdk.config.file"));
         if (!sdkConfigPath.toFile().exists()) {
             LOG.error(sdkConfigPath + " does not exist");
@@ -163,7 +181,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 if (CollectionUtils.isEmpty(item.getChildren())) {
                     item.setLeaf(true);
                     ConfModel parent = item.getParent();
-                    if (parent != null){
+                    if (parent != null) {
                         parent.setHasLeafChildren(true);
                     }
                 }
@@ -194,14 +212,11 @@ public class EspIdfMenuConfigPanel extends JPanel {
         }
 
         public void showCard(ConfModel confModel) {
-            if(!confModel.isHasLeafChildren()) {
+            if (!confModel.isHasLeafChildren()) {
                 return;
             }
             if (!viewMap.containsKey(confModel.getId())) {
                 Component kConfPanel = KConfPanelFactory.createKConfPanel(confModel);
-                if (kConfPanel == null) {
-                  return;
-                }
                 viewMap.put(confModel.getId(), kConfPanel);
                 addToCard(kConfPanel, confModel.getId());
             }

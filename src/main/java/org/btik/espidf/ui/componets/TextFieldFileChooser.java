@@ -1,4 +1,4 @@
-package org.btik.espidf.run.config.components;
+package org.btik.espidf.ui.componets;
 
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.project.Project;

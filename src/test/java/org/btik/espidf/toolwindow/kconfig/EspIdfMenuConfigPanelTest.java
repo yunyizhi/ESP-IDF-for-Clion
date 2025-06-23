@@ -50,6 +50,9 @@ public class EspIdfMenuConfigPanelTest {
     public void load() throws InterruptedException {
         List<ConfModel> confModel = KConfParser.parseKconfig(res2Path("/project_root/build/config/kconfig_menus.json"));
         assert !confModel.isEmpty();
+        for (ConfModel model : confModel) {
+            assert model.getType() != null;
+        }
         Map<String, Object> stringObjectMap = KConfParser.parseSdkConfig(res2Path("/project_root/build/config/sdkconfig.json"));
         assert !stringObjectMap.isEmpty();
     }

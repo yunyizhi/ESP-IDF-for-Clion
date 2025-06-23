@@ -1,4 +1,4 @@
-package org.btik.espidf.project.component;
+package org.btik.espidf.ui.componets;
 
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.ui.ComboBox;

@@ -15,7 +15,7 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.ui.JBUI;
 import org.btik.espidf.conf.IdfToolConf;
-import org.btik.espidf.project.component.ComboBoxWithRefresh;
+import org.btik.espidf.ui.componets.ComboBoxWithRefresh;
 import org.btik.espidf.service.IdfSysConfService;
 import org.jetbrains.annotations.NotNull;
 
