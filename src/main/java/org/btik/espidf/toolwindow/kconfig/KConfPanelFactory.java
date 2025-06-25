@@ -1,6 +1,7 @@
 package org.btik.espidf.toolwindow.kconfig;
 
 import com.intellij.openapi.ui.ComboBox;
+import com.intellij.ui.components.JBTextField;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 
@@ -13,7 +14,7 @@ import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.*;
 
 public class KConfPanelFactory {
     interface ItemCreator {
-        Component create(ConfModel confModel);
+        JComponent create(ConfModel confModel);
     }
 
     private static final HashMap<KconfigType, ItemCreator> creators = new HashMap<>();
@@ -40,40 +41,76 @@ public class KConfPanelFactory {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         for (ConfModel child : filteredList) {
             KconfigType type = child.getType();
-            panel.add(creators.get(type).create(child));
+            ItemCreator itemCreator = creators.get(type);
+            if (itemCreator == null) {
+                System.out.println(type);
+                continue;
+            }
+            JComponent comp = itemCreator.create(child);
+            panel.add(comp);
         }
+        panel.add(Box.createVerticalGlue());
         return panel;
     }
 
-    private static Component boolItemCreator(ConfModel confModel) {
+    private static JComponent boolItemCreator(ConfModel confModel) {
         JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JCheckBox comp = new JCheckBox(confModel.getTitle());
         comp.setToolTipText(confModel.getHelp());
         wrapper.add(comp);
+        wrapper.setSize(comp.getPreferredSize());
         return wrapper;
     }
 
-    private static Component selectItemCreator(ConfModel confModel) {
-        JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        ComboBox<String> comboBox = new ComboBox<>();
+    private static JComponent selectItemCreator(ConfModel confModel) {
+        JPanel wrapper = new JPanel();
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+        ComboBox<ConfModel> comboBox = new ComboBox<>();
+        List<ConfModel> children = confModel.getChildren();
+        for (ConfModel child : children) {
+            if (child.getType().equals(BOOL)) {
+                comboBox.addItem(child);
+            }
+        }
+        JLabel comp = new JLabel(confModel.getTitle() + ":");
+        comp.setToolTipText(confModel.getHelp());
+        wrapper.add(comp);
+        wrapper.add(comboBox);
+        wrapper.add(Box.createVerticalGlue());
         return wrapper;
     }
 
-    private static Component hexCreator(ConfModel confModel) {
-        JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
+    private static JComponent hexCreator(ConfModel confModel) {
+        JPanel wrapper = new JPanel();
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+        JBTextField jTextField = new JBTextField();
+        JLabel comp = new JLabel(confModel.getTitle() + ":");
+        comp.setToolTipText(confModel.getHelp());
+        wrapper.add(comp);
+        wrapper.add(jTextField);
+        wrapper.add(Box.createVerticalGlue());
         return wrapper;
     }
 
-    private static Component intCreator(ConfModel confModel) {
-        JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
+    private static JComponent intCreator(ConfModel confModel) {
+        JPanel wrapper = new JPanel();
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+        JBTextField jTextField = new JBTextField();
+        JLabel comp = new JLabel(confModel.getTitle() + ":");
+        comp.setToolTipText(confModel.getHelp());
+        wrapper.add(comp);
+        wrapper.add(jTextField);
         return wrapper;
     }
 
-    private static Component stringCreator(ConfModel confModel) {
-        JPanel wrapper = new JPanel(new FlowLayout(FlowLayout.LEFT));
-
+    private static JComponent stringCreator(ConfModel confModel) {
+        JPanel wrapper = new JPanel();
+        wrapper.setLayout(new BoxLayout(wrapper, BoxLayout.Y_AXIS));
+        JBTextField jTextField = new JBTextField();
+        JLabel comp = new JLabel(confModel.getTitle() + ":");
+        comp.setToolTipText(confModel.getHelp());
+        wrapper.add(comp);
+        wrapper.add(jTextField);
         return wrapper;
     }
 }

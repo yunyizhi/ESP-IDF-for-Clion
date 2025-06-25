@@ -225,6 +225,9 @@ public class EspIdfMenuConfigPanel extends JPanel {
             }
             if (!viewMap.containsKey(confModel.getId())) {
                 Component kConfPanel = KConfPanelFactory.createKConfPanel(confModel);
+                if (kConfPanel == null) {
+                    return;
+                }
                 viewMap.put(confModel.getId(), kConfPanel);
                 addToCard(kConfPanel, confModel.getId());
             }
