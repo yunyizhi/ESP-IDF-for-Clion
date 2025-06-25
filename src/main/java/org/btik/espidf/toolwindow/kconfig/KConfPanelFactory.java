@@ -1,9 +1,6 @@
 package org.btik.espidf.toolwindow.kconfig;
 
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.uiDesigner.core.GridLayoutManager;
-import com.intellij.util.ui.CheckBox;
-import com.intellij.util.ui.JBUI;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 
@@ -31,16 +28,20 @@ public class KConfPanelFactory {
 
     public static Component createKConfPanel(ConfModel confModel) {
         List<ConfModel> children = confModel.getChildren();
+
+        List<ConfModel> filteredList = children.stream()
+                .filter(ConfModel::isVisible)
+                .filter(ConfModel::isAsMenuPanelItem)
+                .toList();
+        if (filteredList.isEmpty()) {
+            return null;
+        }
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        children.stream()
-                .filter(ConfModel::isVisible)
-                .filter(ConfModel::isLeaf)
-                .forEach(item -> {
-                    ItemCreator itemCreator = creators.get(item.getType());
-                    panel.add(itemCreator.create(item));
-                });
-
+        for (ConfModel child : filteredList) {
+            KconfigType type = child.getType();
+            panel.add(creators.get(type).create(child));
+        }
         return panel;
     }
 

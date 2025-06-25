@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.CHOICE;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
 
@@ -178,11 +179,18 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 } else {
                     item.setVisible(false);
                 }
-                if (CollectionUtils.isEmpty(item.getChildren())) {
-                    item.setLeaf(true);
+                if (item.getType() == CHOICE){
+                    item.setAsMenuPanelItem(true);
                     ConfModel parent = item.getParent();
                     if (parent != null) {
-                        parent.setHasLeafChildren(true);
+                        parent.setHasPanelItem(true);
+                    }
+                }
+                if (CollectionUtils.isEmpty(item.getChildren())) {
+                    ConfModel parent = item.getParent();
+                    if (parent != null && parent.getType() != CHOICE) {
+                        item.setAsMenuPanelItem(true);
+                        parent.setHasPanelItem(true);
                     }
                 }
             });
@@ -212,7 +220,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
         }
 
         public void showCard(ConfModel confModel) {
-            if (!confModel.isHasLeafChildren()) {
+            if (!confModel.isHasPanelItem()) {
                 return;
             }
             if (!viewMap.containsKey(confModel.getId())) {

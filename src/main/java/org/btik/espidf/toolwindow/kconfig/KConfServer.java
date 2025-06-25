@@ -3,6 +3,7 @@ package org.btik.espidf.toolwindow.kconfig;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.application.ApplicationManager;
@@ -105,6 +106,7 @@ public class KConfServer {
                 }
             }
             ObjectMapper mapper = new ObjectMapper();
+            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             JsonParser jsonParser = mapper.getFactory().createParser(reader);
             while (process.isAlive()) {
                 try {

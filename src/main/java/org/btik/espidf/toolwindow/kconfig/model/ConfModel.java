@@ -16,11 +16,11 @@ public class ConfModel {
     private boolean isMenuconfig;
     private int[] range;
     private List<ConfModel> children;
-    private boolean isLeaf;
+    private boolean asMenuPanelItem;
 
     private boolean visible = true;
 
-    private boolean hasLeafChildren = false;
+    private boolean hasPanelItem = false;
 
     private ConfModel parent;
 
@@ -104,12 +104,12 @@ public class ConfModel {
         this.parent = parent;
     }
 
-    public boolean isHasLeafChildren() {
-        return hasLeafChildren;
+    public boolean isHasPanelItem() {
+        return hasPanelItem;
     }
 
-    public void setHasLeafChildren(boolean hasLeafChildren) {
-        this.hasLeafChildren = hasLeafChildren;
+    public void setHasPanelItem(boolean hasPanelItem) {
+        this.hasPanelItem = hasPanelItem;
     }
 
     public String dump() {
@@ -130,11 +130,11 @@ public class ConfModel {
         return title == null ? name : title;
     }
 
-    public boolean isLeaf() {
-        return isLeaf;
+    public boolean isAsMenuPanelItem() {
+        return asMenuPanelItem;
     }
 
-    public void setLeaf(boolean leaf) {
-        isLeaf = leaf;
+    public void setAsMenuPanelItem(boolean asMenuPanelItem) {
+        this.asMenuPanelItem = asMenuPanelItem;
     }
 }

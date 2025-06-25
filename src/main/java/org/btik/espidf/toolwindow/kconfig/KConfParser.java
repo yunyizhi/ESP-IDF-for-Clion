@@ -73,7 +73,7 @@ public class KConfParser {
 
 
     public static DefaultMutableTreeNode buildTree(ConfModel confModel){
-        if (!confModel.isVisible() || confModel.isLeaf()){
+        if (!confModel.isVisible() || confModel.isAsMenuPanelItem()){
             return null;
         }
         DefaultMutableTreeNode treeNode = new DefaultMutableTreeNode(confModel);
@@ -87,7 +87,7 @@ public class KConfParser {
                 continue;
             }
             for (ConfModel child : children) {
-                if (!child.isVisible() || child.isLeaf()) {
+                if (!child.isVisible() || child.isAsMenuPanelItem()) {
                     continue;
                 }
                 DefaultMutableTreeNode childTreeNode = new DefaultMutableTreeNode(child);
