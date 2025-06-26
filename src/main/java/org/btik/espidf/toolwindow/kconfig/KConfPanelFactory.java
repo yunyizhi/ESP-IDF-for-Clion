@@ -5,6 +5,7 @@ import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.JBUI;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
+import org.btik.espidf.ui.componets.InsertPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -63,7 +64,8 @@ public class KConfPanelFactory {
     }
 
     private static JComponent boolItemCreator(ConfModel confModel) {
-        JPanel wrapper = new JPanel(new GridBagLayout());
+        InsertPanel wrapper = new InsertPanel(new GridBagLayout());
+        wrapper.setInsets(JBUI.insetsTop(8));
         JCheckBox comp = new JCheckBox(confModel.getTitle());
         comp.setToolTipText(confModel.getHelp());
 
@@ -78,8 +80,8 @@ public class KConfPanelFactory {
     }
 
     private static JComponent selectItemCreator(ConfModel confModel) {
-        JPanel wrapper = new JPanel(new GridBagLayout());
-
+        InsertPanel wrapper = new InsertPanel(new GridBagLayout());
+        wrapper.setInsets(JBUI.insetsTop(8));
         JLabel label = new JLabel(confModel.getTitle() + ":");
         label.setToolTipText(confModel.getHelp());
 
@@ -105,8 +107,8 @@ public class KConfPanelFactory {
     }
 
     private static JComponent hexCreator(ConfModel confModel) {
-        JPanel wrapper = new JPanel(new GridBagLayout());
-
+        InsertPanel wrapper = new InsertPanel(new GridBagLayout());
+        wrapper.setInsets(JBUI.insetsTop(8));
         JLabel label = new JLabel(confModel.getTitle() + ":");
         label.setToolTipText(confModel.getHelp());
 
@@ -122,8 +124,8 @@ public class KConfPanelFactory {
     }
 
     private static JComponent intCreator(ConfModel confModel) {
-        JPanel wrapper = new JPanel(new GridBagLayout());
-
+        InsertPanel wrapper = new InsertPanel(new GridBagLayout());
+        wrapper.setInsets(JBUI.insetsTop(8));
         JLabel label = new JLabel(confModel.getTitle() + ":");
         label.setToolTipText(confModel.getHelp());
 
@@ -139,8 +141,8 @@ public class KConfPanelFactory {
     }
 
     private static JComponent stringCreator(ConfModel confModel) {
-        JPanel wrapper = new JPanel(new GridBagLayout());
-
+        InsertPanel wrapper = new InsertPanel(new GridBagLayout());
+        wrapper.setInsets(JBUI.insetsTop(8));
         JLabel label = new JLabel(confModel.getTitle() + ":");
         label.setToolTipText(confModel.getHelp());
 
