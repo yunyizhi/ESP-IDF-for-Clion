@@ -62,7 +62,7 @@ public class KConfServer implements ProcessListener {
                 .withWorkDirectory(project.getBasePath())
                 .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
                 .withParameters("-B", cmakeBuildDir, "confserver");
-        var runProfile = new IdfConsoleRunProfile($i18n("esp.idf.config.server.name"), EspIdfIcon.IDF_16_16, commandLine);
+        var runProfile = new IdfConsoleRunProfile($i18n("esp.idf.config.server.name"), EspIdfIcon.IDF_16_16, commandLine, true);
         runProfile.addProcessListener(this);
         ExecutionEnvironment environment;
         try {
@@ -100,33 +100,44 @@ public class KConfServer implements ProcessListener {
 
         int startIndex = 0;
         while (startIndex < builder.length()) {
-
             int jsonStart = builder.indexOf("{", startIndex);
             if (jsonStart == -1) break;
 
+            boolean inQuotes = false;
+            boolean escapeNext = false;
             int depth = 1;
-            int endIndex = jsonStart + 1;
-            while (endIndex < builder.length() && depth > 0) {
-                char c = builder.charAt(endIndex);
-                if (c == '{') depth++;
-                else if (c == '}') depth--;
-                endIndex++;
+            int currentIndex = jsonStart + 1;
+
+            while (currentIndex < builder.length() && depth > 0) {
+                char c = builder.charAt(currentIndex);
+                if (escapeNext) {
+                    escapeNext = false;
+                } else if (c == '\\') {
+                    if (inQuotes) escapeNext = true;
+                } else if (c == '"') {
+                    inQuotes = !inQuotes;
+                } else if (!inQuotes) {
+                    if (c == '{') depth++;
+                    else if (c == '}') depth--;
+                }
+                currentIndex++;
             }
 
             if (depth == 0) {
-                String jsonString = builder.substring(jsonStart, endIndex);
+                String jsonString = builder.substring(jsonStart, currentIndex);
                 try {
                     JsonNode node = mapper.readTree(jsonString);
                     KconfigStatus status = mapper.treeToValue(node, KconfigStatus.class);
                     onMsg.accept(status);
-                    builder.delete(0, endIndex);
+                    builder.delete(0, currentIndex);
                     startIndex = 0;
                 } catch (IOException e) {
                     LOG.error("Parse failed", e);
-                    startIndex = endIndex;
+                    builder.delete(jsonStart, currentIndex);
+                    startIndex = jsonStart;
                 }
             } else {
-                break;
+                break; // 等待更多数据
             }
         }
     }

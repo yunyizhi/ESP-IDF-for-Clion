@@ -4,14 +4,10 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.Executor;
 import com.intellij.execution.configurations.*;
 import com.intellij.execution.filters.TextConsoleBuilder;
-import com.intellij.execution.impl.ConsoleViewImpl;
 import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.execution.ui.ConsoleView;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.NlsSafe;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -29,17 +25,23 @@ public class IdfConsoleRunProfile implements RunProfile {
 
     private Icon icon;
 
-    private GeneralCommandLine commandLine;
-    private CommandLineState commandLineState;
+    private boolean consoleReadOnly = false;
+
+    private final GeneralCommandLine commandLine;
 
     private KillableColoredProcessHandler processHandler;
 
     private List<ProcessListener> processListeners;
 
     public IdfConsoleRunProfile(@NotNull String name, Icon icon, GeneralCommandLine commandLine) {
+        this(name, icon, commandLine, false);
+    }
+
+    public IdfConsoleRunProfile(@NotNull String name, Icon icon, GeneralCommandLine commandLine,boolean consoleReadOnly) {
         this.name = name;
         this.icon = icon;
         this.commandLine = commandLine;
+        this.consoleReadOnly = consoleReadOnly;
     }
 
     public void setName(@NotNull String name) {
@@ -52,7 +54,8 @@ public class IdfConsoleRunProfile implements RunProfile {
 
     @Override
     public @Nullable RunProfileState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment environment) {
-        commandLineState = new CommandLineState(environment) {
+
+        CommandLineState commandLineState = new CommandLineState(environment) {
             @Override
             protected @NotNull ProcessHandler startProcess() throws ExecutionException {
                 IdfConsoleRunProfile.this.processHandler = new KillableColoredProcessHandler(commandLine);
@@ -61,23 +64,15 @@ public class IdfConsoleRunProfile implements RunProfile {
                         IdfConsoleRunProfile.this.processHandler.addProcessListener(processListener);
                     }
                 }
-                TextConsoleBuilder consoleBuilder = getConsoleBuilder();
-                System.out.println(consoleBuilder);
-                if (consoleBuilder != null) {
-                    ConsoleView console = consoleBuilder.getConsole();
-                    if (console instanceof ConsoleViewImpl consoleView){
-                        Editor editor = consoleView.getEditor();
-                        if (editor != null) {
-                            Document document = editor.getDocument();
-                            document.setReadOnly(true);
-                        }
-                    }
-                    System.out.println(console);
-                }
                 return IdfConsoleRunProfile.this.processHandler;
             }
         };
-
+        if (consoleReadOnly) {
+            TextConsoleBuilder consoleBuilder = commandLineState.getConsoleBuilder();
+            if (consoleBuilder != null) {
+                consoleBuilder.setViewer(true);
+            }
+        }
         return commandLineState;
     }
 
