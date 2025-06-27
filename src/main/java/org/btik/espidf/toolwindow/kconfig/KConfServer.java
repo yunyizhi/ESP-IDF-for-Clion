@@ -1,133 +1,134 @@
 package org.btik.espidf.toolwindow.kconfig;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonToken;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.intellij.execution.ExecutionException;
+import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.executors.DefaultRunExecutor;
+import com.intellij.execution.process.ProcessEvent;
+import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.process.ProcessListener;
+import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
+import com.intellij.execution.runners.ProgramRunner;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Key;
+import org.btik.espidf.command.IdfConsoleRunProfile;
+import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
-import org.btik.espidf.toolwindow.kconfig.model.KconfigMeta;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 import org.btik.espidf.util.EnvironmentVarUtil;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
+import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.function.Consumer;
+
+import static org.btik.espidf.util.I18nMessage.$i18n;
 
 /**
  * @author lustre
  * @since 2025/6/17 23:38
  */
-public class KConfServer {
+public class KConfServer implements ProcessListener {
     private static final Logger LOG = Logger.getInstance(KConfServer.class);
     private final Project project;
 
-    private OutputStream processStdIn;
-    private InputStream processStdOut;
-    private Process process;
     private final Consumer<KconfigStatus> onMsg;
+    private ProcessHandler processHandler;
 
+    private final StringBuilder builder = new StringBuilder();
+
+    private boolean preContentOk = false;
 
     public KConfServer(Project project, Consumer<KconfigStatus> onMsg) {
         this.project = project;
         this.onMsg = onMsg;
     }
 
-    private void stopLast() {
-        if (process == null) {
-            return;
-        }
-        try {
-            processStdOut.close();
-            for (int i = 0; i < 10 && process.isAlive(); i++) {
-                Thread.sleep(200);
-            }
-            if (process.isAlive()) {
-                process.destroy();
-            }
-        } catch (IOException | InterruptedException e) {
-            LOG.error(e);
-        }
-    }
-
     public void start() {
-        stopLast();
         IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
         String cmakeBuildDir = projectConfigService.getCmakeBuildDir();
         IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
         Map<String, String> environments = environmentService.getEnvironments();
-        List<String> args = new ArrayList<>();
-        args.add(EnvironmentVarUtil.findIdfFullPath(environments));
-        args.add("-B");
-        args.add(cmakeBuildDir);
-        args.add("confserver");
-        ProcessBuilder processBuilder = new ProcessBuilder(args);
-        processBuilder.environment().putAll(environments);
-        if (project.getBasePath() == null) {
-            LOG.error("Project base path is null");
-            return;
-        }
-        processBuilder.directory(Path.of(project.getBasePath()).toFile());
-        processBuilder.redirectErrorStream(true);
+        GeneralCommandLine commandLine = new GeneralCommandLine()
+                .withEnvironment(environments)
+                .withExePath(EnvironmentVarUtil.findIdfFullPath(environments))
+                .withWorkDirectory(project.getBasePath())
+                .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
+                .withParameters("-B", cmakeBuildDir, "confserver");
+        var runProfile = new IdfConsoleRunProfile($i18n("esp.idf.config.server.name"), EspIdfIcon.IDF_16_16, commandLine);
+        runProfile.addProcessListener(this);
+        ExecutionEnvironment environment;
         try {
-            process = processBuilder.start();
-            startStdOut(process);
-        } catch (IOException e) {
+            environment = ExecutionEnvironmentBuilder.create(project, DefaultRunExecutor.getRunExecutorInstance(), runProfile).build();
+            environment.setExecutionId(ExecutionEnvironment.getNextUnusedExecutionId());
+            final ExecutionEnvironment finalEnvironment = environment;
+            ApplicationManager.getApplication().invokeLater(() -> {
+                try {
+                    ProgramRunner<?> runner = finalEnvironment.getRunner();
+                    runner.execute(finalEnvironment);
+                } catch (ExecutionException e) {
+                    LOG.error("start KConfServer failed", e);
+                }
+            });
+        } catch (ExecutionException e) {
             LOG.error("start KConfServer failed", e);
         }
     }
 
-    public void startStdOut(Process process) {
-        processStdIn = process.getOutputStream();
-        processStdOut = process.getInputStream();
-        ApplicationManager.getApplication().executeOnPooledThread(this::stdOutReadTask);
+    @Override
+    public void startNotified(@NotNull ProcessEvent event) {
+        processHandler = event.getProcessHandler();
     }
 
-    private void stdOutReadTask() {
-        try (var reader = new BufferedReader(new InputStreamReader(processStdOut))) {
-            String beforeContent = reader.readLine();
-            if (beforeContent == null) {
-                return;
-            }
-            LOG.info("exec confserver");
-            while (!beforeContent.contains("Server running")) {
-                System.out.println(beforeContent);
-                beforeContent = reader.readLine();
-                if (beforeContent == null) {
-                    return;
-                }
-            }
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-            JsonParser jsonParser = mapper.getFactory().createParser(reader);
-            while (process.isAlive()) {
-                try {
-                    JsonToken token = jsonParser.nextToken();
-                    if (token == null) break;
+    @Override
+    public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
+        String text = event.getText();
+        builder.append(text);
+        processBufferForJsonObjects();
+    }
 
-                    if (token == JsonToken.START_OBJECT) {
-                        JsonNode node = jsonParser.readValueAsTree();
-                        KconfigStatus status = mapper.treeToValue(node, KconfigStatus.class);
-                        if (node.has(KconfigMeta.ERROR)) {
-                            status.setError(true);
-                        }
-                        onMsg.accept(status);
-                    }
-                } catch (JsonParseException e) {
-                    jsonParser.skipChildren();
-                }
+    private void processBufferForJsonObjects() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        int startIndex = 0;
+        while (startIndex < builder.length()) {
+
+            int jsonStart = builder.indexOf("{", startIndex);
+            if (jsonStart == -1) break;
+
+            int depth = 1;
+            int endIndex = jsonStart + 1;
+            while (endIndex < builder.length() && depth > 0) {
+                char c = builder.charAt(endIndex);
+                if (c == '{') depth++;
+                else if (c == '}') depth--;
+                endIndex++;
             }
-            LOG.info("KConfServer exited");
-        } catch (IOException e) {
-            LOG.error("Error reading process output", e);
+
+            if (depth == 0) {
+                String jsonString = builder.substring(jsonStart, endIndex);
+                try {
+                    JsonNode node = mapper.readTree(jsonString);
+                    KconfigStatus status = mapper.treeToValue(node, KconfigStatus.class);
+                    onMsg.accept(status);
+                    builder.delete(0, endIndex);
+                    startIndex = 0;
+                } catch (IOException e) {
+                    LOG.error("Parse failed", e);
+                    startIndex = endIndex;
+                }
+            } else {
+                break;
+            }
         }
     }
+
 }
