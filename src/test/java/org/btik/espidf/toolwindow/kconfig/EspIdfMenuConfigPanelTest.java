@@ -53,6 +53,18 @@ public class EspIdfMenuConfigPanelTest {
             assert model.getType() != null;
         }
         Map<String, Object> stringObjectMap = KConfParser.parseSdkConfig(res2Path("/project_root/build/config/sdkconfig.json"));
+        for (ConfModel model : confModel) {
+            KConfParser.eachWithParent(model, (parentModel, childModel) -> {
+                childModel.setParent(parentModel);
+            });
+        }
+        for (ConfModel model : confModel) {
+            KConfParser.treeEach(model, (item) -> {
+                if (Objects.equals("BOOTLOADER_COMPILE_TIME_DATE", item.getId())){
+                    assert item.getParent() != null;
+                }
+            });
+        }
         assert !stringObjectMap.isEmpty();
     }
 }

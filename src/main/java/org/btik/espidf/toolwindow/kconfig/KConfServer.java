@@ -17,6 +17,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Key;
 import org.btik.espidf.command.IdfConsoleRunProfile;
+import org.btik.espidf.command.KconfProcessHandler;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
@@ -44,8 +45,6 @@ public class KConfServer implements ProcessListener {
 
     private final StringBuilder builder = new StringBuilder();
 
-    private boolean preContentOk = false;
-
     public KConfServer(Project project, Consumer<KconfigStatus> onMsg) {
         this.project = project;
         this.onMsg = onMsg;
@@ -63,10 +62,10 @@ public class KConfServer implements ProcessListener {
                 .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
                 .withParameters("-B", cmakeBuildDir, "confserver");
         var runProfile = new IdfConsoleRunProfile($i18n("esp.idf.config.server.name"), EspIdfIcon.IDF_16_16, commandLine, true);
-        runProfile.addProcessListener(this);
-        ExecutionEnvironment environment;
         try {
-            environment = ExecutionEnvironmentBuilder.create(project, DefaultRunExecutor.getRunExecutorInstance(), runProfile).build();
+            runProfile.setProcessHandler(new KconfProcessHandler(commandLine));
+            runProfile.addProcessListener(this);
+            ExecutionEnvironment environment = ExecutionEnvironmentBuilder.create(project, DefaultRunExecutor.getRunExecutorInstance(), runProfile).build();
             environment.setExecutionId(ExecutionEnvironment.getNextUnusedExecutionId());
             final ExecutionEnvironment finalEnvironment = environment;
             ApplicationManager.getApplication().invokeLater(() -> {

@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.BOOL;
 import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.CHOICE;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
@@ -105,7 +106,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
     private @NotNull ActionToolbar getRunToolbar() {
         var actionManager = ActionManager.getInstance();
-        ActionGroup actionGroup = new DefaultActionGroup(new AnAction("Start Conf Server", "Start conf server",AllIcons.Actions.Execute) {
+        ActionGroup actionGroup = new DefaultActionGroup(new AnAction("Start Conf Server", "Start conf server", AllIcons.Actions.Execute) {
             @Override
             public void actionPerformed(@NotNull AnActionEvent e) {
                 Presentation presentation = e.getPresentation();
@@ -147,9 +148,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
         treeRootModel.setChildren(confModels);
         for (ConfModel confModel : confModels) {
             confModel.setParent(treeRootModel);
-            KConfParser.eachWithParent(confModel, (parent, child) -> {
-                child.setParent(parent);
-            });
+            KConfParser.eachWithParent(confModel, (parent, child) -> child.setParent(parent));
         }
         Path sdkConfigPath = Path.of(basePath, cmakeBuildDir, $sys("esp.idf.kconfig.menus.dir")).resolve($sys("esp.idf.kconfig.sdk.config.file"));
         if (!sdkConfigPath.toFile().exists()) {
@@ -179,19 +178,8 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 } else {
                     item.setVisible(false);
                 }
-                if (item.getType() == CHOICE){
-                    item.setAsMenuPanelItem(true);
-                    ConfModel parent = item.getParent();
-                    if (parent != null) {
-                        parent.setHasPanelItem(true);
-                    }
-                }
-                if (CollectionUtils.isEmpty(item.getChildren())) {
-                    ConfModel parent = item.getParent();
-                    if (parent != null && parent.getType() != CHOICE) {
-                        item.setAsMenuPanelItem(true);
-                        parent.setHasPanelItem(true);
-                    }
+                if (item.getType() == CHOICE || item.isMenuconfig() || CollectionUtils.isEmpty(item.getChildren())) {
+                    setAsMenuItem(item);
                 }
             });
         }
@@ -201,6 +189,17 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 .toList();
         ApplicationManager.getApplication().invokeLater(() -> kconfigTreePanel.setRoot(root));
 
+    }
+
+    private static void setAsMenuItem(ConfModel item) {
+        item.setAsMenuPanelItem(true);
+        ConfModel parent = item.getParent();
+        if (parent != null) {
+            parent.setHasPanelItem(true);
+            if (parent.getType() == BOOL) {
+                setAsMenuItem(parent);
+            }
+        }
     }
 
     static class KconfigContentPanel extends JScrollPane {
@@ -232,6 +231,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 addToCard(kConfPanel, confModel.getId());
             }
             cardLayout.show(contentCards, confModel.getId());
+            getViewport().setViewPosition(new Point(0, 0));
         }
 
     }

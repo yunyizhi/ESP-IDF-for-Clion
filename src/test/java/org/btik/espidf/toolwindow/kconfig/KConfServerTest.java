@@ -33,7 +33,7 @@ public class KConfServerTest {
         String json = "{\"version\": 2, \"ranges\": {\"TEST\": [0,10]}, \"visible\": {}, \"values\": {}}";
         kConfServer.onTextAvailable(newProcessEvent(json), outputType);
 
-        assertNotNull("回调应被调用", lastStatus.get());
+        assertNotNull("callback ok", lastStatus.get());
         assertEquals("version ok", "2", lastStatus.get().getVersion());
         assertEquals(1, messageCount.get());
     }

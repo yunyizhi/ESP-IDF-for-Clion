@@ -1,5 +1,7 @@
 package org.btik.espidf.toolwindow.kconfig.model;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -13,6 +15,7 @@ public class ConfModel {
     private String title;
     private String help;
     private String id;
+    @SerializedName("is_menuconfig")
     private boolean isMenuconfig;
     private int[] range;
     private List<ConfModel> children;

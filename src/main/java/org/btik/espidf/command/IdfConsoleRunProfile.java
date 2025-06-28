@@ -8,7 +8,6 @@ import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.runners.ExecutionEnvironment;
-import com.intellij.openapi.util.NlsSafe;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -25,11 +24,11 @@ public class IdfConsoleRunProfile implements RunProfile {
 
     private Icon icon;
 
-    private boolean consoleReadOnly = false;
+    private final boolean consoleReadOnly;
 
     private final GeneralCommandLine commandLine;
 
-    private KillableColoredProcessHandler processHandler;
+    private ProcessHandler processHandler;
 
     private List<ProcessListener> processListeners;
 
@@ -37,11 +36,15 @@ public class IdfConsoleRunProfile implements RunProfile {
         this(name, icon, commandLine, false);
     }
 
-    public IdfConsoleRunProfile(@NotNull String name, Icon icon, GeneralCommandLine commandLine,boolean consoleReadOnly) {
+    public IdfConsoleRunProfile(@NotNull String name, Icon icon, GeneralCommandLine commandLine, boolean consoleReadOnly) {
         this.name = name;
         this.icon = icon;
         this.commandLine = commandLine;
         this.consoleReadOnly = consoleReadOnly;
+    }
+
+    public void setProcessHandler(ProcessHandler processHandler) {
+        this.processHandler = processHandler;
     }
 
     public void setName(@NotNull String name) {
@@ -58,7 +61,9 @@ public class IdfConsoleRunProfile implements RunProfile {
         CommandLineState commandLineState = new CommandLineState(environment) {
             @Override
             protected @NotNull ProcessHandler startProcess() throws ExecutionException {
-                IdfConsoleRunProfile.this.processHandler = new KillableColoredProcessHandler(commandLine);
+                if (IdfConsoleRunProfile.this.processHandler == null) {
+                    IdfConsoleRunProfile.this.processHandler = new KillableColoredProcessHandler(commandLine);
+                }
                 if (processListeners != null) {
                     for (ProcessListener processListener : processListeners) {
                         IdfConsoleRunProfile.this.processHandler.addProcessListener(processListener);
@@ -77,7 +82,7 @@ public class IdfConsoleRunProfile implements RunProfile {
     }
 
     @Override
-    public @NlsSafe @NotNull String getName() {
+    public @NotNull String getName() {
         return name;
     }
 
@@ -97,7 +102,7 @@ public class IdfConsoleRunProfile implements RunProfile {
         processListeners.add(listener);
     }
 
-    public KillableColoredProcessHandler getProcessHandler() {
+    public ProcessHandler getProcessHandler() {
         return processHandler;
     }
 }

@@ -123,6 +123,7 @@ public class KConfParser {
             }
             for (ConfModel child : children) {
                 consumer.accept(nodeModel, child);
+                queue.add(child);
             }
         }
     }
