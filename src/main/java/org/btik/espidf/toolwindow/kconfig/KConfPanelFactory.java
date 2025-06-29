@@ -27,6 +27,7 @@ public class KConfPanelFactory {
         creators.put(HEX, KConfPanelFactory::hexCreator);
         creators.put(INT, KConfPanelFactory::intCreator);
         creators.put(STRING, KConfPanelFactory::stringCreator);
+        creators.put(MENU, KConfPanelFactory::menuItemCreator);
     }
 
     public static Component createKConfPanel(ConfModel confModel) {
@@ -45,6 +46,7 @@ public class KConfPanelFactory {
             KconfigType type = child.getType();
             ItemCreator itemCreator = creators.get(type);
             if (itemCreator == null) {
+                System.out.println(child.getId());
                 continue;
             }
             JComponent comp = itemCreator.create(child);
@@ -152,6 +154,22 @@ public class KConfPanelFactory {
 
         addComponent(wrapper, label, 0, 0);
         addComponent(wrapper, textField, 0, 1);
+
+        wrapper.setMaximumSize(wrapper.getPreferredSize());
+        return wrapper;
+    }
+
+    private static JComponent menuItemCreator(ConfModel confModel) {
+        InsertPanel wrapper = new InsertPanel(new GridBagLayout());
+        wrapper.setInsets(JBUI.insetsTop(8));
+        JCheckBox comp = new JCheckBox(confModel.getTitle());
+        comp.setToolTipText(confModel.getHelp());
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = JBUI.insets(2, 10, 0, 0); // 内边距
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.weightx = 1.0;
+        wrapper.add(comp, gbc);
 
         wrapper.setMaximumSize(wrapper.getPreferredSize());
         return wrapper;
