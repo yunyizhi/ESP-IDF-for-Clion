@@ -12,6 +12,7 @@ import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
+import org.btik.espidf.ui.componets.KeyBoardListener;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -23,7 +24,6 @@ import javax.swing.tree.TreeSelectionModel;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
@@ -87,24 +87,13 @@ public class EspIdfMenuConfigPanel extends JPanel {
         toolBar.add(actionToolbar.getComponent());
         toolBar.setBorder(null);
         add(toolBar, BorderLayout.NORTH);
-        searchInputBox.addKeyboardListener(new KeyListener() {
-            @Override
-            public void keyTyped(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyPressed(KeyEvent e) {
-
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    kconfigTreePanel.filterTree(searchInputBox.getText());
-                }
-            }
-        });
+        searchInputBox.addKeyboardListener(
+                new KeyBoardListener().withKeyReleasedCB(e -> {
+                            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                                kconfigTreePanel.filterTree(searchInputBox.getText());
+                            }
+                        }
+                ));
     }
 
     private static @NotNull ActionToolbar getActionToolbar(JPanel toolBar) {
@@ -246,7 +235,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
             contentCards.add(comp, constraints);
         }
 
-        private void showEmpty(){
+        private void showEmpty() {
             cardLayout.show(contentCards, EMPTY);
             getViewport().setViewPosition(new Point(0, 0));
         }
@@ -279,6 +268,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
         private final DefaultMutableTreeNode rootNode;
         private final ConfModel treeRootModel;
         private final TreeModel defaultTreeModel;
+
         public KconfigTreePanel(ConfModel treeRootModel) {
             this.treeRootModel = treeRootModel;
             viewport.setBorder(null);
@@ -311,6 +301,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 }
             });
         }
+
         public void filterTree(String keyword) {
 
             if (keyword == null || keyword.isEmpty()) {
@@ -341,9 +332,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 for (ConfModel child : sourceModel.getChildren()) {
                     ConfModel newChild = new ConfModel();
                     newChild.setParent(targetModel);
-
                     boolean childMatched = filterSubtree(child, newChild, keyword);
-
                     if (childMatched) {
                         newChildren.add(newChild);
                         hasChildrenMatched = true;
@@ -352,19 +341,14 @@ public class EspIdfMenuConfigPanel extends JPanel {
             }
 
             if (isMatched || hasChildrenMatched) {
-
                 sourceModel.copyTo(targetModel);
-
-
                 if (!newChildren.isEmpty()) {
                     targetModel.setChildren(newChildren);
                 } else {
                     targetModel.setChildren(null);
                 }
-
                 return true;
             }
-
             return false;
         }
 
