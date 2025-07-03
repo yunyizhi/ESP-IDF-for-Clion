@@ -78,6 +78,10 @@ public class KConfPanelFactory {
         wrapper.add(comp, gbc);
 
         wrapper.setMaximumSize(wrapper.getPreferredSize());
+        Object value = confModel.getValue();
+        if (value instanceof Boolean) {
+            comp.setSelected((Boolean) value);
+        }
         return wrapper;
     }
 
@@ -92,9 +96,14 @@ public class KConfPanelFactory {
         FontMetrics fm = comboBox.getFontMetrics(comboBox.getFont());
         int width = 200 ;
         final int paddingAndLogo = 50;
-        for (ConfModel child : children) {
+        for (int i = 0; i < children.size(); i++) {
+            ConfModel child = children.get(i);
             if (child.getType().equals(BOOL)) {
                 comboBox.addItem(child);
+                Object value = child.getValue();
+                if (value instanceof Boolean checked && checked) {
+                    comboBox.setSelectedIndex(i);
+                }
                 width = Math.max(fm.stringWidth(child.toString()) + paddingAndLogo, width);
             }
         }
@@ -134,7 +143,10 @@ public class KConfPanelFactory {
         JBTextField textField = new JBTextField();
         textField.setPreferredSize(new Dimension(200, 30));
         textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-
+        Object value = confModel.getValue();
+        if (value instanceof Integer || value instanceof Long) {
+            textField.setText(String.valueOf(value));
+        }
         addComponent(wrapper, label, 0, 0);
         addComponent(wrapper, textField, 0, 1);
 
@@ -151,7 +163,10 @@ public class KConfPanelFactory {
         JBTextField textField = new JBTextField();
         textField.setPreferredSize(new Dimension(200, 30));
         textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-
+        Object value = confModel.getValue();
+        if (value instanceof String) {
+            textField.setText((String) value);
+        }
         addComponent(wrapper, label, 0, 0);
         addComponent(wrapper, textField, 0, 1);
 

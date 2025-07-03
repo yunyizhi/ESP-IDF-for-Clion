@@ -17,14 +17,16 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
+import javax.swing.tree.TreeModel;
 import javax.swing.tree.TreeSelectionModel;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.nio.file.Path;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 
 import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.BOOL;
 import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.CHOICE;
@@ -56,6 +58,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
         treeRootModel.setName($i18n("esp.idf.tool.window.sdk.config.root.name"));
         treeRootModel.setTitle($i18n("esp.idf.tool.window.sdk.config.root.name"));
         treeRootModel.setType(KconfigType.MENU);
+        treeRootModel.setVisible(true);
 
         setBorder(null);
         this.project = project;
@@ -84,6 +87,24 @@ public class EspIdfMenuConfigPanel extends JPanel {
         toolBar.add(actionToolbar.getComponent());
         toolBar.setBorder(null);
         add(toolBar, BorderLayout.NORTH);
+        searchInputBox.addKeyboardListener(new KeyListener() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyPressed(KeyEvent e) {
+
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                    kconfigTreePanel.filterTree(searchInputBox.getText());
+                }
+            }
+        });
     }
 
     private static @NotNull ActionToolbar getActionToolbar(JPanel toolBar) {
@@ -167,9 +188,11 @@ public class EspIdfMenuConfigPanel extends JPanel {
     }
 
     private void onInitOk(KconfigStatus status) {
+        Map<String, Boolean> visible = status.getVisible();
+        Map<String, Object> values = status.getValues();
         for (ConfModel confModel : confModels) {
             KConfParser.treeEach(confModel, (item) -> {
-                Map<String, Boolean> visible = status.getVisible();
+
                 String id = item.getId();
                 if (visible.containsKey(id)) {
                     if (!visible.get(id)) {
@@ -177,6 +200,9 @@ public class EspIdfMenuConfigPanel extends JPanel {
                     }
                 } else {
                     item.setVisible(false);
+                }
+                if (values.containsKey(id)) {
+                    item.setValue(values.get(id));
                 }
                 if (item.getType() == CHOICE || item.isMenuconfig() || CollectionUtils.isEmpty(item.getChildren())) {
                     setAsMenuItem(item);
@@ -206,25 +232,34 @@ public class EspIdfMenuConfigPanel extends JPanel {
         private final CardLayout cardLayout;
         private final JPanel contentCards;
         private final HashMap<String, Component> viewMap = new HashMap<>();
+        static final String EMPTY = "empty";
 
         public KconfigContentPanel(JPanel view, CardLayout cardLayout) {
             super(view);
             this.contentCards = view;
             this.cardLayout = cardLayout;
             getVerticalScrollBar().setUnitIncrement(16);
+            contentCards.add(new JPanel(), EMPTY);
         }
 
         public void addToCard(Component comp, Object constraints) {
             contentCards.add(comp, constraints);
         }
 
+        private void showEmpty(){
+            cardLayout.show(contentCards, EMPTY);
+            getViewport().setViewPosition(new Point(0, 0));
+        }
+
         public void showCard(ConfModel confModel) {
             if (!confModel.isHasPanelItem()) {
+                showEmpty();
                 return;
             }
             if (!viewMap.containsKey(confModel.getId())) {
                 Component kConfPanel = KConfPanelFactory.createKConfPanel(confModel);
                 if (kConfPanel == null) {
+                    showEmpty();
                     return;
                 }
                 viewMap.put(confModel.getId(), kConfPanel);
@@ -239,21 +274,28 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
     static class KconfigTreePanel extends JScrollPane {
         List<DefaultMutableTreeNode> root;
+        List<ConfModel> rootModels = new ArrayList<>();
         private final Tree tree;
         private final DefaultMutableTreeNode rootNode;
-
+        private final ConfModel treeRootModel;
+        private final TreeModel defaultTreeModel;
         public KconfigTreePanel(ConfModel treeRootModel) {
+            this.treeRootModel = treeRootModel;
             viewport.setBorder(null);
             setBorder(BorderFactory.createEmptyBorder());
             rootNode = new DefaultMutableTreeNode(treeRootModel);
             tree = new Tree(rootNode);
+            defaultTreeModel = tree.getModel();
             tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         }
 
         public void setRoot(List<DefaultMutableTreeNode> root) {
             this.root = root;
             tree.expandRow(0);
-            root.forEach(rootNode::add);
+            root.forEach((item) -> {
+                rootNode.add(item);
+                rootModels.add((ConfModel) item.getUserObject());
+            });
             viewport.setView(tree);
         }
 
@@ -268,6 +310,71 @@ public class EspIdfMenuConfigPanel extends JPanel {
                     treeChoseListener.checkedTree(e, confModel);
                 }
             });
+        }
+        public void filterTree(String keyword) {
+
+            if (keyword == null || keyword.isEmpty()) {
+                tree.setModel(defaultTreeModel);
+                return;
+            }
+            ConfModel targetModel = new ConfModel();
+            treeRootModel.copyTo(targetModel);
+            boolean hasMatches = filterSubtree(treeRootModel, targetModel, keyword);
+            if (hasMatches) {
+                tree.setModel(new DefaultTreeModel(KConfParser.buildTree(targetModel)));
+                tree.expandRow(0);
+            } else {
+                DefaultMutableTreeNode emptyRoot = new DefaultMutableTreeNode("无匹配项");
+                tree.setModel(new DefaultTreeModel(emptyRoot));
+            }
+        }
+
+        private boolean filterSubtree(ConfModel sourceModel, ConfModel targetModel, String keyword) {
+            if (!sourceModel.isVisible()) {
+                return false;
+            }
+            boolean isMatched = isMatch(sourceModel, keyword);
+            boolean hasChildrenMatched = false;
+            List<ConfModel> newChildren = new ArrayList<>();
+
+            if (sourceModel.getChildren() != null) {
+                for (ConfModel child : sourceModel.getChildren()) {
+                    ConfModel newChild = new ConfModel();
+                    newChild.setParent(targetModel);
+
+                    boolean childMatched = filterSubtree(child, newChild, keyword);
+
+                    if (childMatched) {
+                        newChildren.add(newChild);
+                        hasChildrenMatched = true;
+                    }
+                }
+            }
+
+            if (isMatched || hasChildrenMatched) {
+
+                sourceModel.copyTo(targetModel);
+
+
+                if (!newChildren.isEmpty()) {
+                    targetModel.setChildren(newChildren);
+                } else {
+                    targetModel.setChildren(null);
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        private boolean isMatch(ConfModel model, String keyword) {
+            if (keyword == null || keyword.isEmpty()) return true;
+
+            String lowerKeyword = keyword.toLowerCase();
+            return (model.getId() != null && model.getId().toLowerCase().contains(lowerKeyword)) ||
+                    (model.getName() != null && model.getName().toLowerCase().contains(lowerKeyword)) ||
+                    (model.getTitle() != null && model.getTitle().toLowerCase().contains(lowerKeyword));
         }
     }
 

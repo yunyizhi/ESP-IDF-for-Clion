@@ -19,6 +19,8 @@ public class ConfModel {
     private boolean isMenuconfig;
     private int[] range;
     private List<ConfModel> children;
+
+    private Object value;
     private boolean asMenuPanelItem;
 
     private boolean visible = true;
@@ -113,6 +115,28 @@ public class ConfModel {
 
     public void setHasPanelItem(boolean hasPanelItem) {
         this.hasPanelItem = hasPanelItem;
+    }
+
+    public Object getValue() {
+        return value;
+    }
+
+    public void setValue(Object value) {
+        this.value = value;
+    }
+    public void copyTo(ConfModel target) {
+        target.setType(this.getType());
+        target.setName(this.getName());
+        target.setTitle(this.getTitle());
+        target.setHelp(this.getHelp());
+        target.setId(this.getId());
+        target.setMenuconfig(this.isMenuconfig());
+        target.setRange(this.getRange());
+        target.setValue(this.getValue());
+        target.setAsMenuPanelItem(this.isAsMenuPanelItem());
+        target.setVisible(this.isVisible());
+        target.setHasPanelItem(this.isHasPanelItem());
+        target.setParent(this.getParent());
     }
 
     public String dump() {
