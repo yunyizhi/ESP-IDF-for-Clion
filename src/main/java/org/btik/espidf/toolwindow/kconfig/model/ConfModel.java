@@ -152,6 +152,11 @@ public class ConfModel {
                 '}';
     }
 
+
+    public ConfModel getFirstChild(){
+        return children == null || children.isEmpty() ? null : children.get(0);
+    }
+
     @Override
     public String toString() {
         return title == null ? name : title;

@@ -1,4 +1,4 @@
-package org.btik.espidf.toolwindow.kconfig;
+package org.btik.espidf.ui.componets;
 
 import javax.swing.event.TreeSelectionEvent;
 
