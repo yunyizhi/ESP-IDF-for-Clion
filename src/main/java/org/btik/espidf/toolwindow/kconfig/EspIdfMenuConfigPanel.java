@@ -4,8 +4,6 @@ import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.ui.SearchTextField;
-import com.intellij.ui.treeStructure.Tree;
 import com.intellij.icons.AllIcons;
 import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.service.IdfProjectConfigService;
@@ -13,7 +11,7 @@ import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 import org.btik.espidf.ui.componets.KeyBoardListener;
-import org.btik.espidf.ui.componets.TreeChoseListener;
+import org.btik.espidf.ui.componets.SearchTextBox;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -25,12 +23,12 @@ import java.awt.event.KeyEvent;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
-import java.util.function.Consumer;
 
 import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.BOOL;
 import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.CHOICE;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
+import static org.btik.espidf.util.UIUtils.setWidth;
 
 /**
  * @author lustre
@@ -39,8 +37,8 @@ import static org.btik.espidf.util.SysConf.$sys;
 public class EspIdfMenuConfigPanel extends JPanel {
     private static final Logger LOG = Logger.getInstance(EspIdfMenuConfigPanel.class);
     private final Project project;
-    private final SearchTextField searchInputBox = new SearchTextField();
-
+    private final SearchTextBox searchInputBox = new SearchTextBox();
+    private final KconfServerAction kconfServerAction = new KconfServerAction();
     private final KconfigTreePanel kconfigTreePanel;
     private final KconfigContentPanel contentPanel;
 
@@ -61,8 +59,9 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
         setBorder(null);
         this.project = project;
-        initToolBar();
+
         kconfServer = new KConfServer(project, this::onKConfMsg);
+        initToolBar();
         kconfigTreePanel = new KconfigTreePanel(treeRootModel);
         kconfigTreePanel.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
         kconfigTreePanel.setPreferredSize(new Dimension(350, Integer.MAX_VALUE));
@@ -74,6 +73,10 @@ public class EspIdfMenuConfigPanel extends JPanel {
         add(contentPanel, BorderLayout.CENTER);
         kconfigTreePanel.addTreeSelectionListener(this::onTreeCheck);
         kconfigTreePanel.onTreeSearchResult(this::onTreeSearchResult);
+        kconfServer.setOnStopCallback(() ->{
+            initOk = false;
+            kconfServerAction.setStatus(initOk);
+        });
     }
 
 
@@ -82,18 +85,21 @@ public class EspIdfMenuConfigPanel extends JPanel {
         ActionToolbar runToolBar = getRunToolbar();
         runToolBar.setTargetComponent(toolBar);
         toolBar.add(runToolBar.getComponent());
+        setWidth(searchInputBox, 300);
         toolBar.add(searchInputBox);
         ActionToolbar actionToolbar = getActionToolbar(toolBar);
         toolBar.add(actionToolbar.getComponent());
         toolBar.setBorder(null);
         add(toolBar, BorderLayout.NORTH);
-        searchInputBox.addKeyboardListener(
-                new KeyBoardListener().withKeyReleasedCB(e -> {
-                            if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                                kconfigTreePanel.filterTree(searchInputBox.getText());
-                            }
-                        }
-                ));
+        searchInputBox
+                .withClearCallback(() -> kconfigTreePanel.filterTree(searchInputBox.getText()))
+                .withKeyboardListener(
+                        new KeyBoardListener().withKeyReleasedCB(e -> {
+                                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                                        kconfigTreePanel.filterTree(searchInputBox.getText());
+                                    }
+                                }
+                        ));
     }
 
     private static @NotNull ActionToolbar getActionToolbar(JPanel toolBar) {
@@ -116,20 +122,15 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
     private @NotNull ActionToolbar getRunToolbar() {
         var actionManager = ActionManager.getInstance();
-        ActionGroup actionGroup = new DefaultActionGroup(new AnAction("Start Conf Server", "Start conf server", AllIcons.Actions.Execute) {
-            @Override
-            public void actionPerformed(@NotNull AnActionEvent e) {
-                Presentation presentation = e.getPresentation();
-                if (!initOk) {
-                    presentation.setIcon(AllIcons.Run.Stop);
-                    presentation.setText("Stop Conf Server");
-                    loadPage();
-                } else {
-                    presentation.setIcon(AllIcons.Actions.Execute);
-                    presentation.setText("Start Conf Server");
-                }
+        kconfServerAction.setCallback(() ->{
+            if (!initOk) {
+                loadPage();
+            }else {
+                kconfServer.stop();
             }
+            kconfServerAction.setStatus(true);
         });
+        ActionGroup actionGroup = new DefaultActionGroup(kconfServerAction);
         return actionManager.createActionToolbar(ActionPlaces.TOOLWINDOW_TOOLBAR_BAR, actionGroup, true);
     }
 
@@ -179,6 +180,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
         if (!initOk) {
             initOk = true;
             onInitOk(status);
+            kconfServerAction.setStatus(initOk);
         }
     }
 

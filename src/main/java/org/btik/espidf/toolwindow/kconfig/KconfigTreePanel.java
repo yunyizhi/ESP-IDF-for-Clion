@@ -4,10 +4,13 @@ import com.intellij.ui.treeStructure.Tree;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 import org.btik.espidf.ui.componets.TreeChoseListener;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+
 import javax.swing.tree.*;
 import java.util.ArrayList;
+
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -21,6 +24,7 @@ public class KconfigTreePanel extends JScrollPane {
     private final ConfModel treeRootModel;
     private final TreeModel defaultTreeModel;
     private Consumer<ConfModel> treeSearchListener;
+    private TreeChoseListener<ConfModel> treeChoseListener;
 
     public KconfigTreePanel(ConfModel treeRootModel) {
         this.treeRootModel = treeRootModel;
@@ -34,23 +38,32 @@ public class KconfigTreePanel extends JScrollPane {
 
     public void setRoot(List<DefaultMutableTreeNode> root) {
         this.root = root;
-        tree.expandRow(0);
         root.forEach((item) -> {
             rootNode.add(item);
             rootModels.add((ConfModel) item.getUserObject());
         });
         viewport.setView(tree);
+        tree.expandPath(new TreePath(rootNode.getPath()));
     }
 
-    public void addTreeSelectionListener(TreeChoseListener<ConfModel> treeChoseListener) {
+    public void addTreeSelectionListener(@NotNull  TreeChoseListener<ConfModel> treeChoseListener) {
+        this.treeChoseListener = treeChoseListener;
         tree.addTreeSelectionListener(e -> {
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
             if (selectedNode == null) {
                 return;
             }
+
             Object userObject = selectedNode.getUserObject();
-            if (userObject instanceof ConfModel confModel) {
+            if (!(userObject instanceof ConfModel confModel)) {
+                return;
+            }
+            if (defaultTreeModel == tree.getModel()) {
                 treeChoseListener.checkedTree(e, confModel);
+                return;
+            }
+            if (treeSearchListener != null) {
+                treeSearchListener.accept(confModel);
             }
         });
     }
@@ -63,6 +76,8 @@ public class KconfigTreePanel extends JScrollPane {
 
         if (keyword == null || keyword.isEmpty()) {
             tree.setModel(defaultTreeModel);
+            tree.expandPath(new TreePath(rootNode.getPath()));
+            treeChoseListener.checkedTree(null, treeRootModel);
             return;
         }
         ConfModel targetModel = new ConfModel();
@@ -70,8 +85,8 @@ public class KconfigTreePanel extends JScrollPane {
         boolean hasMatches = filterSubtree(treeRootModel, targetModel, keyword);
         if (hasMatches) {
             DefaultMutableTreeNode filteredRootNode = KConfParser.buildTree(targetModel);
-            expandFirst(filteredRootNode);
             tree.setModel(new DefaultTreeModel(filteredRootNode));
+            expandFirst(filteredRootNode);
         } else {
             DefaultMutableTreeNode emptyRoot = new DefaultMutableTreeNode($i18n("esp.idf.kconfig.search.not.found"));
             tree.setModel(new DefaultTreeModel(emptyRoot));
@@ -98,15 +113,21 @@ public class KconfigTreePanel extends JScrollPane {
         if (!sourceModel.isVisible()) {
             return false;
         }
-        boolean isMatched = isMatch(sourceModel, keyword);
+        boolean isCurrentMatched = isMatch(sourceModel, keyword);
         boolean hasChildrenMatched = false;
         List<ConfModel> newChildren = new ArrayList<>();
 
         List<ConfModel> children = sourceModel.getChildren();
         if (children != null) {
+            // 下拉菜单本身被命中需要保留所有选项 但下拉菜单依然需要
             if (sourceModel.getType() == KconfigType.CHOICE) {
-                newChildren.addAll(children);
-            } else  {
+                for (ConfModel child : children) {
+                    newChildren.add(child);
+                    if (isMatch(child, keyword)) {
+                        hasChildrenMatched = true;
+                    }
+                }
+            } else {
                 for (ConfModel child : children) {
                     ConfModel newChild = new ConfModel();
                     newChild.setParent(targetModel);
@@ -118,7 +139,7 @@ public class KconfigTreePanel extends JScrollPane {
                 }
             }
         }
-        if (isMatched || hasChildrenMatched) {
+        if (isCurrentMatched || hasChildrenMatched) {
             sourceModel.copyTo(targetModel);
             if (!newChildren.isEmpty()) {
                 targetModel.setChildren(newChildren);

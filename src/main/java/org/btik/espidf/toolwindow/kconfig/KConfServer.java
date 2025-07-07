@@ -41,7 +41,8 @@ public class KConfServer implements ProcessListener {
     private final Project project;
 
     private final Consumer<KconfigStatus> onMsg;
-    private ProcessHandler processHandler;
+    private KconfProcessHandler processHandler;
+    private Runnable onStopCallback;
 
     private final StringBuilder builder = new StringBuilder();
 
@@ -63,7 +64,8 @@ public class KConfServer implements ProcessListener {
                 .withParameters("-B", cmakeBuildDir, "confserver");
         var runProfile = new IdfConsoleRunProfile($i18n("esp.idf.config.server.name"), EspIdfIcon.IDF_16_16, commandLine, true);
         try {
-            runProfile.setProcessHandler(new KconfProcessHandler(commandLine));
+            processHandler = new KconfProcessHandler(commandLine);
+            runProfile.setProcessHandler(processHandler);
             runProfile.addProcessListener(this);
             ExecutionEnvironment environment = ExecutionEnvironmentBuilder.create(project, DefaultRunExecutor.getRunExecutorInstance(), runProfile).build();
             environment.setExecutionId(ExecutionEnvironment.getNextUnusedExecutionId());
@@ -82,15 +84,21 @@ public class KConfServer implements ProcessListener {
     }
 
     @Override
-    public void startNotified(@NotNull ProcessEvent event) {
-        processHandler = event.getProcessHandler();
-    }
-
-    @Override
     public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
         String text = event.getText();
         builder.append(text);
         processBufferForJsonObjects();
+    }
+
+    @Override
+    public void processTerminated(@NotNull ProcessEvent event) {
+        if (onStopCallback != null) {
+            onStopCallback.run();
+        }
+    }
+
+    public void setOnStopCallback(Runnable onStopCallback) {
+        this.onStopCallback = onStopCallback;
     }
 
     private void processBufferForJsonObjects() {
@@ -141,4 +149,10 @@ public class KConfServer implements ProcessListener {
         }
     }
 
+    public void stop() {
+        if (processHandler == null) {
+            return;
+        }
+        processHandler.destroyProcess();
+    }
 }

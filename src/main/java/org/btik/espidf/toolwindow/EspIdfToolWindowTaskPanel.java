@@ -34,7 +34,7 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
         setBorder(BorderFactory.createEmptyBorder());
         Tree tree = new Tree(root);
         viewport.setView(tree);
-        tree.expandRow(0);
+        tree.expandPath(new TreePath(root.getPath()));
         tree.setCellRenderer(new TaskIconCellRenderer());
         tree.addMouseListener(new MouseAdapter() {
             @Override

@@ -5,6 +5,8 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
+import java.awt.*;
+
 import static org.btik.espidf.util.I18nMessage.$i18n;
 
 /**
@@ -22,6 +24,16 @@ public class UIUtils {
     }
 
     public static @NotNull JLabel i18nLabel(String i18nKey) {
-       return new JLabel($i18n(i18nKey));
+        return new JLabel($i18n(i18nKey));
+    }
+
+    public static void setWidth(Component component, int width) {
+        Dimension preferredSize = component.getPreferredSize();
+        preferredSize.width = width;
+        component.setPreferredSize(preferredSize);
+    }
+
+    public static void setHeight(Component component, int height) {
+        component.setSize(component.getPreferredSize().width, height);
     }
 }
