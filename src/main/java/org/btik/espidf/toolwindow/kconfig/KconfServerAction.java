@@ -56,4 +56,8 @@ public class KconfServerAction extends AnAction {
     public void setStatus(boolean refInitOk) {
         this.isRunning = refInitOk;
     }
+
+    public boolean isRunning() {
+        return isRunning;
+    }
 }

@@ -36,6 +36,13 @@ public class KconfigTreePanel extends JScrollPane {
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
     }
 
+    public void clear(){
+        rootNode.removeAllChildren();
+        rootModels.clear();
+        tree.setModel(defaultTreeModel);
+        tree.updateUI();
+    }
+
     public void setRoot(List<DefaultMutableTreeNode> root) {
         this.root = root;
         root.forEach((item) -> {

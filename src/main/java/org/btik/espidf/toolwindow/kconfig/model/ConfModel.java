@@ -124,6 +124,7 @@ public class ConfModel {
     public void setValue(Object value) {
         this.value = value;
     }
+
     public void copyTo(ConfModel target) {
         target.setType(this.getType());
         target.setName(this.getName());
@@ -137,6 +138,15 @@ public class ConfModel {
         target.setVisible(this.isVisible());
         target.setHasPanelItem(this.isHasPanelItem());
         target.setParent(this.getParent());
+    }
+
+    public void cutChain() {
+        if (children != null) {
+            for (ConfModel confModel : children) {
+                confModel.setParent(null);
+            }
+            setChildren(null);
+        }
     }
 
     public String dump() {

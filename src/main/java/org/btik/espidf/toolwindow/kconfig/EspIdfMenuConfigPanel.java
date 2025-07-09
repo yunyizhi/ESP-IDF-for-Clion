@@ -24,8 +24,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 
-import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.BOOL;
-import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.CHOICE;
+import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.*;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
 import static org.btik.espidf.util.UIUtils.setWidth;
@@ -123,12 +122,18 @@ public class EspIdfMenuConfigPanel extends JPanel {
     private @NotNull ActionToolbar getRunToolbar() {
         var actionManager = ActionManager.getInstance();
         kconfServerAction.setCallback(() ->{
-            if (!initOk) {
+            if (!kconfServerAction.isRunning()) {
+                kconfigTreePanel.setVisible(true);
+                contentPanel.setVisible(true);
+                kconfServerAction.setStatus(true);
                 loadPage();
-            }else {
+            } else {
+                contentPanel.clear();
+                kconfigTreePanel.clear();
+                treeRootModel.cutChain();
+                contentPanel.updateUI();
                 kconfServer.stop();
             }
-            kconfServerAction.setStatus(true);
         });
         ActionGroup actionGroup = new DefaultActionGroup(kconfServerAction);
         return actionManager.createActionToolbar(ActionPlaces.TOOLWINDOW_TOOLBAR_BAR, actionGroup, true);
@@ -201,7 +206,14 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 if (values.containsKey(id)) {
                     item.setValue(values.get(id));
                 }
-                if (item.getType() == CHOICE || item.isMenuconfig() || CollectionUtils.isEmpty(item.getChildren())) {
+                if ("SPIRAM".equals(id)) {
+                    System.out.println("break on SPIRAM");
+                }
+                boolean hasNoChild = CollectionUtils.isEmpty(item.getChildren());
+                if (item.getType() == CHOICE || item.isMenuconfig() || hasNoChild) {
+                    setAsMenuItem(item);
+                    // 当bool含子项则是子项的开关控制
+                } else if (item.getType() == BOOL){
                     setAsMenuItem(item);
                 }
             });
@@ -219,9 +231,6 @@ public class EspIdfMenuConfigPanel extends JPanel {
         ConfModel parent = item.getParent();
         if (parent != null) {
             parent.setHasPanelItem(true);
-            if (parent.getType() == BOOL) {
-                setAsMenuItem(parent);
-            }
         }
     }
 
