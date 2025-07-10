@@ -206,14 +206,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 if (values.containsKey(id)) {
                     item.setValue(values.get(id));
                 }
-                if ("SPIRAM".equals(id)) {
-                    System.out.println("break on SPIRAM");
-                }
-                boolean hasNoChild = CollectionUtils.isEmpty(item.getChildren());
-                if (item.getType() == CHOICE || item.isMenuconfig() || hasNoChild) {
-                    setAsMenuItem(item);
-                    // 当bool含子项则是子项的开关控制
-                } else if (item.getType() == BOOL){
+                if (item.isPanelItem()) {
                     setAsMenuItem(item);
                 }
             });

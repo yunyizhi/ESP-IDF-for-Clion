@@ -125,6 +125,16 @@ public class ConfModel {
         this.value = value;
     }
 
+    public boolean isPanelItem(){
+        if (isMenuconfig){
+            return true;
+        }
+        return switch (type) {
+            case BOOL, CHOICE, STRING, INT, HEX -> true;
+            default -> false;
+        };
+    }
+
     public void copyTo(ConfModel target) {
         target.setType(this.getType());
         target.setName(this.getName());

@@ -126,11 +126,13 @@ public class KconfigTreePanel extends JScrollPane {
 
         List<ConfModel> children = sourceModel.getChildren();
         if (children != null) {
-            // 下拉菜单本身被命中需要保留所有选项 但下拉菜单依然需要
-            if (sourceModel.getType() == KconfigType.CHOICE) {
+            if (sourceModel.isPanelItem()) {
                 for (ConfModel child : children) {
-                    newChildren.add(child);
-                    if (isMatch(child, keyword)) {
+                    ConfModel newChild = new ConfModel();
+                    boolean childMatched = filterSubtree(child, newChild, keyword);
+                    newChild.setParent(targetModel);
+                    newChildren.add(newChild);
+                    if (childMatched) {
                         hasChildrenMatched = true;
                     }
                 }
