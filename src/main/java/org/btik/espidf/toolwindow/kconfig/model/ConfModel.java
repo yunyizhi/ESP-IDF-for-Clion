@@ -1,8 +1,11 @@
 package org.btik.espidf.toolwindow.kconfig.model;
 
 import com.google.gson.annotations.SerializedName;
+import com.intellij.openapi.util.Pair;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 /**

@@ -7,11 +7,11 @@ import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.process.ProcessEvent;
-import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.execution.runners.ProgramRunner;
+import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
@@ -27,6 +27,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.io.*;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -42,6 +43,7 @@ public class KConfServer implements ProcessListener {
 
     private final Consumer<KconfigStatus> onMsg;
     private KconfProcessHandler processHandler;
+    private IdfConsoleRunProfile runProfile;
     private Runnable onStopCallback;
 
     private final StringBuilder builder = new StringBuilder();
@@ -62,7 +64,7 @@ public class KConfServer implements ProcessListener {
                 .withWorkDirectory(project.getBasePath())
                 .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
                 .withParameters("-B", cmakeBuildDir, "confserver");
-        var runProfile = new IdfConsoleRunProfile($i18n("esp.idf.config.server.name"), EspIdfIcon.IDF_16_16, commandLine, true);
+        runProfile = new IdfConsoleRunProfile($i18n("esp.idf.config.server.name"), EspIdfIcon.IDF_16_16, commandLine, true);
         try {
             processHandler = new KconfProcessHandler(commandLine);
             runProfile.setProcessHandler(processHandler);
@@ -149,10 +151,24 @@ public class KConfServer implements ProcessListener {
         }
     }
 
+    public void sendCommand(String command) {
+        OutputStream processStdIn = processHandler.getProcessInput();
+        try {
+            processStdIn.write(command.getBytes(StandardCharsets.UTF_8));
+            processStdIn.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
+            processStdIn.flush();
+            runProfile.println(command, ConsoleViewContentType.NORMAL_OUTPUT);
+            LOG.info(command);
+        } catch (IOException e) {
+            LOG.error("sendCommand failed", e);
+        }
+    }
+
     public void stop() {
         if (processHandler == null) {
             return;
         }
         processHandler.destroyProcess();
+        runProfile.println("Conf Server stoped", ConsoleViewContentType.NORMAL_OUTPUT);
     }
 }

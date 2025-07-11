@@ -1,26 +1,25 @@
 package org.btik.espidf.toolwindow.kconfig;
 
+import com.intellij.openapi.util.Pair;
 import com.intellij.ui.treeStructure.Tree;
+import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
-import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 import org.btik.espidf.ui.componets.TreeChoseListener;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
 import javax.swing.tree.*;
-import java.util.ArrayList;
+import java.util.*;
 
-import java.util.List;
 import java.util.function.Consumer;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
 
 public class KconfigTreePanel extends JScrollPane {
-    List<DefaultMutableTreeNode> root;
-    List<ConfModel> rootModels = new ArrayList<>();
+    List<ConfModel> confModels = new ArrayList<>();
     private final Tree tree;
-    private final DefaultMutableTreeNode rootNode;
+    private DefaultMutableTreeNode rootNode;
     private final ConfModel treeRootModel;
     private final TreeModel defaultTreeModel;
     private Consumer<ConfModel> treeSearchListener;
@@ -30,30 +29,40 @@ public class KconfigTreePanel extends JScrollPane {
         this.treeRootModel = treeRootModel;
         viewport.setBorder(null);
         setBorder(BorderFactory.createEmptyBorder());
-        rootNode = new DefaultMutableTreeNode(treeRootModel);
-        tree = new Tree(rootNode);
+        tree = new Tree();
         defaultTreeModel = tree.getModel();
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
     }
 
-    public void clear(){
+    public void clear() {
         rootNode.removeAllChildren();
-        rootModels.clear();
         tree.setModel(defaultTreeModel);
         tree.updateUI();
     }
 
-    public void setRoot(List<DefaultMutableTreeNode> root) {
-        this.root = root;
-        root.forEach((item) -> {
-            rootNode.add(item);
-            rootModels.add((ConfModel) item.getUserObject());
-        });
+    public void onConfigNodesChange() {
         viewport.setView(tree);
-        tree.expandPath(new TreePath(rootNode.getPath()));
+        rootNode = KConfParser.buildTree(treeRootModel);
+        if (rootNode == null) {
+            return;
+        }
+        TreeModel model = tree.getModel();
+        Set<TreePath> expandedPaths = tree.getExpandedPaths();
+        if (model instanceof DefaultTreeModel treeModel) {
+            treeModel.setRoot(rootNode);
+        }
+        if (CollectionUtils.isEmpty(expandedPaths)) {
+            tree.expandPath(new TreePath(rootNode.getPath()));
+        } else {
+            for (TreePath expandedPath : expandedPaths) {
+                System.out.println(expandedPath.getLastPathComponent());
+                tree.expandPath(expandedPath);
+            }
+        }
+
     }
 
-    public void addTreeSelectionListener(@NotNull  TreeChoseListener<ConfModel> treeChoseListener) {
+    public void addTreeSelectionListener(@NotNull TreeChoseListener<ConfModel> treeChoseListener) {
         this.treeChoseListener = treeChoseListener;
         tree.addTreeSelectionListener(e -> {
             DefaultMutableTreeNode selectedNode = (DefaultMutableTreeNode) tree.getLastSelectedPathComponent();
@@ -126,28 +135,20 @@ public class KconfigTreePanel extends JScrollPane {
 
         List<ConfModel> children = sourceModel.getChildren();
         if (children != null) {
-            if (sourceModel.isPanelItem()) {
-                for (ConfModel child : children) {
-                    ConfModel newChild = new ConfModel();
-                    boolean childMatched = filterSubtree(child, newChild, keyword);
-                    newChild.setParent(targetModel);
+            for (ConfModel child : children) {
+                ConfModel newChild = new ConfModel();
+                newChild.setParent(targetModel);
+                boolean childMatched = filterSubtree(child, newChild, keyword);
+                if (childMatched) {
+                    hasChildrenMatched = true;
                     newChildren.add(newChild);
-                    if (childMatched) {
-                        hasChildrenMatched = true;
-                    }
-                }
-            } else {
-                for (ConfModel child : children) {
-                    ConfModel newChild = new ConfModel();
-                    newChild.setParent(targetModel);
-                    boolean childMatched = filterSubtree(child, newChild, keyword);
-                    if (childMatched) {
-                        newChildren.add(newChild);
-                        hasChildrenMatched = true;
-                    }
+                } else if (isCurrentMatched && sourceModel.isHasPanelItem()) {
+                    deepCopy(child, newChild);
+                    newChildren.add(newChild);
                 }
             }
         }
+
         if (isCurrentMatched || hasChildrenMatched) {
             sourceModel.copyTo(targetModel);
             if (!newChildren.isEmpty()) {
@@ -158,6 +159,30 @@ public class KconfigTreePanel extends JScrollPane {
             return true;
         }
         return false;
+    }
+
+    private void deepCopy(ConfModel sourceModel, ConfModel targetModel) {
+        if (sourceModel == null || targetModel == null) {
+            return;
+        }
+        LinkedList<Pair<ConfModel, ConfModel>> queue = new LinkedList<>();
+        queue.offer(Pair.create(sourceModel, targetModel));
+        while (!queue.isEmpty()) {
+            Pair<ConfModel, ConfModel> pair = queue.poll();
+            ConfModel source = pair.getFirst();
+            ConfModel target = pair.getSecond();
+            source.copyTo(target);
+            List<ConfModel> children = source.getChildren();
+            if (children != null && !children.isEmpty()) {
+                List<ConfModel> newChildren = new ArrayList<>();
+                for (ConfModel child : children) {
+                    ConfModel newChild = new ConfModel();
+                    newChildren.add(newChild);
+                    queue.offer(Pair.create(child, newChild));
+                }
+                target.setChildren(newChildren);
+            }
+        }
     }
 
     private boolean isMatch(ConfModel model, String keyword) {

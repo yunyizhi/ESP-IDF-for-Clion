@@ -1,5 +1,6 @@
 package org.btik.espidf.toolwindow.kconfig;
 
+import com.google.gson.Gson;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
@@ -8,6 +9,7 @@ import com.intellij.icons.AllIcons;
 import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
+import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 import org.btik.espidf.ui.componets.KeyBoardListener;
@@ -24,7 +26,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 
-import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.*;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
 import static org.btik.espidf.util.UIUtils.setWidth;
@@ -45,6 +46,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
     private boolean initOk = false;
     private final ConfModel treeRootModel = new ConfModel();
     List<ConfModel> confModels;
+    HashMap<String, ConfModel> confModelMap = new HashMap<>();
     Map<String, Object> sdkConfig;
 
 
@@ -68,14 +70,20 @@ public class EspIdfMenuConfigPanel extends JPanel {
         add(kconfigTreePanel, BorderLayout.WEST);
         CardLayout cardLayout = new CardLayout();
         JPanel contentCards = new JPanel(cardLayout);
-        contentPanel = new KconfigContentPanel(contentCards, cardLayout);
+        contentPanel = new KconfigContentPanel(contentCards, cardLayout, this::sendCmd);
         add(contentPanel, BorderLayout.CENTER);
         kconfigTreePanel.addTreeSelectionListener(this::onTreeCheck);
         kconfigTreePanel.onTreeSearchResult(this::onTreeSearchResult);
-        kconfServer.setOnStopCallback(() ->{
+        kconfServer.setOnStopCallback(() -> {
             initOk = false;
             kconfServerAction.setStatus(initOk);
         });
+    }
+
+    private void sendCmd(KconfigSetCommand kconfigSetCommand) {
+        Gson gson = new Gson();
+        String json = gson.toJson(kconfigSetCommand);
+        kconfServer.sendCommand(json);
     }
 
 
@@ -121,7 +129,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
     private @NotNull ActionToolbar getRunToolbar() {
         var actionManager = ActionManager.getInstance();
-        kconfServerAction.setCallback(() ->{
+        kconfServerAction.setCallback(() -> {
             if (!kconfServerAction.isRunning()) {
                 kconfigTreePanel.setVisible(true);
                 contentPanel.setVisible(true);
@@ -169,6 +177,9 @@ public class EspIdfMenuConfigPanel extends JPanel {
         confModels = KConfParser.parseKconfig(menuConfigPath);
         treeRootModel.setChildren(confModels);
         for (ConfModel confModel : confModels) {
+            KConfParser.treeEach(confModel, (item) -> confModelMap.put(item.getId(), item));
+        }
+        for (ConfModel confModel : confModels) {
             confModel.setParent(treeRootModel);
             KConfParser.eachWithParent(confModel, (parent, child) -> child.setParent(parent));
         }
@@ -186,7 +197,23 @@ public class EspIdfMenuConfigPanel extends JPanel {
             initOk = true;
             onInitOk(status);
             kconfServerAction.setStatus(initOk);
+        } else {
+            onConfigUpdate(status);
         }
+    }
+
+    private void onConfigUpdate(KconfigStatus status) {
+        Map<String, Boolean> visible = status.getVisible();
+        visible.forEach((key, value) -> {
+            ConfModel confModel = confModelMap.get(key);
+            confModel.setVisible(value);
+        });
+        Map<String, Object> values = status.getValues();
+        values.forEach((key, value) -> {
+            ConfModel confModel = confModelMap.get(key);
+            confModel.setValue(confModel);
+        });
+        ApplicationManager.getApplication().invokeLater(kconfigTreePanel::onConfigNodesChange);
     }
 
     private void onInitOk(KconfigStatus status) {
@@ -211,11 +238,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 }
             });
         }
-        List<DefaultMutableTreeNode> root = confModels.stream()
-                .map(KConfParser::buildTree)
-                .filter(Objects::nonNull)
-                .toList();
-        ApplicationManager.getApplication().invokeLater(() -> kconfigTreePanel.setRoot(root));
+        ApplicationManager.getApplication().invokeLater(kconfigTreePanel::onConfigNodesChange);
 
     }
 

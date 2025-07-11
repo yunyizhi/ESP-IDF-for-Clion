@@ -1,10 +1,12 @@
 package org.btik.espidf.toolwindow.kconfig;
 
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
+import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
+import java.util.function.Consumer;
 
 public class KconfigContentPanel extends JScrollPane {
     private final CardLayout cardLayout;
@@ -17,10 +19,13 @@ public class KconfigContentPanel extends JScrollPane {
     private static final String FILTERED_TMP_PANEL_ID = "FILTERED_TMP_PANEL";
     private Component lastTmpView;
 
-    public KconfigContentPanel(JPanel view, CardLayout cardLayout) {
+    private final Consumer<KconfigSetCommand> commandSender;
+
+    public KconfigContentPanel(JPanel view, CardLayout cardLayout,Consumer<KconfigSetCommand> commandSender) {
         super(view);
         this.contentCards = view;
         this.cardLayout = cardLayout;
+        this.commandSender = commandSender;
         getVerticalScrollBar().setUnitIncrement(16);
         emptyPanel = new JPanel();
         contentCards.add(emptyPanel, EMPTY);
@@ -47,7 +52,7 @@ public class KconfigContentPanel extends JScrollPane {
             return;
         }
         if (!viewMap.containsKey(confModel.getId())) {
-            Component kConfPanel = KConfPanelFactory.createKConfPanel(confModel);
+            Component kConfPanel = KConfPanelFactory.createKConfPanel(confModel, commandSender);
             if (kConfPanel == null) {
                 showEmpty();
                 return;
@@ -63,7 +68,7 @@ public class KconfigContentPanel extends JScrollPane {
         if (lastTmpView != null) {
             contentCards.remove(lastTmpView);
         }
-        Component kConfPanel = KConfPanelFactory.createKConfPanel(confModel);
+        Component kConfPanel = KConfPanelFactory.createKConfPanel(confModel, commandSender);
         if (kConfPanel == null) {
             showEmpty();
             return;

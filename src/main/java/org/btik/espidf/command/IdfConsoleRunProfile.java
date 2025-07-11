@@ -8,6 +8,8 @@ import com.intellij.execution.process.KillableColoredProcessHandler;
 import com.intellij.execution.process.ProcessHandler;
 import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.runners.ExecutionEnvironment;
+import com.intellij.execution.ui.ConsoleView;
+import com.intellij.execution.ui.ConsoleViewContentType;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,6 +33,8 @@ public class IdfConsoleRunProfile implements RunProfile {
     private ProcessHandler processHandler;
 
     private List<ProcessListener> processListeners;
+
+    private ConsoleView consoleView;
 
     public IdfConsoleRunProfile(@NotNull String name, Icon icon, GeneralCommandLine commandLine) {
         this(name, icon, commandLine, false);
@@ -76,6 +80,7 @@ public class IdfConsoleRunProfile implements RunProfile {
             TextConsoleBuilder consoleBuilder = commandLineState.getConsoleBuilder();
             if (consoleBuilder != null) {
                 consoleBuilder.setViewer(true);
+                consoleView = consoleBuilder.getConsole();
             }
         }
         return commandLineState;
@@ -104,5 +109,26 @@ public class IdfConsoleRunProfile implements RunProfile {
 
     public ProcessHandler getProcessHandler() {
         return processHandler;
+    }
+
+    public void println(String str) {
+        print(str);
+        print(System.lineSeparator());
+    }
+
+    public void print(String msg) {
+        print(msg, ConsoleViewContentType.NORMAL_OUTPUT);
+    }
+
+    public void print(@NotNull String text, @NotNull ConsoleViewContentType contentType) {
+        if (consoleView != null) {
+            consoleView.print(text, contentType);
+        }
+    }
+
+
+    public void println(@NotNull String text, @NotNull ConsoleViewContentType contentType) {
+        print(text, contentType);
+        print(System.lineSeparator(), contentType);
     }
 }
