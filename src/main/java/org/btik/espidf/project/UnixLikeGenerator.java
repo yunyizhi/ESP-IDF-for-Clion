@@ -1,14 +1,18 @@
 package org.btik.espidf.project;
 
+
 import com.intellij.execution.ExecutionException;
 import com.intellij.facet.ui.ValidationResult;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.platform.ide.progress.TasksKt;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.util.I18nMessage;
 
+
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
@@ -34,11 +38,11 @@ public class UnixLikeGenerator<T> extends SubGenerator<T> {
             return new ValidationResult($i18n("please.select.idf.path"));
         }
         Path folder = Path.of(idfFrameworkPath);
-        if (!Files.exists(folder)){
+        if (!Files.exists(folder)) {
             return new ValidationResult($i18n("please.select.idf.path.not.exist"));
         }
         Path exportSh = folder.resolve($sys("idf.unix.export.script"));
-        if (!Files.exists(exportSh)){
+        if (!Files.exists(exportSh)) {
             return new ValidationResult($i18n("idf.folder.invalid"));
         }
         return ValidationResult.OK;
@@ -50,15 +54,17 @@ public class UnixLikeGenerator<T> extends SubGenerator<T> {
             try {
                 IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
                 IdfToolConf idfToolConf = environmentService.getSourceToolConf(idfFrameworkPath);
-                final IdfToolConf idfToolConf1 = idfToolConf;
-                Map<String, String> readEnvironment = ApplicationManager.getApplication()
-                        .executeOnPooledThread(() -> readEnvironment(idfToolConf1)).get();
+                Map<String, String> readEnvironment = TasksKt.runWithModalProgressBlocking(project, "Loading IDF Environment", (scope, continuation) -> {
+                    try {
+                        return readEnvironment(idfToolConf);
+                    } catch (IOException | ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
                 String toolChainName = idfToolConf.getToolchain().getName();
                 generateProject(readEnvironment, toolChainName);
-            } catch (java.util.concurrent.ExecutionException | InterruptedException | ExecutionException e) {
-                I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.cmd.init.project.failed"),
-                        e.getMessage(), NotificationType.ERROR).notify(project);
-                throw new RuntimeException(e);
+            } catch (RuntimeException | ExecutionException e) {
+                I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.cmd.init.project.failed"), e.getMessage(), NotificationType.ERROR).notify(project);
             }
         });
     }
