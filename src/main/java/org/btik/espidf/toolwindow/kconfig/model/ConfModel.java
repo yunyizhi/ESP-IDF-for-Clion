@@ -2,6 +2,7 @@ package org.btik.espidf.toolwindow.kconfig.model;
 
 import com.google.gson.annotations.SerializedName;
 import com.intellij.openapi.util.Pair;
+import org.btik.espidf.util.TreeBean;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -12,7 +13,7 @@ import java.util.List;
  * @author lustre
  * @since 2025/6/14 14:16
  */
-public class ConfModel {
+public class ConfModel implements TreeBean<ConfModel> {
     private KconfigType type;
     private String name;
     private String title;

@@ -17,13 +17,14 @@ import java.util.function.Consumer;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 
 public class KconfigTreePanel extends JScrollPane {
-    List<ConfModel> confModels = new ArrayList<>();
     private final Tree tree;
     private DefaultMutableTreeNode rootNode;
     private final ConfModel treeRootModel;
     private final TreeModel defaultTreeModel;
     private Consumer<ConfModel> treeSearchListener;
     private TreeChoseListener<ConfModel> treeChoseListener;
+
+    private ConfModel lastCheckedModel;
 
     public KconfigTreePanel(ConfModel treeRootModel) {
         this.treeRootModel = treeRootModel;
@@ -55,8 +56,10 @@ public class KconfigTreePanel extends JScrollPane {
             tree.expandPath(new TreePath(rootNode.getPath()));
         } else {
             for (TreePath expandedPath : expandedPaths) {
-                System.out.println(expandedPath.getLastPathComponent());
                 tree.expandPath(expandedPath);
+            }
+            if (lastCheckedModel != null) {
+                treeSearchListener.accept(lastCheckedModel);
             }
         }
 
@@ -74,6 +77,7 @@ public class KconfigTreePanel extends JScrollPane {
             if (!(userObject instanceof ConfModel confModel)) {
                 return;
             }
+            lastCheckedModel = confModel;
             if (defaultTreeModel == tree.getModel()) {
                 treeChoseListener.checkedTree(e, confModel);
                 return;
@@ -93,6 +97,7 @@ public class KconfigTreePanel extends JScrollPane {
         if (keyword == null || keyword.isEmpty()) {
             tree.setModel(defaultTreeModel);
             tree.expandPath(new TreePath(rootNode.getPath()));
+            lastCheckedModel = treeRootModel;
             treeChoseListener.checkedTree(null, treeRootModel);
             return;
         }

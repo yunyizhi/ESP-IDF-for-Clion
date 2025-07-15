@@ -7,6 +7,7 @@ import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 import org.btik.espidf.ui.componets.InsertPanel;
+import org.btik.espidf.util.TreeUtils;
 
 import javax.swing.*;
 import java.awt.*;
@@ -46,15 +47,20 @@ public class KConfPanelFactory {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         for (ConfModel child : filteredList) {
-            KconfigType type = child.getType();
-            ItemCreator itemCreator = creators.get(type);
-            if (itemCreator == null) {
-                System.out.println(child.getId());
-                continue;
-            }
-            JComponent comp = itemCreator.create(child, commandSender);
-            comp.setAlignmentX(Component.LEFT_ALIGNMENT);
-            panel.add(comp);
+            TreeUtils.treeEach(child, (item) -> {
+                if (!item.isVisible() || item.getParent() != null && item.getParent().getType() == CHOICE) {
+                    return;
+                }
+                KconfigType type = item.getType();
+                ItemCreator itemCreator = creators.get(type);
+                if (itemCreator == null) {
+                    System.out.println(item.getId());
+                    return;
+                }
+                JComponent comp = itemCreator.create(item, commandSender);
+                comp.setAlignmentX(Component.LEFT_ALIGNMENT);
+                panel.add(comp);
+            });
         }
         return panel;
     }

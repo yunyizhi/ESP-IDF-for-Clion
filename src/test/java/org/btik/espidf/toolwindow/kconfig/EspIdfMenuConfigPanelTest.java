@@ -4,6 +4,7 @@ package org.btik.espidf.toolwindow.kconfig;
 import com.intellij.openapi.project.Project;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
+import org.btik.espidf.util.TreeUtils;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
@@ -54,12 +55,12 @@ public class EspIdfMenuConfigPanelTest {
         }
         Map<String, Object> stringObjectMap = KConfParser.parseSdkConfig(res2Path("/project_root/build/config/sdkconfig.json"));
         for (ConfModel model : confModel) {
-            KConfParser.eachWithParent(model, (parentModel, childModel) -> {
+            TreeUtils.eachWithParent(model, (parentModel, childModel) -> {
                 childModel.setParent(parentModel);
             });
         }
         for (ConfModel model : confModel) {
-            KConfParser.treeEach(model, (item) -> {
+            TreeUtils.treeEach(model, (item) -> {
                 if (Objects.equals("BOOTLOADER_COMPILE_TIME_DATE", item.getId())){
                     assert item.getParent() != null;
                 }
