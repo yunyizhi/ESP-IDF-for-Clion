@@ -10,6 +10,8 @@ import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
+import com.intellij.openapi.project.Project;
+import com.jetbrains.cidr.execution.CidrPathConsoleFilter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,6 +37,8 @@ public class IdfConsoleRunProfile implements RunProfile {
     private List<ProcessListener> processListeners;
 
     private ConsoleView consoleView;
+
+    private boolean useOutFilter = false;
 
     public IdfConsoleRunProfile(@NotNull String name, Icon icon, GeneralCommandLine commandLine) {
         this(name, icon, commandLine, false);
@@ -76,12 +80,17 @@ public class IdfConsoleRunProfile implements RunProfile {
                 return IdfConsoleRunProfile.this.processHandler;
             }
         };
+        TextConsoleBuilder consoleBuilder = commandLineState.getConsoleBuilder();
+        if (consoleBuilder == null) {
+            return commandLineState;
+        }
         if (consoleReadOnly) {
-            TextConsoleBuilder consoleBuilder = commandLineState.getConsoleBuilder();
-            if (consoleBuilder != null) {
-                consoleBuilder.setViewer(true);
-                consoleView = consoleBuilder.getConsole();
-            }
+            consoleBuilder.setViewer(true);
+            consoleView = consoleBuilder.getConsole();
+        }
+        if (useOutFilter) {
+            Project project = environment.getProject();
+            consoleBuilder.filters(new CidrPathConsoleFilter(project, null, null));
         }
         return commandLineState;
     }
@@ -94,6 +103,14 @@ public class IdfConsoleRunProfile implements RunProfile {
     @Override
     public @Nullable Icon getIcon() {
         return icon;
+    }
+
+    public boolean isUseOutFilter() {
+        return useOutFilter;
+    }
+
+    public void setUseOutFilter(boolean useOutFilter) {
+        this.useOutFilter = useOutFilter;
     }
 
     public GeneralCommandLine getCommandLine() {

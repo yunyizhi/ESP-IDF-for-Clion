@@ -19,7 +19,7 @@ import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.run.config.EspIdfRunConfig;
 import org.btik.espidf.run.config.EspIdfRunConfigFactory;
 import org.btik.espidf.service.IdfEnvironmentService;
-import org.btik.espidf.util.OsUtil;
+import org.btik.espidf.util.EnvironmentVarUtil;
 import org.btik.espidf.util.SysConf;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -84,7 +84,7 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         idfEnvironmentService.putTo(envs);
         openOcdCli.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 120));
-        openOcdCli.setExePath(OsUtil.getIdfExe());
+        openOcdCli.setExePath(EnvironmentVarUtil.findIdfFullPath(envs));
         openOcdCli.withConsoleMode(true);
         openOcdCli.setWorkDirectory(project.getBasePath());
 

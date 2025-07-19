@@ -29,8 +29,8 @@ import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.util.CmdTaskExecutor;
+import org.btik.espidf.util.EnvironmentVarUtil;
 import org.btik.espidf.util.I18nMessage;
-import org.btik.espidf.util.OsUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -75,7 +75,7 @@ public abstract class SubGenerator<T> {
     protected void generateProject(Map<String, String> envs, String toolChainName) throws ExecutionException {
         Path idfGenerateTmpDir = baseDir.toNioPath().resolve(".tmp");
         GeneralCommandLine generate = new GeneralCommandLine();
-        generate.setExePath(OsUtil.getIdfExe());
+        generate.setExePath(EnvironmentVarUtil.findIdfFullPath(envs));
         generate.setWorkDirectory(baseDir.getPath());
         generate.withEnvironment(envs);
         generate.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
@@ -94,7 +94,7 @@ public abstract class SubGenerator<T> {
 
     protected void setTargetTask(Map<String, String> envs, Runnable nextTask) {
         GeneralCommandLine generate = new GeneralCommandLine();
-        generate.setExePath(OsUtil.getIdfExe());
+        generate.setExePath(EnvironmentVarUtil.findIdfFullPath(envs));
         generate.setWorkDirectory(baseDir.getPath());
         generate.withEnvironment(envs);
         generate.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));

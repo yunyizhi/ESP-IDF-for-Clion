@@ -14,6 +14,8 @@ public class OsUtil {
 
         String UNIX_BASH = "/bin/bash";
 
+        String MAC_ZSH = "/bin/zsh";
+
         String UNIX_BASH_ARG = "-c";
 
         String IDF_EXE = "idf.py";
@@ -25,7 +27,11 @@ public class OsUtil {
 
 
     public static String getCmdEnv() {
-        return IS_WINDOWS ? Const.WIN_CMD : Const.UNIX_BASH;
+        return switch (OS.CURRENT) {
+            case Windows -> Const.WIN_CMD;
+            case macOS -> Const.MAC_ZSH;
+            default -> Const.UNIX_BASH;
+        };
     }
 
     public static String getCmdArg() {

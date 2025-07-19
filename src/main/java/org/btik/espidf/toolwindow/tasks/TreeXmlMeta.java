@@ -14,6 +14,8 @@ public interface TreeXmlMeta {
 
     String VALUE = "value";
 
+    String CONSOLE_FILTER = "console_filter";
+
     String ICON = "icon";
 
     String TOOL_TIP = "toolTip";

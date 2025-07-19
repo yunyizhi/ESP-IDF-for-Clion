@@ -29,6 +29,7 @@ dependencies {
             "com.intellij.clion",
             "com.intellij.clion.embedded",
             "com.jetbrains.sh",
+            "org.jetbrains.plugins.terminal",
             "com.intellij.nativeDebug"
         )
         pluginVerifier()

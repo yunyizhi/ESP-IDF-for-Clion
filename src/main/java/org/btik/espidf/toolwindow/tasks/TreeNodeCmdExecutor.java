@@ -6,6 +6,7 @@ import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.execution.configurations.PtyCommandLine;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.openapi.project.Project;
@@ -22,6 +23,7 @@ import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskCommandNode;
 import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskConsoleCommandNode;
 import org.btik.espidf.toolwindow.tasks.model.RawCommandNode;
 import org.btik.espidf.util.CmdTaskExecutor;
+import org.btik.espidf.util.EnvironmentVarUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.Charset;
@@ -40,23 +42,18 @@ import static org.btik.espidf.util.OsUtil.Const.POWER_SHELL_ENV_PREFIX;
  */
 public class TreeNodeCmdExecutor {
     public static void execute(EspIdfTaskCommandNode commandNode, @NotNull Project project) {
-        GeneralCommandLine commandLine = new GeneralCommandLine();
-        commandLine.setExePath(getCmdEnv());
+        PtyCommandLine commandLine = new PtyCommandLine();
+        IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
+        commandLine.setExePath(EnvironmentVarUtil.findIdfFullPath(idfEnvironmentService.getEnvironments()));
         commandLine.setWorkDirectory(project.getBasePath());
         commandLine.withEnvironment(getEnvsWithProjectSettings(project));
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-        if (IS_WINDOWS) {
-            commandLine.addParameters(getCmdArg(),
-                    getIdfExe(),
-                    commandNode.getCommand());
-        } else {
-            commandLine.addParameters(getCmdArg(),
-                    getIdfExe() + " " + commandNode.getCommand());
-        }
-
+        commandLine.addParameters(commandNode.getCommand());
         try {
-            CmdTaskExecutor.execute(project, new IdfConsoleRunProfile(commandNode.getDisplayName(),
-                    EspIdfIcon.IDF_16_16, commandLine), null);
+            IdfConsoleRunProfile idfConsoleRunProfile = new IdfConsoleRunProfile(commandNode.getDisplayName(),
+                    EspIdfIcon.IDF_16_16, commandLine);
+            idfConsoleRunProfile.setUseOutFilter(commandNode.isOutFilter());
+            CmdTaskExecutor.execute(project, idfConsoleRunProfile, null);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }

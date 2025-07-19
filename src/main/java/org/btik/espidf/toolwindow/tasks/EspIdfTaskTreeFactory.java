@@ -81,7 +81,9 @@ public class EspIdfTaskTreeFactory {
     private static NodeModel<Element> newCmd(Element element) {
         String name = element.getAttribute(NAME);
         String command = element.getAttribute(VALUE);
-        EspIdfTaskCommandNode taskTreeNode = new EspIdfTaskCommandNode(name, command);
+        String useFilterStr = element.getAttribute(CONSOLE_FILTER);
+        boolean useFilter = Boolean.parseBoolean(useFilterStr);
+        EspIdfTaskCommandNode taskTreeNode = new EspIdfTaskCommandNode(name, command, useFilter);
         return buildNode(element, taskTreeNode);
     }
 
