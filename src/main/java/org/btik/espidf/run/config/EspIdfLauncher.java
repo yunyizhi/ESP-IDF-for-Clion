@@ -36,6 +36,7 @@ import kotlin.Pair;
 import org.btik.espidf.run.config.openocd.IdfOpenOcdGDBDriverConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.util.EnvironmentVarUtil;
+import org.btik.espidf.util.OsUtil;
 import org.btik.espidf.util.SysConf;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.SystemIndependent;
@@ -73,14 +74,17 @@ public class EspIdfLauncher extends CLionLauncher {
         Project project = getProject();
         IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
         Map<String, String> environments = environmentService.getEnvironments();
-        GeneralCommandLine flash = new PtyCommandLine()
-                .withConsoleMode(true)
-                .withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 120))
+        PtyCommandLine flash = new PtyCommandLine();
+        if (OsUtil.IS_WINDOWS) {
+            flash.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
+        }
+        flash.withConsoleMode(true)
                 .withExePath(EnvironmentVarUtil.findIdfFullPath(environments))
                 .withWorkDirectory(project.getBasePath())
                 .withEnvironment(environments)
                 .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
                 .withParameters("flash");
+
         return new KillableColoredProcessHandler(flash);
     }
 

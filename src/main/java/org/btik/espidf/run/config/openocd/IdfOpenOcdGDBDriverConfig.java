@@ -20,6 +20,7 @@ import org.btik.espidf.run.config.EspIdfRunConfig;
 import org.btik.espidf.run.config.EspIdfRunConfigFactory;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.util.EnvironmentVarUtil;
+import org.btik.espidf.util.OsUtil;
 import org.btik.espidf.util.SysConf;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -83,7 +84,9 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
         Map<String, String> envs = new HashMap<>(configDataModel.getEnvData().getEnvs());
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         idfEnvironmentService.putTo(envs);
-        openOcdCli.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 120));
+        if (OsUtil.IS_WINDOWS) {
+            openOcdCli.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
+        }
         openOcdCli.setExePath(EnvironmentVarUtil.findIdfFullPath(envs));
         openOcdCli.withConsoleMode(true);
         openOcdCli.setWorkDirectory(project.getBasePath());
@@ -133,6 +136,7 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
                 "target remote :3333",
                 "monitor reset halt",
                 "maintenance flush register-cache",
+                "break app_main"
         };
         for (String gdbCmd : connect) {
             commandLine.addParameters("-ex", gdbCmd);

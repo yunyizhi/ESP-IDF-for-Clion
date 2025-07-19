@@ -24,6 +24,7 @@ import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskConsoleCommandNode;
 import org.btik.espidf.toolwindow.tasks.model.RawCommandNode;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.EnvironmentVarUtil;
+import org.btik.espidf.util.SysConf;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.Charset;
@@ -49,6 +50,9 @@ public class TreeNodeCmdExecutor {
         commandLine.withEnvironment(getEnvsWithProjectSettings(project));
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
         commandLine.addParameters(commandNode.getCommand());
+        if (IS_WINDOWS){
+            commandLine.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
+        }
         try {
             IdfConsoleRunProfile idfConsoleRunProfile = new IdfConsoleRunProfile(commandNode.getDisplayName(),
                     EspIdfIcon.IDF_16_16, commandLine);
