@@ -97,34 +97,4 @@ public class KConfParser {
         }
         return treeNode;
     }
-
-    public static void treeEach(ConfModel confModel, Consumer<ConfModel> consumer){
-        LinkedList<ConfModel> queue = new LinkedList<>();
-        queue.add(confModel);
-        while (!queue.isEmpty()) {
-            ConfModel nodeModel = queue.removeFirst();
-            consumer.accept(nodeModel);
-            List<ConfModel> children = nodeModel.getChildren();
-            if (CollectionUtils.isEmpty(children)) {
-                continue;
-            }
-            queue.addAll(children);
-        }
-    }
-
-    public static void eachWithParent(ConfModel confModel, BiConsumer<ConfModel,ConfModel> consumer){
-        LinkedList<ConfModel> queue = new LinkedList<>();
-        queue.add(confModel);
-        while (!queue.isEmpty()) {
-            ConfModel nodeModel = queue.removeFirst();
-            List<ConfModel> children = nodeModel.getChildren();
-            if (CollectionUtils.isEmpty(children)) {
-                continue;
-            }
-            for (ConfModel child : children) {
-                consumer.accept(nodeModel, child);
-                queue.add(child);
-            }
-        }
-    }
 }

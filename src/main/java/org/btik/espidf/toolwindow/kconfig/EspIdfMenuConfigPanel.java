@@ -14,6 +14,7 @@ import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 import org.btik.espidf.ui.componets.KeyBoardListener;
 import org.btik.espidf.ui.componets.SearchTextBox;
+import org.btik.espidf.util.TreeUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -177,11 +178,11 @@ public class EspIdfMenuConfigPanel extends JPanel {
         confModels = KConfParser.parseKconfig(menuConfigPath);
         treeRootModel.setChildren(confModels);
         for (ConfModel confModel : confModels) {
-            KConfParser.treeEach(confModel, (item) -> confModelMap.put(item.getId(), item));
+            TreeUtils.treeEach(confModel, (item) -> confModelMap.put(item.getId(), item));
         }
         for (ConfModel confModel : confModels) {
             confModel.setParent(treeRootModel);
-            KConfParser.eachWithParent(confModel, (parent, child) -> child.setParent(parent));
+            TreeUtils.eachWithParent(confModel, (parent, child) -> child.setParent(parent));
         }
         Path sdkConfigPath = Path.of(basePath, cmakeBuildDir, $sys("esp.idf.kconfig.menus.dir")).resolve($sys("esp.idf.kconfig.sdk.config.file"));
         if (!sdkConfigPath.toFile().exists()) {
@@ -220,7 +221,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
         Map<String, Boolean> visible = status.getVisible();
         Map<String, Object> values = status.getValues();
         for (ConfModel confModel : confModels) {
-            KConfParser.treeEach(confModel, (item) -> {
+            TreeUtils.treeEach(confModel, (item) -> {
 
                 String id = item.getId();
                 if (visible.containsKey(id)) {
