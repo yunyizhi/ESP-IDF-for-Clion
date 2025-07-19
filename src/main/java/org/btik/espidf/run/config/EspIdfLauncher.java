@@ -21,13 +21,17 @@ import com.intellij.xdebugger.ui.XDebugTabLayouter;
 import com.jetbrains.cidr.ArchitectureType;
 import com.jetbrains.cidr.cpp.execution.CLionLauncher;
 import com.jetbrains.cidr.cpp.execution.debugger.peripheralview.SvdPanel;
+import com.jetbrains.cidr.cpp.toolchains.CPPDebugger;
 import com.jetbrains.cidr.cpp.toolchains.CPPEnvironment;
+import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
+import com.jetbrains.cidr.cpp.toolchains.TrivialNativeToolchain;
 import com.jetbrains.cidr.execution.CidrCoroutineHelper;
 import com.jetbrains.cidr.execution.CidrPathConsoleFilter;
 import com.jetbrains.cidr.execution.TrivialRunParameters;
 import com.jetbrains.cidr.execution.debugger.CidrDebugProcess;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriverConfiguration;
+import com.jetbrains.cidr.toolchains.OSType;
 import kotlin.Pair;
 import org.btik.espidf.run.config.openocd.IdfOpenOcdGDBDriverConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
@@ -81,9 +85,9 @@ public class EspIdfLauncher extends CLionLauncher {
     public @NotNull XDebugProcess createDebugProcess(@NotNull CommandLineState state, @NotNull XDebugSession session) {
         Project project = getProject();
         @SystemIndependent final String projectPath = project.getBasePath();
-        IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
+        CPPToolchains.Toolchain nativeToolchain = TrivialNativeToolchain.Companion.forDebugger(CPPDebugger.customGdb("gdb"), OSType.getCurrent());
         DebuggerDriverConfiguration debuggerDriverConfiguration = new IdfOpenOcdGDBDriverConfig(project,
-                idfEnvironmentService.getCurrentToolchain(), espIdfRunConfig);
+                nativeToolchain, espIdfRunConfig);
 
         GeneralCommandLine commandLine = new GeneralCommandLine("").withWorkDirectory(project.getBasePath());
         TrivialRunParameters parameters = new TrivialRunParameters(debuggerDriverConfiguration, commandLine, ArchitectureType.UNKNOWN);
