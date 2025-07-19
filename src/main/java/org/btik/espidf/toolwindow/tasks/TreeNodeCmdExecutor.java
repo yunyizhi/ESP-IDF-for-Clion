@@ -51,7 +51,7 @@ public class TreeNodeCmdExecutor {
         commandLine.setWorkDirectory(project.getBasePath());
         commandLine.withEnvironment(getEnvsWithProjectSettings(project));
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-        commandLine.addParameters(commandNode.getCommand());
+        commandLine.addParameters(commandNode.getCommand().split(" "));
         if (IS_WINDOWS) {
             commandLine.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
         }
