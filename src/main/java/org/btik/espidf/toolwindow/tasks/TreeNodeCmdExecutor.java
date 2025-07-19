@@ -14,6 +14,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.sh.run.ShConfigurationType;
 import com.intellij.sh.run.ShRunConfiguration;
 import org.btik.espidf.command.IdfConsoleRunProfile;
+import org.btik.espidf.command.MonitorProcessHandler;
 import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.icon.EspIdfIcon;
@@ -33,6 +34,7 @@ import java.util.Map;
 
 import static org.btik.espidf.service.IdfEnvironmentService.*;
 import static org.btik.espidf.service.IdfProjectConfigService.PORT_CONF_AUTO;
+import static org.btik.espidf.service.IdfSysConfService.MONITOR_COMMAND;
 import static org.btik.espidf.util.EnvironmentVarUtil.diffWithSystem;
 import static org.btik.espidf.util.OsUtil.*;
 import static org.btik.espidf.util.OsUtil.Const.POWER_SHELL_ENV_PREFIX;
@@ -50,12 +52,16 @@ public class TreeNodeCmdExecutor {
         commandLine.withEnvironment(getEnvsWithProjectSettings(project));
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
         commandLine.addParameters(commandNode.getCommand());
-        if (IS_WINDOWS){
+        if (IS_WINDOWS) {
             commandLine.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
         }
         try {
             IdfConsoleRunProfile idfConsoleRunProfile = new IdfConsoleRunProfile(commandNode.getDisplayName(),
                     EspIdfIcon.IDF_16_16, commandLine);
+            if (commandNode.getCommand().contains(MONITOR_COMMAND)) {
+                MonitorProcessHandler monitorProcessHandler = new MonitorProcessHandler(commandLine);
+                idfConsoleRunProfile.setProcessHandler(monitorProcessHandler);
+            }
             idfConsoleRunProfile.setUseOutFilter(commandNode.isOutFilter());
             CmdTaskExecutor.execute(project, idfConsoleRunProfile, null);
         } catch (ExecutionException e) {

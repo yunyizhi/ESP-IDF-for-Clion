@@ -16,6 +16,8 @@ public interface IdfSysConfService {
     String UNIX_LIKE = "unixLike";
     String DEFAULT_GDB = "default";
 
+    String MONITOR_COMMAND = "monitor";
+
     IdfToolConf getLastActivedIdfToolConf();
 
     void store(IdfToolConf newIdfToolConf);
