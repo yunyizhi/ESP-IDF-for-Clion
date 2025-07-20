@@ -63,7 +63,7 @@ public class TreeNodeCmdExecutor {
             if (aliveHandler != null) {
                 aliveHandler.destroyProcess();
                 I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("esp.idf.monitor.task.auto.stop.title"),
-                        $i18nF("esp.idf.monitor.task.auto.stop.msg", commandNode.getDisplayName(), aliveHandler.getTaskRawName()),
+                        $i18nF("esp.idf.monitor.task.auto.stop.msg", aliveHandler.getTaskRawName(), commandNode.getDisplayName()),
                         NotificationType.INFORMATION).notify(project);
             }
         }
