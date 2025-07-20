@@ -3,7 +3,7 @@
     <tree name="Tasks" icon="/org-btik-esp-idf/image/idf13_13.svg">
         <folder name="General">
             <command name="Build" value="build" icon="ij:AllIcons.Actions.Compile" toolTip="${idf.tip.build}" console-filter="true"/>
-            <console-command name="Full Clean and Reconfigure" value="fullclean reconfigure" toolTip="${idf.tip.reconfigure}" icon="ij:AllIcons.Actions.Refresh" use-terminal="false"/>
+            <command name="Full Clean and Reconfigure" value="fullclean reconfigure" toolTip="${idf.tip.reconfigure}" icon="ij:AllIcons.Actions.Refresh" />
             <command name="Flash" value="flash" console-filter="true" request-port="true" />
             <!--        use-monitor 为true则必须请求端口，则requestPort 为true 优先级高于 request-port -->
             <command name="Monitor" value="monitor" console-filter="true" toolTip="${idf.monitor.tip}" use-monitor="true" />
