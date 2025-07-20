@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
+import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.service.IdfProjectConfigService;
@@ -16,6 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * @author lustre
@@ -60,19 +62,22 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
 
     @Override
     public String getCmakeBuildDir() {
-        if (!StringUtil.isEmpty(idfProjectConfig.getBuildDir())){
-            return idfProjectConfig.getBuildDir();
-        }
+        String cmakeProfile = idfProjectConfig.getCmakeProfile();
         CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
-        List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
-        if (activeProfiles.isEmpty()){
-            return "build";
-        }
-        File generationDir = activeProfiles.get(0).getGenerationDir();
-        if (generationDir == null){
-            return "build";
-        }
-        return generationDir.getName();
+
+        return Optional.ofNullable(cmakeProfile)
+                .filter(StringUtil::isNotEmpty)
+                .map(instance::getCMakeProfileInfoByName)
+                .map(CMakeProfileInfo::getProfile)
+                .map(CMakeSettings.Profile::getGenerationDir)
+                .map(File::getName)
+                .orElseGet(() ->
+                        instance.getSettings().getActiveProfiles().stream()
+                                .findFirst()
+                                .map(CMakeSettings.Profile::getGenerationDir)
+                                .map(File::getName)
+                                .orElse("build")
+                );
     }
 
     @Override

@@ -13,7 +13,7 @@ public class IdfProjectConfig {
     private String port;
     private String monitorBaud;
     private String uploadBaud;
-    private String buildDir;
+    private String cmakeProfile;
 
     public String getPort() {
         return port;
@@ -39,23 +39,26 @@ public class IdfProjectConfig {
         this.uploadBaud = uploadBaud;
     }
 
-    public String getBuildDir() {
-        return buildDir;
+    public String getCmakeProfile() {
+        return cmakeProfile;
     }
 
-    public void setBuildDir(String buildDir) {
-        this.buildDir = buildDir;
+    public void setCmakeProfile(String cmakeProfile) {
+        this.cmakeProfile = cmakeProfile;
     }
 
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof IdfProjectConfig that)) return false;
-        return Objects.equals(getPort(), that.getPort()) && Objects.equals(getMonitorBaud(), that.getMonitorBaud()) && Objects.equals(getUploadBaud(), that.getUploadBaud()) && Objects.equals(getBuildDir(), that.getBuildDir());
+        return Objects.equals(getPort(), that.getPort())
+                && Objects.equals(getMonitorBaud(), that.getMonitorBaud())
+                && Objects.equals(getUploadBaud(), that.getUploadBaud())
+                && Objects.equals(getCmakeProfile(), that.getCmakeProfile());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getPort(), getMonitorBaud(), getUploadBaud(), getBuildDir());
+        return Objects.hash(getPort(), getMonitorBaud(), getUploadBaud(), getCmakeProfile());
     }
 
     public boolean isEmpty() {

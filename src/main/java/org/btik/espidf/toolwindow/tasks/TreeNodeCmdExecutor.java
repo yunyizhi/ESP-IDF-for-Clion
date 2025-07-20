@@ -75,6 +75,7 @@ public class TreeNodeCmdExecutor {
         commandLine.setWorkDirectory(project.getBasePath());
         commandLine.withEnvironment(envsWithProjectSettings);
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
+        commandLine.addParameters("-B", project.getService(IdfProjectConfigService.class).getCmakeBuildDir());
         commandLine.addParameters(commandNode.getCommand().split(" "));
         if (IS_WINDOWS) {
             commandLine.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
@@ -111,6 +112,7 @@ public class TreeNodeCmdExecutor {
         if (basePath == null) {
             return;
         }
+        String cmakeBuildDir = project.getService(IdfProjectConfigService.class).getCmakeBuildDir();
         RunnerAndConfigurationSettings settings = RunManager.getInstance(project)
                 .createConfiguration(commandNode.getDisplayName(), ShConfigurationType.class);
         ShRunConfiguration runConfiguration = (ShRunConfiguration) settings.getConfiguration();
@@ -132,10 +134,10 @@ public class TreeNodeCmdExecutor {
             });
             String envPrefix = envPrefixBuilder.toString();
             runConfiguration.setScriptText(StringUtil.isEmpty(command) ?
-                    envPrefix : envPrefix + Const.WIN_IDF_EXE + " " + command);
+                    envPrefix : envPrefix + Const.IDF_EXE + " -B " + cmakeBuildDir + " " + command);
         } else {
             runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, false));
-            runConfiguration.setScriptText(StringUtil.isEmpty(command) ? "" : Const.IDF_EXE + " " + command);
+            runConfiguration.setScriptText(StringUtil.isEmpty(command) ? "" : Const.IDF_EXE + " -B " + cmakeBuildDir + " " + command);
         }
         runConfiguration.setScriptWorkingDirectory(basePath);
 

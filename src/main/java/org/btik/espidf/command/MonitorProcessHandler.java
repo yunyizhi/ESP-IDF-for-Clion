@@ -19,7 +19,7 @@ public class MonitorProcessHandler extends KillableColoredProcessHandler {
     private String taskRawName;
     private static final byte GROUP_SEPARATOR = 0x1d; // Ctrl+]
     private static final Logger LOG = Logger.getInstance(MonitorProcessHandler.class);
-    private static final int MAX_TIMEOUT_MS = 5000;
+    private static final int MAX_TIMEOUT_MS = 3000;
     private static final int CHECK_INTERVAL_MS = 200;
 
     public MonitorProcessHandler(@NotNull GeneralCommandLine commandLine) throws ExecutionException {

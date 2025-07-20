@@ -1,5 +1,7 @@
 package org.btik.espidf.toolwindow;
 
+import com.intellij.execution.ExecutionTarget;
+import com.intellij.execution.ExecutionTargetManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.VerticalFlowLayout;
@@ -11,6 +13,8 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.Consumer;
 import com.intellij.util.ui.JBUI;
 
+import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
+import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
@@ -20,6 +24,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.List;
 import java.util.Map;
 
 import static org.btik.espidf.service.IdfEnvironmentService.*;
@@ -34,6 +39,8 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
     private final JBTextField portField = new JBTextField();
     private final ComboBox<String> monitorBaud = new ComboBox<>();
     private final ComboBox<String> uploadBaud = new ComboBox<>();
+    private final ComboBox<String> cmakeProfile = new ComboBox<>();
+    private final ComboBox<String> chipTarget = new ComboBox<>();
     private final JButton saveButton = new JButton();
     private final IdfProjectConfigService idfProjectConfigService;
     private final IdfProjectConfig projectConfigModel;
@@ -48,7 +55,7 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
     }
 
     private void initUI() {
-        JPanel wrapper = new JPanel(new GridLayoutManager(4, 2, JBUI.insets(16, 16, 0, 16), -1, -1));
+        JPanel wrapper = new JPanel(new GridLayoutManager(6, 2, JBUI.insets(16, 16, 0, 16), -1, -1));
 
         int rowIndex = 0;
 
@@ -65,8 +72,15 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
 
         wrapper.add(i18nLabel("idf.project.setting.upload.baud"), createConstraints(rowIndex, 0));
         wrapper.add(uploadBaud, createConstraints(rowIndex, 1));
-
         rowIndex++;
+        JLabel cmakeProfileLabel = i18nLabel("esp.idf.build.cmake.profile");
+        cmakeProfileLabel.setToolTipText($i18n("esp.idf.build.cmake.profile.tooltip"));
+        wrapper.add(cmakeProfileLabel, createConstraints(rowIndex, 0));
+        wrapper.add(cmakeProfile, createConstraints(rowIndex, 1));
+        rowIndex++;
+//        wrapper.add(i18nLabel("idf.env.type.target"), createConstraints(rowIndex, 0));
+//        wrapper.add(chipTarget, createConstraints(rowIndex, 1));
+//        rowIndex++;
         saveButton.setText($i18n("idf.project.setting.save"));
         saveButton.setEnabled(false);
         wrapper.add(saveButton, createConstraints(rowIndex, 1));
@@ -80,6 +94,26 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
     }
 
     private void initValues() {
+        initSerialConf();
+        initCmakeProfile();
+        initIdfTarget();
+    }
+
+    private void initIdfTarget() {
+
+    }
+
+    private void initCmakeProfile() {
+        CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
+        List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
+        for (CMakeSettings.Profile profile : activeProfiles) {
+            cmakeProfile.addItem(profile.getName());
+        }
+        ExecutionTarget activeTarget = ExecutionTargetManager.getActiveTarget(project);
+        cmakeProfile.setSelectedItem(activeTarget.getDisplayName());
+    }
+
+    private void initSerialConf() {
         // 初始化波特率
         String baudRates = $sys("idf.baud.rates");
         String[] baudRateArr = baudRates.trim().split(",");
@@ -145,6 +179,12 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
         uploadBaud.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 projectConfigModel.setUploadBaud((String) uploadBaud.getSelectedItem());
+                saveButton.setEnabled(idfProjectConfigService.hasValueChange(projectConfigModel));
+            }
+        });
+        cmakeProfile.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                projectConfigModel.setCmakeProfile((String) cmakeProfile.getSelectedItem());
                 saveButton.setEnabled(idfProjectConfigService.hasValueChange(projectConfigModel));
             }
         });
