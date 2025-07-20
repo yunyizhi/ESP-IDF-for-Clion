@@ -16,6 +16,7 @@ import java.util.concurrent.TimeUnit;
  * @since 2025/7/19 22:45
  */
 public class MonitorProcessHandler extends KillableColoredProcessHandler {
+    private String taskRawName;
     private static final byte GROUP_SEPARATOR = 0x1d; // Ctrl+]
     private static final Logger LOG = Logger.getInstance(MonitorProcessHandler.class);
     private static final int MAX_TIMEOUT_MS = 5000;
@@ -23,6 +24,14 @@ public class MonitorProcessHandler extends KillableColoredProcessHandler {
 
     public MonitorProcessHandler(@NotNull GeneralCommandLine commandLine) throws ExecutionException {
         super(commandLine);
+    }
+
+    public String getTaskRawName() {
+        return taskRawName;
+    }
+
+    public void setTaskRawName(String taskRawName) {
+        this.taskRawName = taskRawName;
     }
 
     @Override

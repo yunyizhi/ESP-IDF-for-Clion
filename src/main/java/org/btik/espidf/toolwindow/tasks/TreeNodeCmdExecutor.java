@@ -8,7 +8,10 @@ import com.intellij.execution.configuration.EnvironmentVariablesData;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.PtyCommandLine;
 import com.intellij.execution.executors.DefaultRunExecutor;
+import com.intellij.execution.process.ProcessEvent;
+import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.sh.run.ShConfigurationType;
@@ -25,6 +28,7 @@ import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskConsoleCommandNode;
 import org.btik.espidf.toolwindow.tasks.model.RawCommandNode;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.EnvironmentVarUtil;
+import org.btik.espidf.util.I18nMessage;
 import org.btik.espidf.util.SysConf;
 import org.jetbrains.annotations.NotNull;
 
@@ -34,8 +38,9 @@ import java.util.Map;
 
 import static org.btik.espidf.service.IdfEnvironmentService.*;
 import static org.btik.espidf.service.IdfProjectConfigService.PORT_CONF_AUTO;
-import static org.btik.espidf.service.IdfSysConfService.MONITOR_COMMAND;
 import static org.btik.espidf.util.EnvironmentVarUtil.diffWithSystem;
+import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.util.OsUtil.*;
 import static org.btik.espidf.util.OsUtil.Const.POWER_SHELL_ENV_PREFIX;
 
@@ -44,12 +49,31 @@ import static org.btik.espidf.util.OsUtil.Const.POWER_SHELL_ENV_PREFIX;
  * @since 2024/2/18 18:51
  */
 public class TreeNodeCmdExecutor {
+    private static final HashMap<String, MonitorProcessHandler> monitorProcessHandlers = new HashMap<>();
+
     public static void execute(EspIdfTaskCommandNode commandNode, @NotNull Project project) {
+        Map<String, String> envsWithProjectSettings = getEnvsWithProjectSettings(project);
+        String port = envsWithProjectSettings.get(ESP_PORT);
+        if (port == null) {
+            port = PORT_CONF_AUTO;
+        }
+        // 关停带monitor的同端口任务
+        if (commandNode.isRequestPort()) {
+            MonitorProcessHandler aliveHandler = monitorProcessHandlers.get(port);
+            if (aliveHandler != null) {
+                aliveHandler.destroyProcess();
+                I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("esp.idf.monitor.task.auto.stop.title"),
+                        $i18nF("esp.idf.monitor.task.auto.stop.msg", commandNode.getDisplayName(), aliveHandler.getTaskRawName()),
+                        NotificationType.INFORMATION).notify(project);
+            }
+        }
+
+
         PtyCommandLine commandLine = new PtyCommandLine();
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         commandLine.setExePath(EnvironmentVarUtil.findIdfFullPath(idfEnvironmentService.getEnvironments()));
         commandLine.setWorkDirectory(project.getBasePath());
-        commandLine.withEnvironment(getEnvsWithProjectSettings(project));
+        commandLine.withEnvironment(envsWithProjectSettings);
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
         commandLine.addParameters(commandNode.getCommand().split(" "));
         if (IS_WINDOWS) {
@@ -58,15 +82,28 @@ public class TreeNodeCmdExecutor {
         try {
             IdfConsoleRunProfile idfConsoleRunProfile = new IdfConsoleRunProfile(commandNode.getDisplayName(),
                     EspIdfIcon.IDF_16_16, commandLine);
-            if (commandNode.getCommand().contains(MONITOR_COMMAND)) {
-                MonitorProcessHandler monitorProcessHandler = new MonitorProcessHandler(commandLine);
-                idfConsoleRunProfile.setProcessHandler(monitorProcessHandler);
+            if (commandNode.isUseMonitor()) {
+                registerMonitorHandler(port, idfConsoleRunProfile);
             }
             idfConsoleRunProfile.setUseOutFilter(commandNode.isOutFilter());
             CmdTaskExecutor.execute(project, idfConsoleRunProfile, null);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static void registerMonitorHandler(final String port, IdfConsoleRunProfile idfConsoleRunProfile) throws ExecutionException {
+        MonitorProcessHandler monitorProcessHandler = new MonitorProcessHandler(idfConsoleRunProfile.getCommandLine());
+        monitorProcessHandler.setTaskRawName(idfConsoleRunProfile.getName());
+        idfConsoleRunProfile.setProcessHandler(monitorProcessHandler);
+        monitorProcessHandlers.put(port, monitorProcessHandler);
+        idfConsoleRunProfile.addProcessListener(new ProcessListener() {
+            @Override
+            public void processTerminated(@NotNull ProcessEvent event) {
+                ProcessListener.super.processTerminated(event);
+                monitorProcessHandlers.remove(port);
+            }
+        });
     }
 
     public static void execute(EspIdfTaskConsoleCommandNode commandNode, @NotNull Project project) {

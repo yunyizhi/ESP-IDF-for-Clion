@@ -14,7 +14,11 @@ public interface TreeXmlMeta {
 
     String VALUE = "value";
 
-    String CONSOLE_FILTER = "console_filter";
+    String CONSOLE_FILTER = "console-filter";
+
+    String USE_MONITOR = "use-monitor";
+
+    String REQUEST_PORT = "request-port";
 
     String ICON = "icon";
 

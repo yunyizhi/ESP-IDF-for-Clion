@@ -2,13 +2,14 @@
 <taskTree>
     <tree name="Tasks" icon="/org-btik-esp-idf/image/idf13_13.svg">
         <folder name="General">
-            <command name="Build" value="build" icon="ij:AllIcons.Actions.Compile" toolTip="${idf.tip.build}" console_filter="true"/>
+            <command name="Build" value="build" icon="ij:AllIcons.Actions.Compile" toolTip="${idf.tip.build}" console-filter="true"/>
             <console-command name="Full Clean and Reconfigure" value="fullclean reconfigure" toolTip="${idf.tip.reconfigure}" icon="ij:AllIcons.Actions.Refresh" use-terminal="false"/>
-            <command name="Flash" value="flash" console_filter="true" />
-            <command name="Monitor" value="monitor" console_filter="true" toolTip="${idf.monitor.tip}"/>
+            <command name="Flash" value="flash" console-filter="true" request-port="true" />
+            <!--        use-monitor 为true则必须请求端口，则requestPort 为true 优先级高于 request-port -->
+            <command name="Monitor" value="monitor" console-filter="true" toolTip="${idf.monitor.tip}" use-monitor="true" />
+            <command name="Flash and Monitor" value="flash monitor" console-filter="true" use-monitor="true"/>
             <console-command name="Monitor Terminal" value="monitor" toolTip="${idf.monitor.terminal.tip}" />
-            <command name="APP Flash" value="app-flash" console_filter="true" toolTip="${idf.app.flash.tip.build}"/>
-            <command name="Flash and Monitor" value="flash monitor" console_filter="true"/>
+            <command name="APP Flash" value="app-flash" console-filter="true" toolTip="${idf.app.flash.tip.build}" request-port="true" />
             <command name="Clean" value="clean" icon="ij:AllIcons.General.Delete" toolTip="${idf.tip.clean}"/>
             <command name="Full Clean" value="fullclean" icon="ij:AllIcons.General.Delete" toolTip="${idf.tip.full.clean}" />
             <console-command name="Menu Config" value="menuconfig" />
@@ -16,7 +17,7 @@
             <action name="IDF Export Console" id="idf.export.console" terminal="true" />
         </folder>
         <folder name="Miscellaneous">
-            <command name="Erase" value="erase-flash"/>
+            <command name="Erase" value="erase-flash" request-port="true" />
             <command name="Size" value="size"/>
             <raw-command name="Export Environments"
                          win-value="SET"

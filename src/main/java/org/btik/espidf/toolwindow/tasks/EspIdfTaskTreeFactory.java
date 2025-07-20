@@ -82,8 +82,16 @@ public class EspIdfTaskTreeFactory {
         String name = element.getAttribute(NAME);
         String command = element.getAttribute(VALUE);
         String useFilterStr = element.getAttribute(CONSOLE_FILTER);
+        String useMonitorStr = element.getAttribute(USE_MONITOR);
+        String requestPortStr = element.getAttribute(REQUEST_PORT);
         boolean useFilter = Boolean.parseBoolean(useFilterStr);
         EspIdfTaskCommandNode taskTreeNode = new EspIdfTaskCommandNode(name, command, useFilter);
+
+        boolean useMonitor = Boolean.parseBoolean(useMonitorStr);
+        // 使用监视器必然需要请求串口
+        boolean requestPort = useMonitor || Boolean.parseBoolean(requestPortStr);
+        taskTreeNode.setUseMonitor(useMonitor);
+        taskTreeNode.setRequestPort(requestPort);
         return buildNode(element, taskTreeNode);
     }
 

@@ -5,6 +5,8 @@ package org.btik.espidf.toolwindow.tasks.model;
  * @since 2024/2/18 14:42
  */
 public class EspIdfTaskCommandNode extends EspIdfTaskTreeNode{
+    private boolean useMonitor = false;
+    private boolean requestPort = false;
     private String command;
     private boolean outFilter;
 
@@ -12,6 +14,23 @@ public class EspIdfTaskCommandNode extends EspIdfTaskTreeNode{
         super(displayName);
         this.command = command;
         this.outFilter = outFilter;
+    }
+
+
+    public boolean isUseMonitor() {
+        return useMonitor;
+    }
+
+    public void setUseMonitor(boolean useMonitor) {
+        this.useMonitor = useMonitor;
+    }
+
+    public boolean isRequestPort() {
+        return requestPort;
+    }
+
+    public void setRequestPort(boolean requestPort) {
+        this.requestPort = requestPort;
     }
 
     public String getCommand() {
