@@ -1,11 +1,14 @@
 package org.btik.espidf.run.config;
 
 import com.google.gson.Gson;
+import com.intellij.execution.ExecutionTarget;
+import com.intellij.execution.ExecutionTargetManager;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
+import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
@@ -59,18 +62,30 @@ public class EspIdfRunConfigFactory extends ConfigurationFactory {
 
     public static File getFileInCmakeBuildDir(Project project, final String fileName) {
         CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
-        CMakeSettings settings = instance.getSettings();
-        List<CMakeSettings.Profile> profiles = settings.getProfiles();
         String basePath = project.getBasePath();
+
         if (basePath == null) {
             return null;
         }
         Path baseDir = Path.of(basePath);
 
+        ExecutionTarget activeTarget = ExecutionTargetManager.getActiveTarget(project);
+        String displayName = activeTarget.getDisplayName();
+        CMakeProfileInfo cMakeProfileInfoByName = instance.getCMakeProfileInfoByName(displayName);
+        File resolve;
+        if (cMakeProfileInfoByName != null) {
+            File generationDir = cMakeProfileInfoByName.getGenerationDir();
+            if ((resolve = checkDescFile(baseDir.resolve(generationDir.getName()), fileName)) != null) {
+                return resolve;
+            }
+        }
+
+        CMakeSettings settings = instance.getSettings();
+        List<CMakeSettings.Profile> profiles = settings.getProfiles();
         if (profiles.isEmpty()) {
             return checkDescFile(baseDir.resolve($sys("esp.idf.build.project.build.dir")), fileName);
         }
-        File resolve;
+
         for (CMakeSettings.Profile profile : profiles) {
             File generationDir = profile.getGenerationDir();
             if (generationDir != null && (resolve = checkDescFile(baseDir.resolve(generationDir.getName()), fileName)) != null) {
