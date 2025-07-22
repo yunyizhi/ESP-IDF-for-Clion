@@ -167,7 +167,7 @@ public class TreeNodeCmdExecutor {
         EspIdfActionMap.exec(actionNode, project);
     }
 
-    private static Map<String, String> getEnvsWithProjectSettings(@NotNull Project project) {
+    public static Map<String, String> getEnvsWithProjectSettings(@NotNull Project project) {
         IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
         IdfProjectConfig projectConfig = project.getService(IdfProjectConfigService.class).getProjectConfig();
         Map<String, String> projectEnvs = buildProjectSettingToEnvs(projectConfig);
@@ -175,7 +175,7 @@ public class TreeNodeCmdExecutor {
         return projectEnvs;
     }
 
-    private static Map<String, String> buildProjectSettingToEnvs(@NotNull IdfProjectConfig projectConfig) {
+    public static Map<String, String> buildProjectSettingToEnvs(@NotNull IdfProjectConfig projectConfig) {
         if (projectConfig.isEmpty()) {
             return new HashMap<>();
         }
