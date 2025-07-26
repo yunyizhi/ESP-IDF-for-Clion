@@ -4,6 +4,7 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.ListPopup;
@@ -16,11 +17,11 @@ import com.intellij.platform.ide.progress.TasksKt;
 import com.intellij.ui.ClickListener;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.util.ui.JBUI;
-import com.jetbrains.cidr.cpp.cmake.model.CMakeModelConfigurationData;
-import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.icon.EspIdfIcon;
+import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
+import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.EnvironmentVarUtil;
 import org.jetbrains.annotations.NonNls;
@@ -28,14 +29,13 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.event.MouseEvent;
-import java.util.List;
 import java.util.Map;
 
 import static org.btik.espidf.util.SysConf.$sys;
 
 /**
  * @author lustre
- * @since 2023/3/16 0:28
+ * @since 2025/7/22
  */
 public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBarWidget.Multiframe, CustomStatusBarWidget {
 
@@ -49,6 +49,8 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         myComponent = new TextPanel.WithIconAndArrows();
         myComponent.setBorder(JBUI.CurrentTheme.StatusBar.Widget.border());
         myComponent.setIcon(EspIdfIcon.IDF_16_16);
+        IdfProjectConfigService service = project.getService(IdfProjectConfigService.class);
+        service.addProfileChangeListener(this::update);
     }
 
     @Override
@@ -68,7 +70,7 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
                 return true;
             }
         }.installOn(myComponent, true);
-        update();
+        ApplicationManager.getApplication().invokeLater(this::update);
     }
 
     private void setEnable(boolean enable) {
@@ -82,15 +84,13 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
 
 
     private void showSelectBuildTypePopup() {
-        CMakeWorkspace cmakeWorkspace = CMakeWorkspace.getInstance(project);
-        List<CMakeModelConfigurationData> cMakeModelConfigurationData = cmakeWorkspace.getModelConfigurationData();
         GeneralCommandLine listTarget = new GeneralCommandLine();
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         Map<String, String> environments = idfEnvironmentService.getEnvironments();
         listTarget.withEnvironment(environments);
         listTarget.setExePath(EnvironmentVarUtil.findIdfFullPath(environments));
         listTarget.addParameters("--list-targets", "--preview");
-        String targets = TasksKt.runWithModalProgressBlocking(project, "Loading Targets", (scope, continuation) -> CmdTaskExecutor.exeGetStdOut(listTarget, 60));
+        String targets = TasksKt.runWithModalProgressBlocking(project, "Loading Targets", (scope, continuation) -> CmdTaskExecutor.exeGetStdOut(listTarget, 60 * 1000));
         String[] targetsArray;
         if (StringUtils.isEmpty(targets)) {
             targetsArray = $sys("idf.targets.last").split(",");
@@ -98,11 +98,8 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
             targetsArray = targets.split("\n");
         }
         DefaultActionGroup actionGroup = new DefaultActionGroup();
-        if (!cMakeModelConfigurationData.isEmpty()) {
-
-            for (String target : targetsArray) {
-                actionGroup.add(new CheckBuildTypeAction(target, target));
-            }
+        for (String target : targetsArray) {
+            actionGroup.add(new CheckBuildTypeAction(target, target, this::update));
         }
         JComponent component = getComponent();
         DataContext dataContext = DataManager.getInstance().getDataContext(component);
@@ -126,6 +123,10 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
 
 
     public void update() {
-
+        DebugConfigModel debugConfigModel = EspIdfRunConfigFactory.syncProjectDesc(project);
+        if (debugConfigModel == null) {
+            return;
+        }
+        myComponent.setText(debugConfigModel.getTarget());
     }
 }

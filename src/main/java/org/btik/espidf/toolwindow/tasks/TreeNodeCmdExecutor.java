@@ -70,8 +70,7 @@ public class TreeNodeCmdExecutor {
 
 
         PtyCommandLine commandLine = new PtyCommandLine();
-        IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
-        commandLine.setExePath(EnvironmentVarUtil.findIdfFullPath(idfEnvironmentService.getEnvironments()));
+        commandLine.setExePath(EnvironmentVarUtil.findIdfFullPath(envsWithProjectSettings));
         commandLine.setWorkDirectory(project.getBasePath());
         commandLine.withEnvironment(envsWithProjectSettings);
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));

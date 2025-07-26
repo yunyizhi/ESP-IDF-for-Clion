@@ -1,28 +1,45 @@
 package org.btik.espidf.run.config;
 
+import com.intellij.execution.ExecutionException;
+import com.intellij.execution.configurations.PtyCommandLine;
+import com.intellij.execution.process.ProcessEvent;
+import com.intellij.execution.process.ProcessListener;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsActions;
-import org.btik.espidf.toolwindow.tasks.TreeNodeCmdExecutor;
-import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskCommandNode;
+import org.btik.espidf.command.IdfConsoleRunProfile;
+import org.btik.espidf.icon.EspIdfIcon;
+import org.btik.espidf.run.config.model.DebugConfigModel;
+import org.btik.espidf.service.IdfEnvironmentService;
+import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.util.CmdTaskExecutor;
+import org.btik.espidf.util.EnvironmentVarUtil;
+import org.btik.espidf.util.SysConf;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.nio.charset.Charset;
+import java.util.Map;
+import java.util.Objects;
 import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
 /**
  * @author lustre
- * @since 2023/5/9 15:38
+ * @since 2025/7/24 15:38
  */
 public class CheckBuildTypeAction extends AnAction implements DumbAware {
 
     private final String chipTarget;
+    public final Runnable callback;
 
-    public CheckBuildTypeAction(@Nullable @NlsActions.ActionText String text,@NotNull String chipTarget) {
+    public CheckBuildTypeAction(@Nullable @NlsActions.ActionText String text,@NotNull String chipTarget,  Runnable callback) {
         super(text);
         this.chipTarget = chipTarget;
+        this.callback = callback;
     }
 
     @Override
@@ -32,8 +49,35 @@ public class CheckBuildTypeAction extends AnAction implements DumbAware {
         if (project == null) {
             return;
         }
-        TreeNodeCmdExecutor.execute(new EspIdfTaskCommandNode($i18n("idf.set.project.target"),
-                "set-target " + chipTarget, true
-        ), project);
+        DebugConfigModel debugConfigModel = EspIdfRunConfigFactory.syncProjectDesc(project);
+        if (debugConfigModel != null && Objects.equals(debugConfigModel.getTarget(), chipTarget)) {
+            return;
+        }
+        Map<String, String> envs = project.getService(IdfEnvironmentService.class).getEnvironments();
+        PtyCommandLine commandLine = new PtyCommandLine();
+        commandLine.setExePath(EnvironmentVarUtil.findIdfFullPath(envs));
+        commandLine.setWorkDirectory(project.getBasePath());
+        commandLine.withEnvironment(envs);
+        commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
+        commandLine.addParameters(
+                "-B", project.getService(IdfProjectConfigService.class).getCmakeBuildDir(),
+                "set-target", chipTarget
+        );
+        if (IS_WINDOWS) {
+            commandLine.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
+        }
+        try {
+            IdfConsoleRunProfile idfConsoleRunProfile = new IdfConsoleRunProfile($i18n("idf.set.project.target"),
+                    EspIdfIcon.IDF_16_16, commandLine);
+            idfConsoleRunProfile.setUseOutFilter(true);
+            CmdTaskExecutor.execute(project, idfConsoleRunProfile, new ProcessListener() {
+                @Override
+                public void processTerminated(@NotNull ProcessEvent event) {
+                    ApplicationManager.getApplication().invokeLater(callback);
+                }
+            });
+        } catch (ExecutionException exception) {
+            throw new RuntimeException(exception);
+        }
     }
 }

@@ -54,7 +54,7 @@ public class UnixLikeGenerator<T> extends SubGenerator<T> {
             try {
                 IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
                 IdfToolConf idfToolConf = environmentService.getSourceToolConf(idfFrameworkPath);
-                Map<String, String> readEnvironment = TasksKt.runWithModalProgressBlocking(project, "Loading IDF Environment", (scope, continuation) -> {
+                Map<String, String> readEnvironment = TasksKt.runWithModalProgressBlocking(project, $i18n("esp.idf.read.envs"), (scope, continuation) -> {
                     try {
                         return readEnvironment(idfToolConf);
                     } catch (IOException | ExecutionException e) {

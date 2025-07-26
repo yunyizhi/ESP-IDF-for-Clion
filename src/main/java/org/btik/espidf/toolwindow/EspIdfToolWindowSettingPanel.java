@@ -2,6 +2,7 @@ package org.btik.espidf.toolwindow;
 
 import com.intellij.execution.ExecutionTarget;
 import com.intellij.execution.ExecutionTargetManager;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.VerticalFlowLayout;
@@ -24,6 +25,7 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -40,7 +42,6 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
     private final ComboBox<String> monitorBaud = new ComboBox<>();
     private final ComboBox<String> uploadBaud = new ComboBox<>();
     private final ComboBox<String> cmakeProfile = new ComboBox<>();
-    private final ComboBox<String> chipTarget = new ComboBox<>();
     private final JButton saveButton = new JButton();
     private final IdfProjectConfigService idfProjectConfigService;
     private final IdfProjectConfig projectConfigModel;
@@ -78,9 +79,7 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
         wrapper.add(cmakeProfileLabel, createConstraints(rowIndex, 0));
         wrapper.add(cmakeProfile, createConstraints(rowIndex, 1));
         rowIndex++;
-//        wrapper.add(i18nLabel("idf.env.type.target"), createConstraints(rowIndex, 0));
-//        wrapper.add(chipTarget, createConstraints(rowIndex, 1));
-//        rowIndex++;
+
         saveButton.setText($i18n("idf.project.setting.save"));
         saveButton.setEnabled(false);
         wrapper.add(saveButton, createConstraints(rowIndex, 1));
@@ -96,21 +95,32 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
     private void initValues() {
         initSerialConf();
         initCmakeProfile();
-        initIdfTarget();
-    }
-
-    private void initIdfTarget() {
-
     }
 
     private void initCmakeProfile() {
-        CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
-        List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
-        for (CMakeSettings.Profile profile : activeProfiles) {
-            cmakeProfile.addItem(profile.getName());
-        }
-        ExecutionTarget activeTarget = ExecutionTargetManager.getActiveTarget(project);
-        cmakeProfile.setSelectedItem(activeTarget.getDisplayName());
+        IdfProjectConfigService service = project.getService(IdfProjectConfigService.class);
+        service.addProfileChangeListener(this::initCmakeProfileVal);
+        initCmakeProfileVal();
+    }
+
+    private void initCmakeProfileVal() {
+        ApplicationManager.getApplication().invokeLater(() ->
+        {
+            CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
+            List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
+            cmakeProfile.removeAllItems();
+            HashSet<String> activeProfileNames = new HashSet<>();
+            for (CMakeSettings.Profile profile : activeProfiles) {
+                cmakeProfile.addItem(profile.getName());
+                activeProfileNames.add(profile.getName());
+            }
+            ExecutionTarget activeTarget = ExecutionTargetManager.getActiveTarget(project);
+            String displayName = activeTarget.getDisplayName();
+            if (activeProfileNames.contains(displayName)) {
+                cmakeProfile.setSelectedItem(displayName);
+            }
+
+        });
     }
 
     private void initSerialConf() {

@@ -1,5 +1,6 @@
 package org.btik.espidf.state;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
@@ -15,9 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * @author lustre
@@ -30,6 +29,8 @@ import java.util.Optional;
 public class IdfProjectConfigComponent implements PersistentStateComponent<IdfProjectConfig>, IdfProjectConfigService {
     private final IdfProjectConfig idfProjectConfig = new IdfProjectConfig();
     private final Project project;
+
+    private final Set<Runnable> profileChangeListeners = new HashSet<>();
 
     public IdfProjectConfigComponent(Project project) {
         this.project = project;
@@ -81,7 +82,14 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     }
 
     @Override
-    public List<String> listCmakeBuildDir() {
-        return List.of();
+    public void addProfileChangeListener(Runnable callback) {
+        profileChangeListeners.add(callback);
+    }
+
+    @Override
+    public void onProfileChanged() {
+        for (Runnable profileChangeListener : profileChangeListeners) {
+            ApplicationManager.getApplication().invokeLater(profileChangeListener);
+        }
     }
 }

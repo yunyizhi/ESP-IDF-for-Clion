@@ -48,6 +48,12 @@ Enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif
         <configurationType order="last" id="esp_idf"
                            implementation="org.btik.espidf.run.config.EspIdfRunConfigType"/>
         <statusBarWidgetFactory
-                implementation="org.btik.espidf.run.config.EspIdfTargetBarBarWidgetFactory"/>
+                implementation="org.btik.espidf.run.config.EspIdfTargetBarBarWidgetFactory" id="esp_idf_target"/>
     </extensions>
+    <projectListeners>
+        <listener topic="com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspaceListener"
+                  class="org.btik.espidf.state.EspIdfCMakeStatusListener"/>
+        <listener class="org.btik.espidf.state.CMakeStateListener"
+                  topic="com.jetbrains.cidr.cpp.cmake.CMakeSettingsListener"/>
+    </projectListeners>
 </idea-plugin>

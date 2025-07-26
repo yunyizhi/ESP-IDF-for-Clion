@@ -4,6 +4,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.platform.ide.progress.TasksKt;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
@@ -22,9 +23,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 
 import static org.btik.espidf.adapter.Adapter.readEnvironment;
+import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 import static org.btik.espidf.util.SysConf.$sys;
 
@@ -107,15 +108,16 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         if (StringUtil.isEmpty(environment)) {
             return;
         }
-        try {
-            Map<String, String> rawEnv = ApplicationManager.getApplication()
-                    .executeOnPooledThread(() -> readEnvironment(toolchain, environment)).get();
-            environments = sanitizeEnv(rawEnv);
-            environmentFile = environment;
+        Map<String, String> rawEnv = TasksKt.runWithModalProgressBlocking(project, $i18n("esp.idf.read.envs"), (scope, continuation) -> {
+            try {
+                return readEnvironment(toolchain, environment);
+            } catch (IOException | com.intellij.execution.ExecutionException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        environments = sanitizeEnv(rawEnv);
+        environmentFile = environment;
 
-        } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     @Override

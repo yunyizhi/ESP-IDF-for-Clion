@@ -59,11 +59,11 @@ public class CmdTaskExecutor {
         });
     }
 
-    public static String exeGetStdOut(GeneralCommandLine commandLine, int timeout) {
+    public static String exeGetStdOut(GeneralCommandLine commandLine, int timeoutInMilliseconds) {
 
         try {
             ProcessOutput output = new CapturingProcessRunner(new CapturingProcessHandler(commandLine))
-                    .runProcess(timeout);
+                    .runProcess(timeoutInMilliseconds);
             if (output.isTimeout()) {
                 return null;
             } else if (output.getExitCode() != 0) {

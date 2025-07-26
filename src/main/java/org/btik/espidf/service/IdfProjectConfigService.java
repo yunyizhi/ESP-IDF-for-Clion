@@ -20,5 +20,7 @@ public interface IdfProjectConfigService {
 
     String getCmakeBuildDir();
 
-    List<String> listCmakeBuildDir();
+    void addProfileChangeListener(Runnable callback);
+
+    void onProfileChanged();
 }
