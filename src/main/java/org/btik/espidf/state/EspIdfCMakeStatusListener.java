@@ -18,11 +18,4 @@ public class EspIdfCMakeStatusListener implements CMakeWorkspaceListener {
         project.getService(IdfProjectConfigService.class).onProfileChanged();
     }
 
-    @Override
-    public void reloadingScheduled() {
-        CMakeWorkspaceListener.super.reloadingScheduled();
-        project.getService(IdfProjectConfigService.class).onProfileChanged();
-    }
-
-
 }

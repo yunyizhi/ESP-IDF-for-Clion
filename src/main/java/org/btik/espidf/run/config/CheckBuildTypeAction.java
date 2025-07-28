@@ -17,6 +17,7 @@ import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.EnvironmentVarUtil;
+import org.btik.espidf.util.EspIdfProjectUtil;
 import org.btik.espidf.util.SysConf;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -49,7 +50,7 @@ public class CheckBuildTypeAction extends AnAction implements DumbAware {
         if (project == null) {
             return;
         }
-        DebugConfigModel debugConfigModel = EspIdfRunConfigFactory.syncProjectDesc(project);
+        DebugConfigModel debugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
         if (debugConfigModel != null && Objects.equals(debugConfigModel.getTarget(), chipTarget)) {
             return;
         }

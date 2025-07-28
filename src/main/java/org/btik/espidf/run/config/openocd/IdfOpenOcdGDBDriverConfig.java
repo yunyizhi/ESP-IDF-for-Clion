@@ -17,9 +17,9 @@ import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.run.config.EspIdfRunConfig;
-import org.btik.espidf.run.config.EspIdfRunConfigFactory;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.util.EnvironmentVarUtil;
+import org.btik.espidf.util.EspIdfProjectUtil;
 import org.btik.espidf.util.OsUtil;
 import org.btik.espidf.util.SysConf;
 import org.jetbrains.annotations.NotNull;
@@ -125,7 +125,7 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
         if (checkElf(appElf)) {
             commandLine.addParameters("-iex", "file " + gdbConsolePath(appElf));
         } else {
-            File appElfInBuild = EspIdfRunConfigFactory.getFileInCmakeBuildDir(project, gdbConsolePath(appElf));
+            File appElfInBuild = EspIdfProjectUtil.getFileInCmakeBuildDir(project, gdbConsolePath(appElf));
             if (appElfInBuild != null) {
                 commandLine.addParameters("-iex", "file " + gdbConsolePath(appElfInBuild.getPath()));
             }

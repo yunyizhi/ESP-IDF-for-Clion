@@ -136,7 +136,7 @@ public abstract class SubGenerator<T> {
 
             }
         });
-        createDebugRunConfig();
+        ApplicationManager.getApplication().invokeLater(this::createDebugRunConfig);
     }
 
     protected void createDebugRunConfig() {

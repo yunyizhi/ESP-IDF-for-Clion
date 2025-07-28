@@ -24,6 +24,7 @@ import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.EnvironmentVarUtil;
+import org.btik.espidf.util.EspIdfProjectUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
@@ -123,7 +124,7 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
 
 
     public void update() {
-        DebugConfigModel debugConfigModel = EspIdfRunConfigFactory.syncProjectDesc(project);
+        DebugConfigModel debugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
         if (debugConfigModel == null) {
             return;
         }

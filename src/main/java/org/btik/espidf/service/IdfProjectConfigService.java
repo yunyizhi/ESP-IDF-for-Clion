@@ -1,8 +1,7 @@
 package org.btik.espidf.service;
 
+import com.intellij.util.Consumer;
 import org.btik.espidf.conf.IdfProjectConfig;
-
-import java.util.List;
 
 /**
  * @author lustre
@@ -17,10 +16,16 @@ public interface IdfProjectConfigService {
 
     IdfProjectConfig getProjectConfig();
 
-
     String getCmakeBuildDir();
 
     void addProfileChangeListener(Runnable callback);
 
     void onProfileChanged();
+
+    boolean isCreateByEspIdf();
+
+    void setCreateByEspIdf(boolean createByEspIdf);
+
+    void setStatusBarRefreshHook(Consumer<Boolean> callback);
+
 }

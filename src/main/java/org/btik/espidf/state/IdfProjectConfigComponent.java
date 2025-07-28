@@ -6,12 +6,14 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.Consumer;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.util.EspIdfProjectUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -31,9 +33,15 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     private final Project project;
 
     private final Set<Runnable> profileChangeListeners = new HashSet<>();
+    /*
+     * 是否由ESPIDF插件创建，不需要持久化
+     * */
+    private boolean createByEspIdf = false;
+    private Consumer<Boolean> statusBarRefreshHook;
 
     public IdfProjectConfigComponent(Project project) {
         this.project = project;
+
     }
 
     @Override
@@ -88,8 +96,28 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
 
     @Override
     public void onProfileChanged() {
+        boolean isEspIdfProject = EspIdfProjectUtil.isEspIdfProject(project);
+        statusBarRefreshHook.accept(isEspIdfProject);
+        if (!isEspIdfProject) {
+            return;
+        }
         for (Runnable profileChangeListener : profileChangeListeners) {
             ApplicationManager.getApplication().invokeLater(profileChangeListener);
         }
+    }
+
+    @Override
+    public boolean isCreateByEspIdf() {
+        return createByEspIdf;
+    }
+
+    @Override
+    public void setCreateByEspIdf(boolean createByEspIdf) {
+        this.createByEspIdf = createByEspIdf;
+    }
+
+    @Override
+    public void setStatusBarRefreshHook(Consumer<Boolean> callback) {
+        this.statusBarRefreshHook = callback;
     }
 }

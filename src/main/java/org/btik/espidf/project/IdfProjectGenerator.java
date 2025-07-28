@@ -11,6 +11,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.impl.welcomeScreen.AbstractActionWithPanel;
 import com.intellij.platform.DirectoryProjectGenerator;
 import com.jetbrains.cidr.cpp.cmake.projectWizard.generators.CLionProjectGenerator;
+import org.btik.espidf.service.IdfProjectConfigService;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -99,9 +100,10 @@ public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements 
 
     @Override
     public void generateProject(@NotNull Project project, @NotNull VirtualFile baseDir, @NotNull T settings, @NotNull Module module) {
-        if(IS_WINDOWS) {
+        project.getService(IdfProjectConfigService.class).setCreateByEspIdf(true);
+        if (IS_WINDOWS) {
             windowsGenerator.generateProject(project, baseDir, settings, module);
-        }else{
+        } else {
             unixLikeGenerator.generateProject(project, baseDir, settings, module);
         }
 
@@ -114,7 +116,7 @@ public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements 
     public void setIdfTarget(String idfTarget) {
         if (IS_WINDOWS) {
             windowsGenerator.setIdfTarget(idfTarget);
-        }else {
+        } else {
             unixLikeGenerator.setIdfTarget(idfTarget);
         }
     }

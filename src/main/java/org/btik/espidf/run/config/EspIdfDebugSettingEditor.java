@@ -17,6 +17,7 @@ import org.btik.espidf.ui.componets.TextFieldFileChooser;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfSysConfService;
+import org.btik.espidf.util.EspIdfProjectUtil;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -134,15 +135,15 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
     }
 
     private void initValue() {
-        DebugConfigModel debugConfigModel = EspIdfRunConfigFactory.syncProjectDesc(project);
+        DebugConfigModel debugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
         if (debugConfigModel == null) {
-            debugConfigModel = EspIdfRunConfigFactory.syncProjectDesc(project);
+            debugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
         }
         if (debugConfigModel == null) {
             return;
         }
         appElf.setText(debugConfigModel.getAppElf());
-        appElf.setRootDir(EspIdfRunConfigFactory.getFileInCmakeBuildDir(project, "/"));
+        appElf.setRootDir(EspIdfProjectUtil.getFileInCmakeBuildDir(project, "/"));
         bootloaderElf.setText(debugConfigModel.getBootloaderElf());
         String target = debugConfigModel.getTarget();
 
