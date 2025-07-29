@@ -14,6 +14,7 @@ import com.jetbrains.cidr.ArchitectureType;
 import com.jetbrains.cidr.cpp.execution.debugger.backend.CLionGDBDriverConfiguration;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
+import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.run.config.EspIdfRunConfig;
@@ -81,6 +82,12 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
     @Override
     public @NotNull GeneralCommandLine createDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType) {
         var configDataModel = espIdfRunConfig.getConfigDataModel();
+        if (StringUtils.isEmpty(configDataModel.getGdbExe())) {
+            throw new RuntimeException($i18n("esp.idf.debugging.gdb.not.selected"));
+        }
+        if (StringUtils.isEmpty(configDataModel.getAppElf())) {
+            throw new RuntimeException($i18n("esp.idf.debugging.app.elf.not.selected"));
+        }
         Map<String, String> envs = new HashMap<>(configDataModel.getEnvData().getEnvs());
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         idfEnvironmentService.putTo(envs);

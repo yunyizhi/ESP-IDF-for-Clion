@@ -1,4 +1,4 @@
-package org.btik.espidf.run.config;
+package org.btik.espidf.state;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.PtyCommandLine;

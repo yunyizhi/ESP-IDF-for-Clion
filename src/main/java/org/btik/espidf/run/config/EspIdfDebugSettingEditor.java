@@ -6,6 +6,7 @@ import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
+import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.VerticalFlowLayout;
@@ -13,6 +14,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.ui.JBUI;
+import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.ui.componets.TextFieldFileChooser;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
@@ -193,7 +195,13 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
     }
 
     @Override
-    protected void applyEditorTo(@NotNull EspIdfRunConfig espIdfRunConfig) {
+    protected void applyEditorTo(@NotNull EspIdfRunConfig espIdfRunConfig) throws ConfigurationException {
+        if (StringUtils.isEmpty(gdb.getText())) {
+            throw new ConfigurationException($i18n("esp.idf.debugging.gdb.not.selected"));
+        }
+        if (StringUtils.isEmpty(appElf.getText())) {
+            throw new ConfigurationException($i18n("esp.idf.debugging.app.elf.not.selected"));
+        }
         DebugConfigModel configDataModel = espIdfRunConfig.getConfigDataModel();
         DebugConfigModel debugConfigModel = configDataModel == null ? new DebugConfigModel() : configDataModel;
         espIdfRunConfig.setConfigDataModel(debugConfigModel);

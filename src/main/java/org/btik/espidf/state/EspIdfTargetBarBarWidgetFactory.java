@@ -1,4 +1,4 @@
-package org.btik.espidf.run.config;
+package org.btik.espidf.state;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsContexts;
@@ -26,7 +26,7 @@ public class EspIdfTargetBarBarWidgetFactory implements StatusBarWidgetFactory {
 
     @Override
     public @NotNull @NlsContexts.ConfigurableName String getDisplayName() {
-        return "";
+        return "Switch ESP-IDF Target";
     }
 
     @Override

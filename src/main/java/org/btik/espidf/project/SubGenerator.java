@@ -125,6 +125,7 @@ public abstract class SubGenerator<T> {
         CidrProjectApplicationVersion.getInstance(project).initializeApplicationInfo();
         File cmakeProject = VfsUtilCore.virtualToIoFile(baseDir);
         instance.linkCMakeProject(cmakeProject, new Continuation<>() {
+
             @NotNull
             @Override
             public CoroutineContext getContext() {
@@ -133,10 +134,13 @@ public abstract class SubGenerator<T> {
 
             @Override
             public void resumeWith(@NotNull Object o) {
-
+                if (o instanceof Boolean success && success) {
+                    ApplicationManager.getApplication().invokeLater(SubGenerator.this::createDebugRunConfig);
+                } else {
+                    LOG.warn(o + ":class " + o.getClass().getName());
+                }
             }
         });
-        ApplicationManager.getApplication().invokeLater(this::createDebugRunConfig);
     }
 
     protected void createDebugRunConfig() {

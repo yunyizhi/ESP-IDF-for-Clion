@@ -1,4 +1,4 @@
-package org.btik.espidf.run.config;
+package org.btik.espidf.state;
 
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.ide.DataManager;
@@ -72,15 +72,6 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
             }
         }.installOn(myComponent, true);
         ApplicationManager.getApplication().invokeLater(this::update);
-    }
-
-    private void setEnable(boolean enable) {
-        myComponent.setVisible(enable);
-    }
-
-    @Override
-    public void dispose() {
-        setEnable(false);
     }
 
 
