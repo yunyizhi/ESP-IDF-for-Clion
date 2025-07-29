@@ -25,11 +25,13 @@ public interface IdfEnvironmentService {
 
     String OPENOCD_COMMANDS = "OPENOCD_COMMANDS";
 
+    Map<String, String> getCmakeSelectEnvironments();
+
+    Map<String, String> getTaskTreeEnvironments();
+
     Map<String, String> getEnvironments();
 
     void putTo(Map<String, String> newEnvironments);
-
-    String getEnvironmentFile();
 
     /**
      * 仅windows
@@ -39,7 +41,5 @@ public interface IdfEnvironmentService {
     IdfToolConf getSourceToolConf(String idfFrameworkPath);
 
     List<EspIdfBuildTarget> getBuildTargets();
-
-    CPPToolchains.Toolchain getCurrentToolchain();
 
 }
