@@ -7,7 +7,6 @@ import com.intellij.execution.ExecutionTarget;
 import com.intellij.execution.ExecutionTargetManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.text.StringUtil;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
@@ -15,7 +14,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
-import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileReader;
@@ -33,7 +31,6 @@ public class EspIdfProjectUtil {
     private final static Logger log = Logger.getInstance(EspIdfProjectUtil.class);
     private static final String PROJECT_DESC_FILE_NAME = $sys("esp.idf.build.project.description");
     private static final String IDF_PATH = $sys("esp.idf.build.idf.path");
-    private static final String DEFAULT_CMAKE_BUILD_DIR_PREFIX = "cmake-build-";
 
     public static boolean isEspIdfProject(Project project) {
         boolean createByEspIdf = project.getService(IdfProjectConfigService.class).isCreateByEspIdf();
@@ -49,7 +46,7 @@ public class EspIdfProjectUtil {
         List<CMakeSettings.Profile> activeProfiles = CMakeSettings.getInstance(project).getActiveProfiles();
         Gson gson = new Gson();
         for (CMakeSettings.Profile activeProfile : activeProfiles) {
-            String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project.getBasePath(), activeProfile);
+            String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project, activeProfile);
             if (StringUtils.isEmpty(buildOutDir)) {
                 continue;
             }
@@ -79,21 +76,8 @@ public class EspIdfProjectUtil {
         return gson.fromJson(json, DebugConfigModel.class);
     }
 
-    public static String getProfileDefaultBuildOutDir(String basePath, CMakeSettings.Profile profile) {
-        if (basePath == null) {
-            return null;
-        }
-        Path baseDir = Path.of(basePath);
-        String name = profile.getName().toLowerCase();
-        String tryWithProfileName = DEFAULT_CMAKE_BUILD_DIR_PREFIX + name;
-        File file = baseDir.resolve(tryWithProfileName).toFile();
-        if (file.exists() && file.isDirectory()) {
-            return tryWithProfileName;
-        }
-        return null;
-    }
-
-    public static String getBuildOutDir(String basePath, CMakeSettings.Profile profile) {
+    public static String getBuildOutDir(Project project, CMakeSettings.Profile profile) {
+        String basePath = project.getBasePath();
         if (basePath == null) {
             return null;
         }
@@ -101,9 +85,10 @@ public class EspIdfProjectUtil {
         if (generationDir != null) {
             return generationDir.getName();
         }
-        String profileDefaultBuildOutDir = getProfileDefaultBuildOutDir(basePath, profile);
-        if (StringUtil.isNotEmpty(profileDefaultBuildOutDir)) {
-            return profileDefaultBuildOutDir;
+        CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
+        CMakeProfileInfo cMakeProfileInfoByName = instance.getCMakeProfileInfoByName(profile.getName());
+        if (cMakeProfileInfoByName != null) {
+            return cMakeProfileInfoByName.getGenerationDir().getName();
         }
         return null;
     }
@@ -123,7 +108,7 @@ public class EspIdfProjectUtil {
         File resolve;
         if (cMakeProfileInfoByName != null) {
             CMakeSettings.Profile profile = cMakeProfileInfoByName.getProfile();
-            String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project.getBasePath(), profile);
+            String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project, profile);
             if (StringUtils.isNotEmpty(buildOutDir) && (resolve = checkDescFile(baseDir.resolve(buildOutDir), fileName)) != null) {
                 return resolve;
             }
@@ -136,7 +121,7 @@ public class EspIdfProjectUtil {
         }
 
         for (CMakeSettings.Profile profile : profiles) {
-            String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project.getBasePath(), profile);
+            String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project, profile);
             if (StringUtils.isNotEmpty(buildOutDir) && (resolve = checkDescFile(baseDir.resolve(buildOutDir), fileName)) != null) {
                 return resolve;
             }

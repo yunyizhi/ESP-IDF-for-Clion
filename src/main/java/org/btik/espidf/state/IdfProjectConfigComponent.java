@@ -75,7 +75,7 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
             return "build";
         }
         CMakeSettings.Profile profile = activeProfiles.get(0);
-        String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project.getBasePath(), profile);
+        String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project, profile);
         if (StringUtil.isNotEmpty(buildOutDir)) {
             return buildOutDir;
         }
@@ -93,12 +93,8 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
         if (cMakeProfileInfoByName == null) {
             return getFirstBuildDir(instance);
         }
-        CMakeSettings.Profile profile = cMakeProfileInfoByName.getProfile();
-        String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project.getBasePath(), profile);
-        if (StringUtil.isNotEmpty(buildOutDir)) {
-            return buildOutDir;
-        }
-        return getFirstBuildDir(instance);
+        File generationDir = cMakeProfileInfoByName.getGenerationDir();
+        return generationDir.getName();
     }
 
     @Override
