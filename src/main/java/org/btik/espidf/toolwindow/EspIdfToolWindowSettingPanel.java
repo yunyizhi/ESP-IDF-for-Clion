@@ -118,6 +118,7 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
             String displayName = activeTarget.getDisplayName();
             if (activeProfileNames.contains(displayName)) {
                 cmakeProfile.setSelectedItem(displayName);
+                idfProjectConfigService.updateProfile(displayName);
             }
 
         });

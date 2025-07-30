@@ -128,4 +128,9 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     public void setStatusBarRefreshHook(Consumer<Boolean> callback) {
         this.statusBarRefreshHook = callback;
     }
+
+    @Override
+    public void updateProfile(String displayName) {
+        idfProjectConfig.setCmakeProfile(displayName);
+    }
 }

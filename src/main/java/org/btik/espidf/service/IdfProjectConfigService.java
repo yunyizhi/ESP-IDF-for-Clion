@@ -28,4 +28,5 @@ public interface IdfProjectConfigService {
 
     void setStatusBarRefreshHook(Consumer<Boolean> callback);
 
+    void updateProfile(String displayName);
 }
