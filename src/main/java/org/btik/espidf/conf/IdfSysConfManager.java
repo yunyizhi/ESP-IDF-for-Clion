@@ -63,6 +63,8 @@ public class IdfSysConfManager implements IdfSysConfService {
     private List<ClassMetaUtils.PropOptMeta> propOptMetas;
 
     public IdfSysConfManager() {
+        parseGdbConf();
+        parseDebugModelSerialMeta();
 
         Path configDir = PathManager.getConfigDir();
         Path idfFolder = configDir.resolve(IDF_FOLDER_NAME);
@@ -74,10 +76,6 @@ public class IdfSysConfManager implements IdfSysConfService {
             return;
         }
         parseToolConf(idfJson);
-
-        parseGdbConf();
-
-        parseDebugModelSerialMeta();
 
     }
 

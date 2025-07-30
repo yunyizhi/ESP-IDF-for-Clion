@@ -69,24 +69,36 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
         return XmlSerializerUtil.createCopy(idfProjectConfig);
     }
 
+    private String getFirstBuildDir(CMakeWorkspace workspace) {
+        List<CMakeSettings.Profile> activeProfiles = workspace.getSettings().getActiveProfiles();
+        if (activeProfiles.isEmpty()) {
+            return "build";
+        }
+        CMakeSettings.Profile profile = activeProfiles.get(0);
+        String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project.getBasePath(), profile);
+        if (StringUtil.isNotEmpty(buildOutDir)) {
+            return buildOutDir;
+        }
+        return "build";
+    }
+
     @Override
     public String getCmakeBuildDir() {
         String cmakeProfile = idfProjectConfig.getCmakeProfile();
         CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
-
-        return Optional.ofNullable(cmakeProfile)
-                .filter(StringUtil::isNotEmpty)
-                .map(instance::getCMakeProfileInfoByName)
-                .map(CMakeProfileInfo::getProfile)
-                .map(CMakeSettings.Profile::getGenerationDir)
-                .map(File::getName)
-                .orElseGet(() ->
-                        instance.getSettings().getActiveProfiles().stream()
-                                .findFirst()
-                                .map(CMakeSettings.Profile::getGenerationDir)
-                                .map(File::getName)
-                                .orElse("build")
-                );
+        if (StringUtil.isEmpty(cmakeProfile)) {
+            return getFirstBuildDir(instance);
+        }
+        CMakeProfileInfo cMakeProfileInfoByName = instance.getCMakeProfileInfoByName(cmakeProfile);
+        if (cMakeProfileInfoByName == null) {
+            return getFirstBuildDir(instance);
+        }
+        CMakeSettings.Profile profile = cMakeProfileInfoByName.getProfile();
+        String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project.getBasePath(), profile);
+        if (StringUtil.isNotEmpty(buildOutDir)) {
+            return buildOutDir;
+        }
+        return getFirstBuildDir(instance);
     }
 
     @Override
