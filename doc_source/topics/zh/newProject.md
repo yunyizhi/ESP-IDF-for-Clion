@@ -224,3 +224,7 @@ export IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
 设置对应target,然后新建项目。
 
 
+### 重命名Toolchain
+
+生成的Toolchain名称前缀为`EspIdfAutoGen`，目前本插件不依赖Toolchain名称，可以重命名。
+重命名后，已经配置过的项目需要在cmake profile处重新指定对应名称即可。

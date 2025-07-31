@@ -25,3 +25,4 @@ idf.py会把会把波特率传给idf_monitor.py。
 idf.py会把会把波特率传给esptool.py。
 
 >通过环境变量设置，不会影响`IDF Export Console`生成的当前终端会话环境变量。
+
