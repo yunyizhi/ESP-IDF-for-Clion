@@ -1,7 +1,7 @@
 # Debug
 集成了openocd调试。可以断点调试 查看线程、变量，集成gdb控制台，内存视图，和外设寄存器查看。
 
-默认的openocd未设置参数，如esp32c3 esp32c6 esp32s3 esp32h2 esp32p4 等含 内置jtag对于这些 idf.py openocd会自动选择内置jtag进行调试，
+默认的openocd未设置参数，如esp32c3/esp32s3/esp32c6/esp32c5/esp32h2/esp32p4 等含 内置jtag对于这些 idf.py openocd会自动选择内置jtag进行调试，
 而如esp32 和esp32s2等 官方idf文档里面也是使用了核心板上外置的jtag进行调试，如果采用外置jtag调试器连接方式，需要openocd 参数项。
 
 详情见[配置其他jtag](https://docs.espressif.com/projects/esp-idf/zh_CN/v5.3.1/esp32/api-guides/jtag-debugging/configure-other-jtag.html#jtag)
