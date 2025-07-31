@@ -143,7 +143,7 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
                 "target remote :3333",
                 "monitor reset halt",
                 "maintenance flush register-cache",
-                "break app_main"
+                "thbreak app_main"
         };
         for (String gdbCmd : connect) {
             commandLine.addParameters("-ex", gdbCmd);

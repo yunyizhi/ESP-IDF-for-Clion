@@ -1,6 +1,6 @@
 # ADF
 
-ADF 暂未集成，但可以手动配置。
+ADF 暂未集成，无法使用新建项目，但可以使用任务树，和调试。
 
 可以参考ADF的向导从[步骤1](https://docs.espressif.com/projects/esp-adf/zh_CN/latest/get-started/index.html#step-1-set-up-esp-idf)
 开始
@@ -17,15 +17,77 @@ ADF 暂未集成，但可以手动配置。
 git clone --recursive https://github.com/espressif/esp-adf.git
 ```
 
+#### 无法克隆时使用代理
+
+需要替换代理服务器地址为实际代理程序真实监听地址
+<tabs>
+    <tab title="Windows">
+        <code-block lang="bash">
+:: 设置 HTTP 代理
+set http_proxy=http://127.0.0.1:7890
+:: 设置 HTTPS 代理
+set https_proxy=http://127.0.0.1:7890
+git clone --recursive https://github.com/espressif/esp-adf.git
+</code-block>
+    </tab>
+    <tab title="Linux">
+        <code-block lang="bash">
+# 设置 HTTP 代理
+export http_proxy=http://192.168.137.1:7890
+# 设置 HTTPS 代理
+export https_proxy=http://192.168.137.1:7890
+git clone --recursive https://github.com/espressif/esp-idf.git
+          </code-block>
+    </tab>
+    <tab title="MacOS">
+        <code-block lang="bash">
+export http_proxy=http://192.168.137.1:7890
+export https_proxy=http://192.168.137.1:7890
+git clone --recursive https://github.com/espressif/esp-idf.git
+          </code-block>
+    </tab>
+</tabs>
+
 ## 2.安装
 
-这里暂时仅仅使用windows测试，
+这里暂时仅仅使用windows测试。
 
 ### 2.1 为ADF安装IDF
 
 进入 esp-adf目录下的 esp-idf目录
 
-* 运行cmd 执行 `install.bat`
+* 运行命令行终端 执行
+
+<tabs>
+    <tab title="Windows">
+        <code-block lang="bash">
+install.bat
+</code-block>
+    </tab>
+    <tab title="Linux/Macos">
+        <code-block lang="bash">
+./install.sh
+          </code-block>
+    </tab>
+</tabs>
+
+* 或者使用乐鑫中国下载站
+
+<tabs>
+    <tab title="Windows">
+        <code-block lang="bash">
+set IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
+install.bat
+</code-block>
+    </tab>
+    <tab title="Linux/Macos">
+        <code-block lang="bash">
+export IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
+./install.sh
+          </code-block>
+    </tab>
+</tabs>
+
 * 继续执行 `export.bat`
 
 执行完毕 保留cmd窗口。此时当前命令行会话的已经含有IDF的环境变量。
@@ -34,7 +96,38 @@ git clone --recursive https://github.com/espressif/esp-adf.git
 
 * 是在上一步操作中的cmd窗口 退回到 esp-adf目录或者说是 clone 下来ADF的根目录。
   `cd ..`
-* 执行 `install.bat` 安装ADF
+*  安装ADF
+运行命令行终端 执行
+
+<tabs>
+    <tab title="Windows">
+        <code-block lang="bash">
+install.bat
+</code-block>
+    </tab>
+    <tab title="Linux/Macos">
+        <code-block lang="bash">
+./install.sh
+          </code-block>
+    </tab>
+</tabs>
+* 或者使用乐鑫中国下载站
+
+<tabs>
+    <tab title="Windows">
+        <code-block lang="bash">
+set IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
+install.bat
+</code-block>
+    </tab>
+    <tab title="Linux/Macos">
+        <code-block lang="bash">
+export IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
+./install.sh
+          </code-block>
+    </tab>
+</tabs>
+
 * 执行 `export.bat` 导出ADF的环境变量。
 
 > 这一步操作完成之后，该窗口已经包含ADF和IDF的环境变量，可以使用当前命令行窗口，进入ADF相关例程目录，使用
@@ -50,20 +143,36 @@ include($ENV{ADF_PATH}/CMakeLists.txt)
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 ```
 
-这里需要两者的环境变量。
+这里需要两者的环境变量。一般新建一个System类型的Toolchain，选择ADF源码路径下的export脚本作为环境变量文件即可。
+如果失败，可以考虑下一步操作。
 
 ### 新建导出ADF需要的环境变量的脚本
 
-类似于Clion配置 IDF使用环境变量脚本，ADF需要两个环境变量脚本导出的 变量。
+保留之前 2.2安装的完成的命令行，此命令行已经包含了ADF和IDF所有环境变量。
+>若没有保留，可以新建命令行，先进入adf下idf目录执行export脚本 导出环境变量到当前命令行会话
+> 然后cd ..再执行adf目录的export脚本，从而得到一个含全部环境变量的会话。
 
-这里我们新建一个脚本比如命名为:export_adf.bat 把两个export脚本调用起来。
+这个时候可以自己制作一个最简单环境变量导出脚本，也就是只导出环境变量不含任何逻辑的脚本。
 
-这里我将其放在esp-adf clone下的根目录，按相对路径调用两个export.bat内容如下:
-
-```Bash
-call export.bat
-call esp-idf\export.bat
+* windows下使用 SET 命令可以打印当前命令行所有环境变量。
+  则使用 SET >export_adf.bat 制作一个脚本，
+  然后编辑该脚本给行首加上 `set `这样得到一个脚本大致内容是
+```shell
+set ADF_PATH=D:\ESP_ADF\esp-adf
+set HOMEDRIVE=C:
+set HOMEPATH=\Users\immor
+set IDF_CCACHE_ENABLE=1
+xxxxx
 ```
+* linux和mac暂未尝试
+理论上使用env >export_adf.sh得到脚本后给行首加上`export `便可
+类似以下内容:
+```shell
+export ADF_PATH=/home/xxx/esp_adf/esp-adf
+export IDF_CCACHE_ENABLE=1
+xxxxx
+```
+> 这里面可能包含上述clone代码过程，设置的http代理，可以根据需要去除，以防代理没有开的时候，连不上组件仓库。
 
 ### 配置TOOlChain
 
@@ -74,6 +183,8 @@ call esp-idf\export.bat
 ### 打开ADF项目 {id="open_adf_project"}
 
 打开ADF项目时选择刚才新建的Toolchain 然后将cmake输出路径改成 build文件夹。
+
+可使用命令树大部分节点，但`IDF Export Console` 不可使用。
 
 
 

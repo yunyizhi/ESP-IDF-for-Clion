@@ -12,8 +12,10 @@
 > 放在后面会被idf.py 视为一个任务，所以OpenOcd Server任务的命令行无参。
 
 ### 默认的运行配置
-使用当前插件新建项目时，会基于选择的target创建一份运行配置。如果使用esp32c3 esp32c6 esp32s3 (esp32h2暂未测试，esp32p4目前的usb口可能未正常连接jtag)等无需其他配置，
+使用当前插件新建项目时，会基于选择的target创建一份运行配置。如果使用esp32c3/esp32s3/esp32c6/esp32c5/esp32h2/esp32p4等无需其他配置，
 连接esp32的jtag到pc即可一键debug。
+>注意esp32p4自身含两个usb 一个连接jtag 一个连接otg,需要满足芯片版本为eco2及以后，我们需要将24/25号引脚作为usb引脚连接到pc才能debug。
+> 若开发板未引出，可以购买usb转4pin的杜邦头的线，连接gnd 24/25 5v,24/25接反会导致未识别接口，连接成功jtag cdc也会产生一个串口设备。
 
 ### 手动新建配置
 新建运行配置选择ESP-IDF,会默认基于build目录下的`project_description.json`填充一些默认参数。
@@ -84,12 +86,12 @@ set {uint32_t } 0x6000400c |= (1 << 2)
 
 ![periphreals_show.png](periphreals_show.png)
 
-需要搜索可以使用以csv编辑器打开的功能。写入寄存器可以复制地址到gdb控制台进行操作。
+需要搜索可以使用以csv编辑器打开的功能。也可编辑寄存器。
 
 
 ### 注意事项
 
-linux可能启动openocd失败 会有如下报错
+* linux可能启动openocd失败 会有如下报错
 
 `libusb_open() failed with LIBUSB_ERROR_ACCESS`
 
@@ -108,3 +110,11 @@ HINT: OpenOCD process does not have permissions to access the USB JTAG/serial de
 找到报错的设备
 
 使用chmod给 其他用户和用户组赋 读写权限 sudo chmod 766 /dev/bus/usb/具体数字/具体数字 。当然 777也是可以的。
+
+* gdb 停不掉问题
+
+当gdb在执行命令时，使用clion自带销毁进程方式 可能无法关闭。
+
+最常见于openocd 未成功连接设备退出后， gdb忙于连接openocd等待超时，由于设置了10秒超时时间，
+这个中途clion尝试销毁进程可能不会正确得到响应，最后不再尝试。遇到openocd未能连接设备的情况，可略等待超时后停止调试。
+或者手动kill gbd进程。
