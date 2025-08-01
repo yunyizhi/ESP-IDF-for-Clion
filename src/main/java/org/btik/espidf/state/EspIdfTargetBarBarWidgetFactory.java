@@ -39,7 +39,7 @@ public class EspIdfTargetBarBarWidgetFactory implements StatusBarWidgetFactory {
     public boolean isAvailable(@NotNull Project project) {
         project.getService(IdfProjectConfigService.class).setStatusBarRefreshHook((isEspIdfProject)->{
             this.available = isEspIdfProject;
-            if (!widgetHasCreated && isEspIdfProject) {
+            if ((!widgetHasCreated && isEspIdfProject) || (widgetHasCreated && !isEspIdfProject)) {
                 project.getService(StatusBarWidgetsManager.class).updateWidget(this);
             }
         });
