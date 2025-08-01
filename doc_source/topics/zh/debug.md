@@ -25,6 +25,9 @@ elf文件可以加载调试需要符号。rom一般是固定的，部分芯片ro
 gdb一般会自动选择,可根据需要重新选择。
 
 
+### Auto功能
+Auto按钮可以自动填充调试配置项，但仅仅只对第一个CMake Profile生成。需要调试其他选项，可以手动选择对应的elf和gdb文件。
+
 ### 调试方法
 ![debug_run.png](debug_run.png)
 
@@ -117,4 +120,4 @@ HINT: OpenOCD process does not have permissions to access the USB JTAG/serial de
 
 最常见于openocd 未成功连接设备退出后， gdb忙于连接openocd等待超时，由于设置了10秒超时时间，
 这个中途clion尝试销毁进程可能不会正确得到响应，最后不再尝试。遇到openocd未能连接设备的情况，可略等待超时后停止调试。
-或者手动kill gbd进程。
+或者手动kill gdb进程。

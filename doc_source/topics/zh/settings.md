@@ -4,7 +4,7 @@
 
 ![settings_panel.png](settings_panel.png)
 
-当前只包含串口相关设置。会使用clion自带持久化能力，保存设置参数。
+会使用clion自带持久化能力，保存设置参数。
 
 >项目的`.idea`目录下会有一个`espidf_settings.xml`。
 
@@ -28,3 +28,6 @@ idf.py会把会把波特率传给esptool.py。
 
 >通过环境变量设置，不会影响`IDF Export Console`生成的当前终端会话环境变量。
 
+## CMake Profile
+可以指定任务树使用的CMake Profile用于执行任务时指定cmake build目录。
+可以参考 [Profiles](profiles.md)

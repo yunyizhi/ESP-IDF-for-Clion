@@ -2,7 +2,7 @@
 
 这是一个非官方的ESP-IDF CLion插件。
 
-当前文档对应插件版本:0.4。
+当前文档对应插件版本:0.5。
 
 在clion官方文档中[clion可无插件配置ESP-IDF](https://www.jetbrains.com/help/clion/esp-idf.html)。
 

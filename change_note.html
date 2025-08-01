@@ -5,6 +5,33 @@
     <title>ESP-IDF for CLion Change Note</title>
 </head>
 <body>
+<h3>0.5</h3>
+en:
+<ul>
+    <li>Resolved the issue of errors when reading environment variables on macOS by adopting a unified approach of
+        execution within a blocking modal dialog.
+    </li>
+    <li>Fixed the problem preventing debugging from starting on macOS.</li>
+    <li>Added a popup menu in the bottom-right status bar for setting the ESP-IDF target.</li>
+    <li>Task execution now prioritizes standard run configuration tasks over terminal commands, enabling automatic
+        termination of an ongoing Monitor task when a new serial port task is requested. Added a general filter to the
+        task console view, allowing navigation to specific file lines by clicking file links in the console, with stderr
+        output displayed in red.
+    </li>
+    <li>Task trees now support specifying a Profile, allowing assignment of the corresponding Profile to run items when
+        multiple CMake Profiles are available.
+    </li>
+</ul>
+中文:
+<ul>
+    <li>解决MacOs读取环境变量报错问题，统一采取阻塞模态窗执行。</li>
+    <li>解决MacOs无法启动调试的问题。</li>
+    <li>增加右下角状态栏设置target的状态Popupmenu</li>
+    <li>将执行任务优先采用常规运行配置任务项执行而非终端命令，实现了常规任务的Monitor任务被新请求串口任务自动关停；增加了任务控制台视图逸通用过滤器，
+        可以点击控制台视图上的文件链接进行跳转文件具体行，stderr会使用红色。
+    </li>
+    <li>任务树支持了指定Profile，在多CMake Profile可以指定运行项对应的Profile</li>
+</ul>
 <h3>0.4</h3>
 en:
 <p>Integrated OpenOCD Debugging Support:</p>

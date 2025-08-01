@@ -11,8 +11,6 @@ ADF 暂未集成，无法使用新建项目，但可以使用任务树，和调�
 
 因为idf是不兼容有空格路径，请在一个无空格路径下 操作。
 
-这一步可以使用命令行HTTP/HTTPS代理环境变量。
-
 ```shell
 git clone --recursive https://github.com/espressif/esp-adf.git
 ```
@@ -32,6 +30,7 @@ git clone --recursive https://github.com/espressif/esp-adf.git
     </tab>
     <tab title="Linux">
         <code-block lang="bash">
+# linux可以使用局域网其他主机提供代理服务
 # 设置 HTTP 代理
 export http_proxy=http://192.168.137.1:7890
 # 设置 HTTPS 代理
@@ -41,8 +40,8 @@ git clone --recursive https://github.com/espressif/esp-idf.git
     </tab>
     <tab title="MacOS">
         <code-block lang="bash">
-export http_proxy=http://192.168.137.1:7890
-export https_proxy=http://192.168.137.1:7890
+export http_proxy=http://127.0.0.1:7890
+export https_proxy=http://127.0.0.1:7890
 git clone --recursive https://github.com/espressif/esp-idf.git
           </code-block>
     </tab>
@@ -174,7 +173,7 @@ xxxxx
 ```
 > 这里面可能包含上述clone代码过程，设置的http代理，可以根据需要去除，以防代理没有开的时候，连不上组件仓库。
 
-### 配置TOOlChain
+### 配置ToolChain
 
 新建一个System类型的Toolchain，选择上一步新建的脚本即可。
 
