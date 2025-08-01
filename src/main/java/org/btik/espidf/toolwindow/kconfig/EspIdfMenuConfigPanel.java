@@ -77,7 +77,11 @@ public class EspIdfMenuConfigPanel extends JPanel {
         kconfigTreePanel.onTreeSearchResult(this::onTreeSearchResult);
         kconfServer.setOnStopCallback(() -> {
             initOk = false;
-            kconfServerAction.setStatus(initOk);
+            kconfServerAction.setStatus(false);
+            contentPanel.clear();
+            kconfigTreePanel.clear();
+            treeRootModel.cutChain();
+            contentPanel.updateUI();
         });
     }
 
@@ -137,10 +141,6 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 kconfServerAction.setStatus(true);
                 loadPage();
             } else {
-                contentPanel.clear();
-                kconfigTreePanel.clear();
-                treeRootModel.cutChain();
-                contentPanel.updateUI();
                 kconfServer.stop();
             }
         });

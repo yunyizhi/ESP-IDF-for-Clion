@@ -27,5 +27,7 @@ public class EspIdfToolWindowFactory implements ToolWindowFactory {
         contentManager.addContent(taskContent);
         Content setttingsContent = contentFactory.createContent(new EspIdfToolWindowSettingPanel(project), $i18n("esp.idf.tool.window.settings"), false);
         contentManager.addContent(setttingsContent);
+        Content kconfigContent = contentFactory.createContent(new EspIdfMenuConfigPanel(project), $i18n("esp.idf.tool.window.sdk.config"), false);
+        contentManager.addContent(kconfigContent);
     }
 }
