@@ -18,7 +18,7 @@ platformio项目中使用idf命令行。
 
 * 在CLion的终端里面的使用MenuConfig 中使用ESC默认行为是上方编辑器获取焦点。
 
-从而使得ESC不可操作Menuconfig。 建议移除终端的<kdb>ESC</kbd>按键将焦点切换到编辑器功能<br>
+从而使得ESC不可操作Menuconfig。 建议移除终端的`ESC`按键将焦点切换到编辑器功能<br>
 进入Settings ->keymap -> Plugins | Terminal | Switch Focus To Editor
 中文版本是 设置->按键映射->插件 | Terminal | 将焦点切换到编辑器
 >若不愿移除，可以使用左箭头代替<kbd>ESC</kbd>回到上一级菜单的功能，使用`Q`代替退出MenuConfig的功能。但编辑文本框退出功能依然无法代替，仅仅可以通过回车确定来关闭。
