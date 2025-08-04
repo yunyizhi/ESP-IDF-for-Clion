@@ -12,5 +12,9 @@ public enum KconfigType {
     @SerializedName("hex") HEX,
     @SerializedName("int") INT,
     @SerializedName("menu") MENU,
-    @SerializedName("string") STRING
+    @SerializedName("string") STRING,
+    // bool类型做CHOICE子项时其实是下拉菜单
+    CHOICE_ITEM,
+    // bool类型含子项时本身需要在树上也面板同时展示
+    ENABLE_SWITCH,
 }

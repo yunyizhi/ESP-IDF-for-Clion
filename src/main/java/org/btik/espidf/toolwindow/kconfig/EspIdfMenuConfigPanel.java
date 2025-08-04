@@ -77,11 +77,13 @@ public class EspIdfMenuConfigPanel extends JPanel {
         kconfigTreePanel.onTreeSearchResult(this::onTreeSearchResult);
         kconfServer.setOnStopCallback(() -> {
             initOk = false;
-            kconfServerAction.setStatus(false);
-            contentPanel.clear();
-            kconfigTreePanel.clear();
-            treeRootModel.cutChain();
-            contentPanel.updateUI();
+            ApplicationManager.getApplication().invokeLater(() -> {
+                kconfServerAction.setStatus(false);
+                contentPanel.clear();
+                kconfigTreePanel.clear();
+                treeRootModel.cutChain();
+                contentPanel.updateUI();
+            });
         });
     }
 
@@ -178,11 +180,21 @@ public class EspIdfMenuConfigPanel extends JPanel {
         confModels = KConfParser.parseKconfig(menuConfigPath);
         treeRootModel.setChildren(confModels);
         for (ConfModel confModel : confModels) {
-            TreeUtils.treeEach(confModel, (item) -> confModelMap.put(item.getId(), item));
+            TreeUtils.treeEach(confModel, (item) -> {
+                confModelMap.put(item.getId(), item);
+                if (confModel.getType() == KconfigType.BOOL && CollectionUtils.isNotEmpty(confModel.getChildren())){
+                    confModel.setRedefinedType(KconfigType.ENABLE_SWITCH);
+                }
+            });
         }
         for (ConfModel confModel : confModels) {
             confModel.setParent(treeRootModel);
-            TreeUtils.eachWithParent(confModel, (parent, child) -> child.setParent(parent));
+            TreeUtils.eachWithParent(confModel, (parent, child) -> {
+                child.setParent(parent);
+                if (parent.getType() == KconfigType.CHOICE) {
+                    child.setRedefinedType(KconfigType.CHOICE_ITEM);
+                }
+            });
         }
         Path sdkConfigPath = Path.of(basePath, cmakeBuildDir, $sys("esp.idf.kconfig.menus.dir")).resolve($sys("esp.idf.kconfig.sdk.config.file"));
         if (!sdkConfigPath.toFile().exists()) {

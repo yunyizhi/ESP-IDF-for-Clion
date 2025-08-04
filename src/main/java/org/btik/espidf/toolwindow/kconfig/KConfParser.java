@@ -6,6 +6,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.toolwindow.common.NodeModel;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
+import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import java.io.FileNotFoundException;
@@ -21,6 +22,7 @@ import java.util.function.Consumer;
  */
 public class KConfParser {
     private static final Logger LOG = Logger.getInstance(KConfParser.class);
+
     public static List<ConfModel> parseKconfig(Path path) {
         Gson gson = new Gson();
         try {
@@ -42,11 +44,11 @@ public class KConfParser {
         return List.of();
     }
 
-    public static Map<String,Object> parseSdkConfig(Path path) {
+    public static Map<String, Object> parseSdkConfig(Path path) {
         Gson gson = new Gson();
         try {
             JsonElement jsonElement = gson.fromJson(new JsonReader(new FileReader(path.toFile())), JsonElement.class);
-            Map<String,Object> result = new HashMap<>();
+            Map<String, Object> result = new HashMap<>();
             if (jsonElement.isJsonObject()) {
                 jsonElement.getAsJsonObject().entrySet().forEach(entry -> {
                     JsonElement value = entry.getValue();
@@ -55,9 +57,9 @@ public class KConfParser {
                         JsonPrimitive asJsonPrimitive = value.getAsJsonPrimitive();
                         if (asJsonPrimitive.isBoolean()) {
                             result.put(key, asJsonPrimitive.getAsBoolean());
-                        }else if (asJsonPrimitive.isString()) {
+                        } else if (asJsonPrimitive.isString()) {
                             result.put(key, asJsonPrimitive.getAsString());
-                        }else if (asJsonPrimitive.isNumber()) {
+                        } else if (asJsonPrimitive.isNumber()) {
                             result.put(key, asJsonPrimitive.getAsLong());
                         }
                     }

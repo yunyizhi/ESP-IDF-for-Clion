@@ -15,6 +15,7 @@ import java.util.List;
  */
 public class ConfModel implements TreeBean<ConfModel> {
     private KconfigType type;
+    private KconfigType redefinedType;
     private String name;
     private String title;
     private String help;
@@ -39,6 +40,14 @@ public class ConfModel implements TreeBean<ConfModel> {
 
     public void setType(KconfigType type) {
         this.type = type;
+    }
+
+    public KconfigType getRedefinedType() {
+        return redefinedType == null ? type : redefinedType;
+    }
+
+    public void setRedefinedType(KconfigType redefinedType) {
+        this.redefinedType = redefinedType;
     }
 
     public String getName() {
@@ -133,13 +142,14 @@ public class ConfModel implements TreeBean<ConfModel> {
         if (isMenuconfig){
             return true;
         }
-        return switch (type) {
+        return switch (getRedefinedType()) {
             case BOOL, CHOICE, STRING, INT, HEX -> true;
             default -> false;
         };
     }
 
     public void copyTo(ConfModel target) {
+        target.setRedefinedType(this.getRedefinedType());
         target.setType(this.getType());
         target.setName(this.getName());
         target.setTitle(this.getTitle());
