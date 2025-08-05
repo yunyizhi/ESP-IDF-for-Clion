@@ -74,7 +74,7 @@ public class KConfParser {
     }
 
 
-    public static DefaultMutableTreeNode buildTree(ConfModel confModel){
+    public static DefaultMutableTreeNode buildTree(ConfModel confModel, Map<String,DefaultMutableTreeNode > searchMap){
         if (!confModel.isVisible() || confModel.isAsMenuPanelItem()){
             return null;
         }
@@ -82,6 +82,7 @@ public class KConfParser {
         LinkedList<NodeModel<ConfModel>> queue = new LinkedList<>();
         NodeModel<ConfModel> rootNodeModel = new NodeModel<>(treeNode, confModel);
         queue.add(rootNodeModel);
+        searchMap.put(confModel.getId(), treeNode);
         while (!queue.isEmpty()) {
             NodeModel<ConfModel> nodeModel = queue.removeFirst();
             List<ConfModel> children = nodeModel.getModel().getChildren();
@@ -95,6 +96,7 @@ public class KConfParser {
                 DefaultMutableTreeNode childTreeNode = new DefaultMutableTreeNode(child);
                 queue.add(new NodeModel<>(childTreeNode, child));
                 nodeModel.getNode().add(childTreeNode);
+                searchMap.put(child.getId(), childTreeNode);
             }
         }
         return treeNode;

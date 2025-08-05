@@ -2,16 +2,22 @@ package org.btik.espidf.toolwindow.kconfig;
 
 import com.intellij.openapi.util.Pair;
 import com.intellij.ui.treeStructure.Tree;
-import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
+import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
+import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
+import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 import org.btik.espidf.ui.componets.TreeChoseListener;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 
 import javax.swing.tree.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.*;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
@@ -20,19 +26,59 @@ public class KconfigTreePanel extends JScrollPane {
     private final Tree tree;
     private DefaultMutableTreeNode rootNode;
     private final ConfModel treeRootModel;
+    private final HashMap<String, DefaultMutableTreeNode> searchMap = new HashMap<>();
+    private final HashMap<String, DefaultMutableTreeNode> filteredSearchMap = new HashMap<>();
     private final TreeModel defaultTreeModel;
     private Consumer<ConfModel> treeSearchListener;
     private TreeChoseListener<ConfModel> treeChoseListener;
 
     private ConfModel lastCheckedModel;
+    private final Consumer<KconfigSetCommand> commandSender;
 
-    public KconfigTreePanel(ConfModel treeRootModel) {
+    public KconfigTreePanel(ConfModel treeRootModel, Consumer<KconfigSetCommand> commandSender) {
         this.treeRootModel = treeRootModel;
+        this.commandSender = commandSender;
         viewport.setBorder(null);
         setBorder(BorderFactory.createEmptyBorder());
         tree = new Tree();
+        tree.setCellRenderer(new KconfTreeCellRenderer());
         defaultTreeModel = tree.getModel();
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+        tree.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+                if (path == null) {
+                    return;
+                }
+                // 设置复选框选中
+                DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode) path.getLastPathComponent();
+                Object userObject = lastPathComponent.getUserObject();
+                if (!(userObject instanceof ConfModel confModel)) {
+                    return;
+                }
+                tree.addMouseListener(new MouseAdapter() {
+                    @Override
+                    public void mouseClicked(MouseEvent e) {
+                        int x = e.getX();
+                        int y = e.getY();
+                        int selRow = tree.getRowForLocation(x, y);
+                        TreePath selPath = tree.getPathForLocation(x, y);
+                        if (selRow != -1) {
+                            Rectangle pathBounds = tree.getPathBounds(selPath);
+                            if (pathBounds != null && pathBounds.contains(x, y)) {
+                                if (x < pathBounds.x + 20) {
+                                    KconfigSetCommand kconfigSetCommand = new KconfigSetCommand();
+                                    Object value = confModel.getValue();
+                                    kconfigSetCommand.setValues(Map.of(confModel.getId(), !Boolean.parseBoolean(String.valueOf(value))));
+                                    commandSender.accept(kconfigSetCommand);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
     }
 
     public void clear() {
@@ -41,28 +87,79 @@ public class KconfigTreePanel extends JScrollPane {
         tree.updateUI();
     }
 
-    public void onConfigNodesChange() {
+    public void onConfigNodesInit() {
         viewport.setView(tree);
-        rootNode = KConfParser.buildTree(treeRootModel);
+        rootNode = KConfParser.buildTree(treeRootModel, searchMap);
         if (rootNode == null) {
             return;
         }
         TreeModel model = tree.getModel();
-        Set<TreePath> expandedPaths = tree.getExpandedPaths();
         if (model instanceof DefaultTreeModel treeModel) {
             treeModel.setRoot(rootNode);
         }
-        if (CollectionUtils.isEmpty(expandedPaths)) {
-            tree.expandPath(new TreePath(rootNode.getPath()));
-        } else {
-            for (TreePath expandedPath : expandedPaths) {
-                tree.expandPath(expandedPath);
-            }
-            if (lastCheckedModel != null) {
-                treeSearchListener.accept(lastCheckedModel);
-            }
+        if (lastCheckedModel != null) {
+            treeSearchListener.accept(lastCheckedModel);
         }
 
+    }
+
+    public void onConfigNodesChange(KconfigStatus status, HashMap<String, ConfModel> confModelMap) {
+        Map<String, Object> values = status.getValues();
+        values.forEach((key, value) -> {
+            ConfModel confModel = confModelMap.get(key);
+            if (confModel == null) {
+                return;
+            }
+            confModel.setValue(value);
+        });
+        Map<String, Boolean> visible = status.getVisible();
+        visible.forEach((key, value) -> {
+            ConfModel confModel = confModelMap.get(key);
+
+            boolean wasVisible = confModel.isVisible();
+            if (wasVisible == value) {
+                return;
+            }
+            confModel.setVisible(value);
+            if (!confModel.isTreeNode()) {
+                return;
+            }
+            if (value) {
+                addNode(confModel, visible);
+            } else {
+                DefaultMutableTreeNode defaultMutableTreeNode = searchMap.get(confModel.getParent().getId());
+                DefaultMutableTreeNode current = searchMap.get(confModel.getId());
+                if (defaultMutableTreeNode != null && current != null) {
+                    if (defaultMutableTreeNode.isNodeChild(current)){
+                        defaultMutableTreeNode.remove(current);
+                    }
+                }
+            }
+        });
+        tree.updateUI();
+
+    }
+
+    private void addNode(ConfModel confModel, Map<String, Boolean> visible) {
+
+        ConfModel parent = confModel.getParent();
+        if (parent == null) {
+            System.out.println(confModel.dump());
+            return;
+        }
+        String id = parent.getId();
+        DefaultMutableTreeNode parentNode = searchMap.get(id);
+        if (parentNode == null) {
+            Boolean parentVisible = visible.get(id);
+            if (parentVisible == null || !parentVisible) {
+                return;
+            }
+            addNode(parent, visible);
+            return;
+        }
+        DefaultMutableTreeNode newChild = new DefaultMutableTreeNode(confModel);
+        parentNode.add(newChild);
+        searchMap.put(confModel.getId(), newChild);
     }
 
     public void addTreeSelectionListener(@NotNull TreeChoseListener<ConfModel> treeChoseListener) {
@@ -105,7 +202,8 @@ public class KconfigTreePanel extends JScrollPane {
         treeRootModel.copyTo(targetModel);
         boolean hasMatches = filterSubtree(treeRootModel, targetModel, keyword);
         if (hasMatches) {
-            DefaultMutableTreeNode filteredRootNode = KConfParser.buildTree(targetModel);
+            filteredSearchMap.clear();
+            DefaultMutableTreeNode filteredRootNode = KConfParser.buildTree(targetModel, filteredSearchMap);
             tree.setModel(new DefaultTreeModel(filteredRootNode));
             expandFirst(filteredRootNode);
         } else {

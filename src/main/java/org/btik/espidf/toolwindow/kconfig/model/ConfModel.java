@@ -203,4 +203,7 @@ public class ConfModel implements TreeBean<ConfModel> {
     public void setAsMenuPanelItem(boolean asMenuPanelItem) {
         this.asMenuPanelItem = asMenuPanelItem;
     }
+    public boolean isTreeNode() {
+        return !asMenuPanelItem && getRedefinedType() != KconfigType.CHOICE_ITEM;
+    }
 }

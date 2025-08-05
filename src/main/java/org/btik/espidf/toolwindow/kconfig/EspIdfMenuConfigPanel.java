@@ -19,7 +19,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
-import javax.swing.tree.*;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -64,7 +63,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
         kconfServer = new KConfServer(project, this::onKConfMsg);
         initToolBar();
-        kconfigTreePanel = new KconfigTreePanel(treeRootModel);
+        kconfigTreePanel = new KconfigTreePanel(treeRootModel, this::sendCmd);
         kconfigTreePanel.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
         kconfigTreePanel.setPreferredSize(new Dimension(350, Integer.MAX_VALUE));
 
@@ -182,8 +181,8 @@ public class EspIdfMenuConfigPanel extends JPanel {
         for (ConfModel confModel : confModels) {
             TreeUtils.treeEach(confModel, (item) -> {
                 confModelMap.put(item.getId(), item);
-                if (confModel.getType() == KconfigType.BOOL && CollectionUtils.isNotEmpty(confModel.getChildren())){
-                    confModel.setRedefinedType(KconfigType.ENABLE_SWITCH);
+                if (item.getType() == KconfigType.BOOL && CollectionUtils.isNotEmpty(item.getChildren())){
+                    item.setRedefinedType(KconfigType.ENABLE_SWITCH);
                 }
             });
         }
@@ -211,22 +210,8 @@ public class EspIdfMenuConfigPanel extends JPanel {
             onInitOk(status);
             kconfServerAction.setStatus(initOk);
         } else {
-            onConfigUpdate(status);
+            ApplicationManager.getApplication().invokeLater(() -> kconfigTreePanel.onConfigNodesChange(status, confModelMap));
         }
-    }
-
-    private void onConfigUpdate(KconfigStatus status) {
-        Map<String, Boolean> visible = status.getVisible();
-        visible.forEach((key, value) -> {
-            ConfModel confModel = confModelMap.get(key);
-            confModel.setVisible(value);
-        });
-        Map<String, Object> values = status.getValues();
-        values.forEach((key, value) -> {
-            ConfModel confModel = confModelMap.get(key);
-            confModel.setValue(confModel);
-        });
-        ApplicationManager.getApplication().invokeLater(kconfigTreePanel::onConfigNodesChange);
     }
 
     private void onInitOk(KconfigStatus status) {
@@ -251,7 +236,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 }
             });
         }
-        ApplicationManager.getApplication().invokeLater(kconfigTreePanel::onConfigNodesChange);
+        ApplicationManager.getApplication().invokeLater(kconfigTreePanel::onConfigNodesInit);
 
     }
 
