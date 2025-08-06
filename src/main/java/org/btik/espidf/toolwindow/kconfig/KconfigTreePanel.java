@@ -31,9 +31,13 @@ public class KconfigTreePanel extends JScrollPane {
     private final TreeModel defaultTreeModel;
     private Consumer<ConfModel> treeSearchListener;
     private TreeChoseListener<ConfModel> treeChoseListener;
+    private final KconfTreeCellRenderer kconfTreeCellRenderer;
 
     private ConfModel lastCheckedModel;
     private final Consumer<KconfigSetCommand> commandSender;
+
+    private boolean isTreeCheckEnabled = true;
+    private long lastCheckTime = 0L;
 
     public KconfigTreePanel(ConfModel treeRootModel, Consumer<KconfigSetCommand> commandSender) {
         this.treeRootModel = treeRootModel;
@@ -41,42 +45,45 @@ public class KconfigTreePanel extends JScrollPane {
         viewport.setBorder(null);
         setBorder(BorderFactory.createEmptyBorder());
         tree = new Tree();
-        tree.setCellRenderer(new KconfTreeCellRenderer());
+        kconfTreeCellRenderer = new KconfTreeCellRenderer();
+        tree.setCellRenderer(kconfTreeCellRenderer);
         defaultTreeModel = tree.getModel();
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
         tree.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+                int x = e.getX();
+                int y = e.getY();
+                TreePath path = tree.getPathForLocation(x, y);
                 if (path == null) {
                     return;
                 }
-                // 设置复选框选中
+                int selRow = tree.getRowForLocation(x, y);
+                TreePath selPath = tree.getPathForLocation(x, y);
+                if (selRow == -1) {
+                    return;
+                }
+                Rectangle pathBounds = tree.getPathBounds(selPath);
+                if (pathBounds == null || !pathBounds.contains(x, y)) {
+                    return;
+                }
                 DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode) path.getLastPathComponent();
                 Object userObject = lastPathComponent.getUserObject();
                 if (!(userObject instanceof ConfModel confModel)) {
                     return;
                 }
-                tree.addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseClicked(MouseEvent e) {
-                        int x = e.getX();
-                        int y = e.getY();
-                        int selRow = tree.getRowForLocation(x, y);
-                        TreePath selPath = tree.getPathForLocation(x, y);
-                        if (selRow != -1) {
-                            Rectangle pathBounds = tree.getPathBounds(selPath);
-                            if (pathBounds != null && pathBounds.contains(x, y)) {
-                                if (x < pathBounds.x + 20) {
-                                    KconfigSetCommand kconfigSetCommand = new KconfigSetCommand();
-                                    Object value = confModel.getValue();
-                                    kconfigSetCommand.setValues(Map.of(confModel.getId(), !Boolean.parseBoolean(String.valueOf(value))));
-                                    commandSender.accept(kconfigSetCommand);
-                                }
-                            }
-                        }
-                    }
-                });
+                if (confModel.getRedefinedType() != KconfigType.ENABLE_SWITCH) {
+                    return;
+                }
+                int checkBoxWidth = kconfTreeCellRenderer.getCheckBoxWidth(confModel.getId());
+                if (x < pathBounds.x + checkBoxWidth && (isTreeCheckEnabled || (System.currentTimeMillis() - lastCheckTime) > 3000)) {
+                    isTreeCheckEnabled = false;
+                    KconfigSetCommand kconfigSetCommand = new KconfigSetCommand();
+                    Object value = confModel.getValue();
+                    kconfigSetCommand.setValues(Map.of(confModel.getId(), !Boolean.parseBoolean(String.valueOf(value))));
+                    KconfigTreePanel.this.commandSender.accept(kconfigSetCommand);
+                    lastCheckTime = System.currentTimeMillis();
+                }
             }
         });
     }
@@ -137,29 +144,32 @@ public class KconfigTreePanel extends JScrollPane {
             }
         });
         tree.updateUI();
-
+        isTreeCheckEnabled = true;
     }
 
-    private void addNode(ConfModel confModel, Map<String, Boolean> visible) {
+    private DefaultMutableTreeNode addNode(ConfModel confModel, Map<String, Boolean> visible) {
 
         ConfModel parent = confModel.getParent();
         if (parent == null) {
             System.out.println(confModel.dump());
-            return;
+            return null;
         }
         String id = parent.getId();
         DefaultMutableTreeNode parentNode = searchMap.get(id);
         if (parentNode == null) {
             Boolean parentVisible = visible.get(id);
             if (parentVisible == null || !parentVisible) {
-                return;
+                return null;
             }
-            addNode(parent, visible);
-            return;
+            parentNode = addNode(parent, visible);
+            if (parentNode == null) {
+                return null;
+            }
         }
         DefaultMutableTreeNode newChild = new DefaultMutableTreeNode(confModel);
         parentNode.add(newChild);
         searchMap.put(confModel.getId(), newChild);
+        return newChild;
     }
 
     public void addTreeSelectionListener(@NotNull TreeChoseListener<ConfModel> treeChoseListener) {

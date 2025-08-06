@@ -8,6 +8,7 @@ import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessListener;
+import com.intellij.execution.process.ProcessOutputType;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.execution.runners.ProgramRunner;
@@ -87,6 +88,9 @@ public class KConfServer implements ProcessListener {
 
     @Override
     public void onTextAvailable(@NotNull ProcessEvent event, @NotNull Key outputType) {
+        if (outputType == ProcessOutputType.STDERR){
+            return;
+        }
         String text = event.getText();
         builder.append(text);
         processBufferForJsonObjects();
@@ -141,7 +145,7 @@ public class KConfServer implements ProcessListener {
                     builder.delete(0, currentIndex);
                     startIndex = 0;
                 } catch (IOException e) {
-                    LOG.error("Parse failed", e);
+                    LOG.error("Parse failed" + jsonString, e);
                     builder.delete(jsonStart, currentIndex);
                     startIndex = jsonStart;
                 }
@@ -157,7 +161,7 @@ public class KConfServer implements ProcessListener {
             processStdIn.write(command.getBytes(StandardCharsets.UTF_8));
             processStdIn.write(System.lineSeparator().getBytes(StandardCharsets.UTF_8));
             processStdIn.flush();
-            runProfile.println(command, ConsoleViewContentType.NORMAL_OUTPUT);
+            runProfile.println(command, ConsoleViewContentType.USER_INPUT);
             LOG.info(command);
         } catch (IOException e) {
             LOG.error("sendCommand failed", e);

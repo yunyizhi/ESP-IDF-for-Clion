@@ -1,5 +1,7 @@
 package org.btik.espidf.toolwindow.kconfig.model;
 
+import org.apache.commons.collections.CollectionUtils;
+
 import java.util.List;
 import java.util.Map;
 
@@ -57,15 +59,12 @@ public class KconfigStatus {
         return isError;
     }
 
-    public void setError(boolean error) {
-        isError = error;
-    }
-
     public List<String> getError() {
         return error;
     }
 
     public void setError(List<String> error) {
         this.error = error;
+        this.isError = CollectionUtils.isNotEmpty(error);
     }
 }
