@@ -140,25 +140,28 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
             uploadBaud.setSelectedItem(projectConfig.getUploadBaud());
             return;
         }
-        // 没有配置则读取环境变量
-        IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
+        ApplicationManager.getApplication().invokeLater(() -> {
+            // 没有配置则读取环境变量
+            IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
 
-        Map<String, String> environments = environmentService.getEnvironments();
-        String port = environments.get(ESP_PORT);
-        if (!StringUtil.isEmpty(port)) {
-            portField.setText(port);
-        }
-        String monitorBaudValue = environments.get(MONITOR_BAUD);
-        if (StringUtil.isEmpty(monitorBaudValue)) {
-            monitorBaudValue = environments.get(IDF_MONITOR_BAUD);
-        }
-        if (!StringUtil.isEmpty(monitorBaudValue)) {
-            monitorBaud.setSelectedItem(monitorBaudValue);
-        }
-        String uploadBaudValue = environments.get(ESP_BAUD);
-        if (!StringUtil.isEmpty(uploadBaudValue)) {
-            uploadBaud.setSelectedItem(uploadBaudValue);
-        }
+            Map<String, String> environments = environmentService.getEnvironments();
+            String port = environments.get(ESP_PORT);
+            if (!StringUtil.isEmpty(port)) {
+                portField.setText(port);
+            }
+            String monitorBaudValue = environments.get(MONITOR_BAUD);
+            if (StringUtil.isEmpty(monitorBaudValue)) {
+                monitorBaudValue = environments.get(IDF_MONITOR_BAUD);
+            }
+            if (!StringUtil.isEmpty(monitorBaudValue)) {
+                monitorBaud.setSelectedItem(monitorBaudValue);
+            }
+            String uploadBaudValue = environments.get(ESP_BAUD);
+            if (!StringUtil.isEmpty(uploadBaudValue)) {
+                uploadBaud.setSelectedItem(uploadBaudValue);
+            }
+        });
+
     }
 
     private void bindAction() {
