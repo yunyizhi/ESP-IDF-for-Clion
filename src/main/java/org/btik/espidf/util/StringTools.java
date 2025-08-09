@@ -1,6 +1,6 @@
 package org.btik.espidf.util;
 
-import javax.annotation.Nullable;
+import org.jetbrains.annotations.Nullable;
 import java.util.function.Function;
 
 /**

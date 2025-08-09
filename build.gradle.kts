@@ -23,10 +23,10 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:4.5.1")
     intellijPlatform {
-        clion("2025.1.1") { useInstaller = false }
+        clion("2025.2") { useInstaller = false }
         bundledPlugins(
-            "com.intellij.cidr.base",
             "com.intellij.clion",
+            "com.intellij.clion.cmake",
             "com.intellij.clion.embedded",
             "com.jetbrains.sh",
             "org.jetbrains.plugins.terminal",
