@@ -2,6 +2,7 @@ package org.btik.espidf.toolwindow.kconfig;
 
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
+import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,6 +21,8 @@ public class KconfigContentPanel extends JScrollPane {
     private Component lastTmpView;
 
     private final Consumer<KconfigSetCommand> commandSender;
+
+    private String lastId;
 
     public KconfigContentPanel(JPanel view, CardLayout cardLayout,Consumer<KconfigSetCommand> commandSender) {
         super(view);
@@ -51,17 +54,19 @@ public class KconfigContentPanel extends JScrollPane {
             showEmpty();
             return;
         }
-        if (!viewMap.containsKey(confModel.getId())) {
+        String id = confModel.getId();
+        if (!viewMap.containsKey(id)) {
             Component kConfPanel = KConfPanelFactory.createKConfPanel(confModel, commandSender);
             if (kConfPanel == null) {
                 showEmpty();
                 return;
             }
-            viewMap.put(confModel.getId(), kConfPanel);
-            addToCard(kConfPanel, confModel.getId());
+            viewMap.put(id, kConfPanel);
+            addToCard(kConfPanel, id);
         }
-        cardLayout.show(contentCards, confModel.getId());
+        cardLayout.show(contentCards, id);
         getViewport().setViewPosition(new Point(0, 0));
+        lastId = id;
     }
 
     public void showCardWithSelectItem(ConfModel confModel) {
@@ -77,5 +82,19 @@ public class KconfigContentPanel extends JScrollPane {
         addToCard(kConfPanel, FILTERED_TMP_PANEL_ID);
         cardLayout.show(contentCards,FILTERED_TMP_PANEL_ID);
         getViewport().setViewPosition(new Point(0, 0));
+    }
+
+    public void onConfigNodesChange(KconfigStatus status, HashMap<String, ConfModel> confModelMap) {
+        if (lastId == null) {
+            return;
+        }
+        contentCards.removeAll();
+        viewMap.clear();
+        ConfModel confModel = confModelMap.get(lastId);
+        if (confModel == null) {
+            showEmpty();
+            return;
+        }
+        showCard(confModel);
     }
 }

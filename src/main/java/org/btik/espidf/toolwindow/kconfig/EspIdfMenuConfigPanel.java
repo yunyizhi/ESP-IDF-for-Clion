@@ -214,7 +214,10 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 LOG.warn(status.getError().toString());
                 return;
             }
-            ApplicationManager.getApplication().invokeLater(() -> kconfigTreePanel.onConfigNodesChange(status, confModelMap));
+            ApplicationManager.getApplication().invokeLater(() -> {
+                kconfigTreePanel.onConfigNodesChange(status, confModelMap);
+                contentPanel.onConfigNodesChange(status, confModelMap);
+            });
         }
     }
 

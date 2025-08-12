@@ -1,6 +1,5 @@
 package org.btik.espidf.toolwindow.kconfig;
 
-import com.intellij.icons.AllIcons;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 
@@ -9,7 +8,6 @@ import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.DefaultTreeCellRenderer;
 import java.awt.*;
 import java.util.HashMap;
-import java.util.function.Consumer;
 
 public class KconfTreeCellRenderer extends DefaultTreeCellRenderer {
 
@@ -39,7 +37,6 @@ public class KconfTreeCellRenderer extends DefaultTreeCellRenderer {
         if (redefinedType != KconfigType.ENABLE_SWITCH) {
             JLabel jLabel = new JLabel(confModel.getTitle());
             jLabel.setToolTipText(confModel.getHelp());
-            setIcon(confModel, jLabel::setIcon);
             return jLabel;
         }
         JCheckBox comp = new JCheckBox();
@@ -47,13 +44,6 @@ public class KconfTreeCellRenderer extends DefaultTreeCellRenderer {
         comp.setToolTipText(confModel.getHelp());
         comp.setSelected(Boolean.parseBoolean(String.valueOf(confModel.getValue())));
         checkBoxWidth.put(confModel.getTitle(), comp.getPreferredSize().width);
-        setIcon(confModel, comp::setIcon);
         return comp;
-    }
-
-    private void setIcon(ConfModel confModel, Consumer<Icon> setter) {
-        if (confModel.isHasPanelItem()) {
-            setter.accept(AllIcons.Nodes.Editorconfig);
-        }
     }
 }

@@ -137,7 +137,7 @@ public class KconfigTreePanel extends JScrollPane {
                 DefaultMutableTreeNode defaultMutableTreeNode = searchMap.get(confModel.getParent().getId());
                 DefaultMutableTreeNode current = searchMap.get(confModel.getId());
                 if (defaultMutableTreeNode != null && current != null) {
-                    if (defaultMutableTreeNode.isNodeChild(current)){
+                    if (defaultMutableTreeNode.isNodeChild(current)) {
                         defaultMutableTreeNode.remove(current);
                     }
                 }
@@ -166,10 +166,14 @@ public class KconfigTreePanel extends JScrollPane {
                 return null;
             }
         }
-        DefaultMutableTreeNode newChild = new DefaultMutableTreeNode(confModel);
-        parentNode.add(newChild);
-        searchMap.put(confModel.getId(), newChild);
-        return newChild;
+
+
+        String currentId = confModel.getId();
+        DefaultMutableTreeNode defaultMutableTreeNode = searchMap.computeIfAbsent(currentId, k -> new DefaultMutableTreeNode(confModel));
+        if (!defaultMutableTreeNode.isNodeChild(parentNode)) {
+            parentNode.add(defaultMutableTreeNode);
+        }
+        return defaultMutableTreeNode;
     }
 
     public void addTreeSelectionListener(@NotNull TreeChoseListener<ConfModel> treeChoseListener) {
