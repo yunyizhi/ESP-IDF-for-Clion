@@ -90,7 +90,7 @@ public class KConfParser {
                 continue;
             }
             for (ConfModel child : children) {
-                if (!child.isVisible() || child.isAsMenuPanelItem()) {
+                if (!child.isVisible() || child.getRedefinedType() == KconfigType.CHOICE_ITEM) {
                     continue;
                 }
                 DefaultMutableTreeNode childTreeNode = new DefaultMutableTreeNode(child);

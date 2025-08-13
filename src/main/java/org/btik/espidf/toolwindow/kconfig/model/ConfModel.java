@@ -22,7 +22,7 @@ public class ConfModel implements TreeBean<ConfModel> {
     private String id;
     @SerializedName("is_menuconfig")
     private boolean isMenuconfig;
-    private int[] range;
+    private long[] range;
     private List<ConfModel> children;
 
     private Object value;
@@ -82,11 +82,11 @@ public class ConfModel implements TreeBean<ConfModel> {
         this.id = id;
     }
 
-    public int[] getRange() {
+    public long[] getRange() {
         return range;
     }
 
-    public void setRange(int[] range) {
+    public void setRange(long[] range) {
         this.range = range;
     }
 
@@ -204,6 +204,6 @@ public class ConfModel implements TreeBean<ConfModel> {
         this.asMenuPanelItem = asMenuPanelItem;
     }
     public boolean isTreeNode() {
-        return !asMenuPanelItem && getRedefinedType() != KconfigType.CHOICE_ITEM;
+        return  getRedefinedType() != KconfigType.CHOICE_ITEM;
     }
 }

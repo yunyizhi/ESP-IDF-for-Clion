@@ -151,9 +151,6 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
 
     private void onTreeCheck(TreeSelectionEvent e, ConfModel confModel) {
-        if (CollectionUtils.isEmpty(confModel.getChildren())) {
-            return;
-        }
         contentPanel.showCard(confModel);
     }
 

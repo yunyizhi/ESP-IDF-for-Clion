@@ -7,19 +7,34 @@ import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 import org.btik.espidf.ui.componets.InsertPanel;
+import org.btik.espidf.ui.componets.LongField;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.*;
 
 public class KConfPanelFactory {
+    static class PanelItem {
+
+        JComponent itemWrapper;
+        JComponent focusPointer;
+
+        public PanelItem(JComponent itemWrapper, JComponent focusPointer) {
+            this.itemWrapper = itemWrapper;
+            this.focusPointer = focusPointer;
+        }
+    }
+
     interface ItemCreator {
-        JComponent create(ConfModel confModel, Consumer<KconfigSetCommand> commandSender);
+        PanelItem create(ConfModel confModel, Consumer<KconfigSetCommand> commandSender);
     }
 
     private static final HashMap<KconfigType, ItemCreator> creators = new HashMap<>();
@@ -33,9 +48,8 @@ public class KConfPanelFactory {
         creators.put(MENU, KConfPanelFactory::menuItemCreator);
     }
 
-    public static Component createKConfPanel(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
+    public static Component createKConfPanel(ConfModel confModel, Consumer<KconfigSetCommand> commandSender, HashMap<String, JComponent> confItemComponentMap) {
         List<ConfModel> children = confModel.getChildren();
-
         List<ConfModel> filteredList = children.stream()
                 .filter(ConfModel::isVisible)
                 .filter(ConfModel::isAsMenuPanelItem)
@@ -45,6 +59,7 @@ public class KConfPanelFactory {
         }
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        addTitle(panel, confModel, confItemComponentMap);
         for (ConfModel child : filteredList) {
             KconfigType type = child.getType();
             ItemCreator itemCreator = creators.get(type);
@@ -52,11 +67,25 @@ public class KConfPanelFactory {
                 System.out.println(child.getId());
                 continue;
             }
-            JComponent comp = itemCreator.create(child, commandSender);
-            comp.setAlignmentX(Component.LEFT_ALIGNMENT);
-            panel.add(comp);
+            PanelItem item = itemCreator.create(child, commandSender);
+            item.itemWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+            panel.add(item.itemWrapper);
+            confItemComponentMap.put(child.getId(), item.focusPointer);
         }
         return panel;
+    }
+
+    private static void addTitle(JPanel panel, ConfModel confModel, HashMap<String, JComponent> confItemComponentMap) {
+        JLabel jLabel = new JLabel(confModel.getTitle());
+
+        jLabel.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 14));
+        InsertPanel wrapper = new InsertPanel(new GridBagLayout());
+        wrapper.setInsets(JBUI.insetsTop(8));
+        addComponent(wrapper, jLabel, 0, 0);
+        wrapper.setMaximumSize(wrapper.getPreferredSize());
+        wrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
+        confItemComponentMap.put(confModel.getId(), jLabel);
+        panel.add(wrapper);
     }
 
     private static void addComponent(JPanel panel, Component component, int gridx, int gridy) {
@@ -68,7 +97,7 @@ public class KConfPanelFactory {
         panel.add(component, gbc);
     }
 
-    private static JComponent boolItemCreator(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
+    private static PanelItem boolItemCreator(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
         InsertPanel wrapper = new InsertPanel(new GridBagLayout());
         wrapper.setInsets(JBUI.insetsTop(8));
         JCheckBox comp = new JCheckBox(confModel.getTitle());
@@ -90,10 +119,10 @@ public class KConfPanelFactory {
             kconfigSetCommand.setValues(Map.of(confModel.getId(), comp.isSelected()));
             commandSender.accept(kconfigSetCommand);
         });
-        return wrapper;
+        return new PanelItem(wrapper, comp);
     }
 
-    private static JComponent selectItemCreator(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
+    private static PanelItem selectItemCreator(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
         InsertPanel wrapper = new InsertPanel(new GridBagLayout());
         wrapper.setInsets(JBUI.insetsTop(8));
         JLabel label = new JLabel(confModel.getTitle() + ":");
@@ -122,10 +151,10 @@ public class KConfPanelFactory {
         addComponent(wrapper, comboBox, 0, 1);
 
         wrapper.setMaximumSize(wrapper.getPreferredSize());
-        return wrapper;
+        return new PanelItem(wrapper, comboBox);
     }
 
-    private static JComponent hexCreator(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
+    private static PanelItem hexCreator(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
         InsertPanel wrapper = new InsertPanel(new GridBagLayout());
         wrapper.setInsets(JBUI.insetsTop(8));
         JLabel label = new JLabel(confModel.getTitle() + ":");
@@ -139,30 +168,49 @@ public class KConfPanelFactory {
         addComponent(wrapper, textField, 0, 1);
 
         wrapper.setMaximumSize(wrapper.getPreferredSize());
-        return wrapper;
+        return new PanelItem(wrapper, textField);
     }
 
-    private static JComponent intCreator(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
+    private static PanelItem intCreator(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
         InsertPanel wrapper = new InsertPanel(new GridBagLayout());
         wrapper.setInsets(JBUI.insetsTop(8));
         JLabel label = new JLabel(confModel.getTitle() + ":");
         label.setToolTipText(confModel.getHelp());
 
-        JBTextField textField = new JBTextField();
-        textField.setPreferredSize(new Dimension(200, 30));
-        textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        LongField longField = new LongField();
+        longField.setPreferredSize(new Dimension(200, 30));
+        longField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         Object value = confModel.getValue();
         if (value instanceof Integer || value instanceof Long) {
-            textField.setText(String.valueOf(value));
+            longField.setText(String.valueOf(value));
+        }
+        long[] range = confModel.getRange();
+        if (range != null) {
+            longField.setMaxValue(range[0]);
+            longField.setMinValue(range[1]);
         }
         addComponent(wrapper, label, 0, 0);
-        addComponent(wrapper, textField, 0, 1);
+        addComponent(wrapper, longField, 0, 1);
 
         wrapper.setMaximumSize(wrapper.getPreferredSize());
-        return wrapper;
+        longField.addFocusListener(new FocusAdapter() {
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (!longField.isValid()) {
+                    return;
+                }
+                if (Objects.equals(longField.getValue(), confModel.getValue())) {
+                    return;
+                }
+                KconfigSetCommand kconfigSetCommand = new KconfigSetCommand();
+                kconfigSetCommand.setValues(Map.of(confModel.getId(), longField.getValue()));
+                commandSender.accept(kconfigSetCommand);
+            }
+        });
+        return new PanelItem(wrapper, longField);
     }
 
-    private static JComponent stringCreator(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
+    private static PanelItem stringCreator(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
         InsertPanel wrapper = new InsertPanel(new GridBagLayout());
         wrapper.setInsets(JBUI.insetsTop(8));
         JLabel label = new JLabel(confModel.getTitle() + ":");
@@ -179,10 +227,10 @@ public class KConfPanelFactory {
         addComponent(wrapper, textField, 0, 1);
 
         wrapper.setMaximumSize(wrapper.getPreferredSize());
-        return wrapper;
+        return new PanelItem(wrapper, textField);
     }
 
-    private static JComponent menuItemCreator(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
+    private static PanelItem menuItemCreator(ConfModel confModel, Consumer<KconfigSetCommand> commandSender) {
         InsertPanel wrapper = new InsertPanel(new GridBagLayout());
         wrapper.setInsets(JBUI.insetsTop(8));
         JCheckBox comp = new JCheckBox(confModel.getTitle());
@@ -195,6 +243,6 @@ public class KConfPanelFactory {
         wrapper.add(comp, gbc);
 
         wrapper.setMaximumSize(wrapper.getPreferredSize());
-        return wrapper;
+        return new PanelItem(wrapper, comp);
     }
 }
