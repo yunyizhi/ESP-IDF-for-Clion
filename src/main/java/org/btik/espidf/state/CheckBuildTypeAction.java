@@ -11,6 +11,7 @@ import com.intellij.openapi.project.DumbAware;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsActions;
 import org.btik.espidf.command.IdfConsoleRunProfile;
+import org.btik.espidf.command.ProcessEventAdaptor;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
@@ -25,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.charset.Charset;
 import java.util.Map;
 import java.util.Objects;
+
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
@@ -37,7 +39,7 @@ public class CheckBuildTypeAction extends AnAction implements DumbAware {
     private final String chipTarget;
     public final Runnable callback;
 
-    public CheckBuildTypeAction(@Nullable @NlsActions.ActionText String text,@NotNull String chipTarget,  Runnable callback) {
+    public CheckBuildTypeAction(@Nullable @NlsActions.ActionText String text, @NotNull String chipTarget, Runnable callback) {
         super(text);
         this.chipTarget = chipTarget;
         this.callback = callback;
@@ -71,12 +73,8 @@ public class CheckBuildTypeAction extends AnAction implements DumbAware {
             IdfConsoleRunProfile idfConsoleRunProfile = new IdfConsoleRunProfile($i18n("idf.set.project.target"),
                     EspIdfIcon.IDF_16_16, commandLine);
             idfConsoleRunProfile.setUseOutFilter(true);
-            CmdTaskExecutor.execute(project, idfConsoleRunProfile, new ProcessListener() {
-                @Override
-                public void processTerminated(@NotNull ProcessEvent event) {
-                    ApplicationManager.getApplication().invokeLater(callback);
-                }
-            });
+            CmdTaskExecutor.execute(project, idfConsoleRunProfile,
+                    new ProcessEventAdaptor().withProcessTerminatedCb((event) -> ApplicationManager.getApplication().invokeLater(callback)));
         } catch (ExecutionException exception) {
             throw new RuntimeException(exception);
         }

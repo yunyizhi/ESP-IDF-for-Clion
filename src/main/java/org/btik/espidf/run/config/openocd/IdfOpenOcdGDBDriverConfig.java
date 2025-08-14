@@ -16,6 +16,7 @@ import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.command.IdfConsoleRunProfile;
+import org.btik.espidf.command.ProcessEventAdaptor;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.run.config.EspIdfRunConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
@@ -68,14 +69,7 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
         });
 
         KillableProcessHandler processHandler = new KillableProcessHandler(commandLine);
-        processHandler.addProcessListener(new ProcessListener() {
-            @Override
-            public void processTerminated(@NotNull ProcessEvent event) {
-                ProcessListener.super.processTerminated(event);
-                openOcdProcessListener.destroy();
-            }
-        });
-
+        processHandler.addProcessListener(new ProcessEventAdaptor().withProcessTerminatedCb((event) -> openOcdProcessListener.destroy()));
         return processHandler;
     }
 

@@ -211,6 +211,14 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 LOG.warn(status.getError().toString());
                 return;
             }
+            Map<String, Object> values = status.getValues();
+            values.forEach((key, value) -> {
+                ConfModel confModel = confModelMap.get(key);
+                if (confModel == null) {
+                    return;
+                }
+                confModel.setValue(value);
+            });
             ApplicationManager.getApplication().invokeLater(() -> {
                 kconfigTreePanel.onConfigNodesChange(status, confModelMap);
                 contentPanel.onConfigNodesChange(status, confModelMap);

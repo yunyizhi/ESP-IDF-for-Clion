@@ -9,6 +9,7 @@ import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
 import org.btik.espidf.command.IdfConsoleRunProfile;
+import org.btik.espidf.command.ProcessEventAdaptor;
 import org.jetbrains.annotations.NotNull;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
@@ -42,9 +43,7 @@ public class CmdTaskExecutor {
     public static void execute(@NotNull Project project,
                                IdfConsoleRunProfile idfConsoleRunProfile, Runnable terminatedCallBack, String failedTip, boolean continueWithError)
             throws ExecutionException {
-        execute(project, idfConsoleRunProfile, new ProcessListener() {
-            @Override
-            public void processTerminated(@NotNull ProcessEvent event) {
+        execute(project, idfConsoleRunProfile, new ProcessEventAdaptor().withProcessTerminatedCb((event) ->{
                 if (event.getExitCode() != 0) {
                     I18nMessage.NOTIFICATION_GROUP.createNotification(failedTip,
                             $i18nF("idf.exec.return.error", safeNull(event.getText()), event.getExitCode())
@@ -55,8 +54,7 @@ public class CmdTaskExecutor {
                     }
                 }
                 terminatedCallBack.run();
-            }
-        });
+            }));
     }
 
     public static String exeGetStdOut(GeneralCommandLine commandLine, int timeoutInMilliseconds) {

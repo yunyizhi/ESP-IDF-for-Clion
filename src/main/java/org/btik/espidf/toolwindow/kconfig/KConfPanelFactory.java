@@ -6,13 +6,15 @@ import com.intellij.util.ui.JBUI;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
+import org.btik.espidf.ui.componets.HexTextField;
 import org.btik.espidf.ui.componets.InsertPanel;
-import org.btik.espidf.ui.componets.LongField;
+import org.btik.espidf.ui.componets.LongTextField;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
+import java.awt.event.ItemEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -151,6 +153,18 @@ public class KConfPanelFactory {
         addComponent(wrapper, comboBox, 0, 1);
 
         wrapper.setMaximumSize(wrapper.getPreferredSize());
+        comboBox.addItemListener((e -> {
+            if (e.getStateChange() != ItemEvent.SELECTED) {
+                return;
+            }
+            Object item = e.getItem();
+            if (!(item instanceof ConfModel selectedMode)){
+                return;
+            }
+            KconfigSetCommand kconfigSetCommand = new KconfigSetCommand();
+            kconfigSetCommand.setValues(Map.of(selectedMode.getId(), true));
+            commandSender.accept(kconfigSetCommand);
+        }));
         return new PanelItem(wrapper, comboBox);
     }
 
@@ -160,14 +174,40 @@ public class KConfPanelFactory {
         JLabel label = new JLabel(confModel.getTitle() + ":");
         label.setToolTipText(confModel.getHelp());
 
-        JBTextField textField = new JBTextField();
+        HexTextField textField = new HexTextField();
         textField.setPreferredSize(new Dimension(200, 30));
         textField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 
         addComponent(wrapper, label, 0, 0);
         addComponent(wrapper, textField, 0, 1);
-
+        Object value = confModel.getValue();
+        String strValue;
+        if (value instanceof Integer intValue) {
+            strValue = "0x%x".formatted(intValue);
+            textField.setText(strValue);
+        } else if (value instanceof Long longValue) {
+            strValue = "0x%x".formatted(longValue);
+            textField.setText(strValue);
+        } else {
+            strValue = null;
+        }
         wrapper.setMaximumSize(wrapper.getPreferredSize());
+        textField.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (!textField.isValid()) {
+                    textField.setText(strValue == null ? "" : strValue);
+                    return;
+                }
+                String text = textField.getText();
+                if (Objects.equals(strValue, text)) {
+                    return;
+                }
+                KconfigSetCommand kconfigSetCommand = new KconfigSetCommand();
+                kconfigSetCommand.setValues(Map.of(confModel.getId(), text));
+                commandSender.accept(kconfigSetCommand);
+            }
+        });
         return new PanelItem(wrapper, textField);
     }
 
@@ -177,34 +217,45 @@ public class KConfPanelFactory {
         JLabel label = new JLabel(confModel.getTitle() + ":");
         label.setToolTipText(confModel.getHelp());
 
-        LongField longField = new LongField();
+        LongTextField longField = new LongTextField();
         longField.setPreferredSize(new Dimension(200, 30));
         longField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         Object value = confModel.getValue();
-        if (value instanceof Integer || value instanceof Long) {
-            longField.setText(String.valueOf(value));
+        Long longVal;
+        if (value instanceof Integer integer) {
+            longVal = (long) integer;
+            longField.setLongValue(longVal);
+        } else if (value instanceof Long long_) {
+            longVal = long_;
+            longField.setLongValue(longVal);
+        } else {
+            longVal = null;
         }
         long[] range = confModel.getRange();
         if (range != null) {
-            longField.setMaxValue(range[0]);
-            longField.setMinValue(range[1]);
+            longField.setRange(range[0], range[1]);
+            longField.setToolTipText("range [%d, %d]".formatted(range[0], range[1]));
         }
         addComponent(wrapper, label, 0, 0);
         addComponent(wrapper, longField, 0, 1);
 
         wrapper.setMaximumSize(wrapper.getPreferredSize());
-        longField.addFocusListener(new FocusAdapter() {
+        longField.addMouseListener(new MouseAdapter() {
             @Override
-            public void focusLost(FocusEvent e) {
-                if (!longField.isValid()) {
-                    return;
+            public void mouseExited(MouseEvent e) {
+                try {
+                    long longValue = longField.getLongValue();
+                    if (Objects.equals(longValue, longVal)) {
+                        return;
+                    }
+                    KconfigSetCommand kconfigSetCommand = new KconfigSetCommand();
+                    kconfigSetCommand.setValues(Map.of(confModel.getId(), longValue));
+                    commandSender.accept(kconfigSetCommand);
+                } catch (NumberFormatException ignored) {
+                    if (value instanceof Integer || value instanceof Long) {
+                        longField.setText(String.valueOf(value));
+                    }
                 }
-                if (Objects.equals(longField.getValue(), confModel.getValue())) {
-                    return;
-                }
-                KconfigSetCommand kconfigSetCommand = new KconfigSetCommand();
-                kconfigSetCommand.setValues(Map.of(confModel.getId(), longField.getValue()));
-                commandSender.accept(kconfigSetCommand);
             }
         });
         return new PanelItem(wrapper, longField);
@@ -227,6 +278,18 @@ public class KConfPanelFactory {
         addComponent(wrapper, textField, 0, 1);
 
         wrapper.setMaximumSize(wrapper.getPreferredSize());
+        textField.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseExited(MouseEvent e) {
+                String text = textField.getText();
+                if (Objects.equals(String.valueOf(value), text)) {
+                    return;
+                }
+                KconfigSetCommand kconfigSetCommand = new KconfigSetCommand();
+                kconfigSetCommand.setValues(Map.of(confModel.getId(), text));
+                commandSender.accept(kconfigSetCommand);
+            }
+        });
         return new PanelItem(wrapper, textField);
     }
 

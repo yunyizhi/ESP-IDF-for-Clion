@@ -111,14 +111,6 @@ public class KconfigTreePanel extends JScrollPane {
     }
 
     public void onConfigNodesChange(KconfigStatus status, HashMap<String, ConfModel> confModelMap) {
-        Map<String, Object> values = status.getValues();
-        values.forEach((key, value) -> {
-            ConfModel confModel = confModelMap.get(key);
-            if (confModel == null) {
-                return;
-            }
-            confModel.setValue(value);
-        });
         Map<String, Boolean> visible = status.getVisible();
         visible.forEach((key, value) -> {
             ConfModel confModel = confModelMap.get(key);
