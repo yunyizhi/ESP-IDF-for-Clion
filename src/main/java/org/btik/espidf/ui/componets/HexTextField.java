@@ -35,21 +35,24 @@ public class HexTextField extends JTextField {
     }
 
     private static class HexDocumentFilter extends DocumentFilter {
+        private StringBuilder getValidCharSequence(String string) {
+            String allowedChars = "0123456789abcdefABCDEFxX";
+            StringBuilder validInsert = new StringBuilder();
+            for (int i = 0; i < string.length(); i++) {
+                char ch = string.charAt(i);
+                if (allowedChars.indexOf(ch) != -1) {
+                    validInsert.append(ch);
+                }
+            }
+            return validInsert;
+        }
 
         @Override
         public void insertString(FilterBypass fb, int offset, String string,
                                  AttributeSet attr) throws BadLocationException {
             // 获取当前文本
             String currentText = fb.getDocument().getText(0, fb.getDocument().getLength());
-
-            String allowedChars = "0123456789abcdefABCDEFxX";
-            StringBuilder validInsert = new StringBuilder();
-            for (char c : string.toCharArray()) {
-                if (allowedChars.indexOf(c) != -1) {
-                    validInsert.append(c);
-                }
-            }
-
+            StringBuilder validInsert = getValidCharSequence(string);
             if (!validInsert.isEmpty()) {
                 String newText = currentText.substring(0, offset) + validInsert + currentText.substring(offset);
                 if (isValidFormat(newText)) {
@@ -61,15 +64,8 @@ public class HexTextField extends JTextField {
         @Override
         public void replace(FilterBypass fb, int offset, int length, String text,
                             AttributeSet attrs) throws BadLocationException {
-            // 与 insertString 逻辑类似
             String currentText = fb.getDocument().getText(0, fb.getDocument().getLength());
-            String allowedChars = "0123456789abcdefABCDEFxX";
-            StringBuilder validReplace = new StringBuilder();
-            for (char c : text.toCharArray()) {
-                if (allowedChars.indexOf(c) != -1) {
-                    validReplace.append(c);
-                }
-            }
+            StringBuilder validReplace =   getValidCharSequence(text);
 
             if (!validReplace.isEmpty()) {
                 String newText = currentText.substring(0, offset) + validReplace + currentText.substring(offset + length);
