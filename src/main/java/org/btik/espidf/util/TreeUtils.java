@@ -7,6 +7,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class TreeUtils {
 
@@ -16,6 +18,23 @@ public class TreeUtils {
         while (!queue.isEmpty()) {
             T nodeModel = queue.removeFirst();
             consumer.accept(nodeModel);
+            List<T> children = nodeModel.getChildren();
+            if (CollectionUtils.isEmpty(children)) {
+                continue;
+            }
+            queue.addAll(children);
+        }
+    }
+
+    public static <T extends TreeBean<T>> void treeEachWithBreak(T root, Function<T, Boolean> consumer) {
+        LinkedList<T> queue = new LinkedList<>();
+        queue.add(root);
+        while (!queue.isEmpty()) {
+            T nodeModel = queue.removeFirst();
+            Boolean next = consumer.apply(nodeModel);
+            if (!next) {
+                break;
+            }
             List<T> children = nodeModel.getChildren();
             if (CollectionUtils.isEmpty(children)) {
                 continue;

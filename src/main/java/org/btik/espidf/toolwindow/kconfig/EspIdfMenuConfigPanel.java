@@ -1,13 +1,18 @@
 package org.btik.espidf.toolwindow.kconfig;
 
 import com.google.gson.Gson;
+import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.ui.popup.ListPopup;
+import com.intellij.ui.awt.RelativePoint;
 import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.state.CheckBuildTypeAction;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
@@ -109,10 +114,55 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 .withKeyboardListener(
                         new KeyBoardListener().withKeyReleasedCB(e -> {
                                     if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                                        kconfigTreePanel.filterTree(searchInputBox.getText());
+                                        showSearchResult(search());
                                     }
                                 }
                         ));
+    }
+
+    private LinkedHashSet<ConfModel> search() {
+        LinkedHashSet<ConfModel> results = new LinkedHashSet<>();
+        String text = searchInputBox.getText();
+        String lowerKeyword = text.toLowerCase();
+        TreeUtils.treeEachWithBreak(treeRootModel, (model) -> {
+            if (results.size() >= 50) {
+                return false;
+            }
+            boolean isMatch = isMatch(model, lowerKeyword);
+            if (isMatch) {
+                if (model.getRedefinedType() == KconfigType.CHOICE_ITEM) {
+                    ConfModel parent = model.getParent();
+                    results.add(parent);
+                } else {
+                    results.add(model);
+                }
+            }
+            return results.size() < 50;
+        });
+        return results;
+    }
+
+    private void showSearchResult(Collection<ConfModel> result) {
+        DefaultActionGroup actionGroup = new DefaultActionGroup();
+        for (ConfModel confModel : result) {
+            actionGroup.add(new JumpToSearchResultAction(confModel));
+        }
+        JComponent component = searchInputBox;
+        DataContext dataContext = DataManager.getInstance().getDataContext(component);
+        ListPopup popup = JBPopupFactory.getInstance().createActionGroupPopup("Search Result",
+                actionGroup, dataContext, JBPopupFactory.ActionSelectionAid.SPEEDSEARCH, false);
+        RelativePoint pos = RelativePoint.getSouthWestOf(component);
+        popup.showInScreenCoordinates(component, pos.getScreenPoint());
+    }
+
+    private boolean isMatch(ConfModel model, String keyword) {
+        if (keyword == null || keyword.isEmpty()) return true;
+        if (!model.isVisible()) {
+            return false;
+        }
+        return (model.getId() != null && model.getId().toLowerCase().contains(keyword)) ||
+                (model.getName() != null && model.getName().toLowerCase().contains(keyword)) ||
+                (model.getTitle() != null && model.getTitle().toLowerCase().contains(keyword));
     }
 
     private static @NotNull ActionToolbar getActionToolbar(JPanel toolBar) {
@@ -178,7 +228,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
         for (ConfModel confModel : confModels) {
             TreeUtils.treeEach(confModel, (item) -> {
                 confModelMap.put(item.getId(), item);
-                if (item.getType() == KconfigType.BOOL && CollectionUtils.isNotEmpty(item.getChildren())){
+                if (item.getType() == KconfigType.BOOL && CollectionUtils.isNotEmpty(item.getChildren())) {
                     item.setRedefinedType(KconfigType.ENABLE_SWITCH);
                 }
             });
@@ -207,7 +257,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
             onInitOk(status);
             kconfServerAction.setStatus(initOk);
         } else {
-            if (status.isError()){
+            if (status.isError()) {
                 LOG.warn(status.getError().toString());
                 return;
             }
