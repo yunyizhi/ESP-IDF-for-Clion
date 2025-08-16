@@ -1,24 +1,17 @@
 package org.btik.espidf.toolwindow.kconfig;
 
 import com.google.gson.Gson;
-import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.icons.AllIcons;
-import com.intellij.openapi.ui.popup.JBPopupFactory;
-import com.intellij.openapi.ui.popup.ListPopup;
-import com.intellij.ui.awt.RelativePoint;
 import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.service.IdfProjectConfigService;
-import org.btik.espidf.state.CheckBuildTypeAction;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
-import org.btik.espidf.ui.componets.KeyBoardListener;
-import org.btik.espidf.ui.componets.SearchTextBox;
 import org.btik.espidf.util.TreeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,13 +19,13 @@ import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
 
 import java.awt.*;
-import java.awt.event.KeyEvent;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
+import static org.btik.espidf.util.SysConf.$sysInt;
 import static org.btik.espidf.util.UIUtils.setWidth;
 
 /**
@@ -67,7 +60,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
         this.project = project;
 
         kconfServer = new KConfServer(project, this::onKConfMsg);
-        initToolBar();
+
         kconfigTreePanel = new KconfigTreePanel(treeRootModel, this::sendCmd);
         kconfigTreePanel.setMaximumSize(new Dimension(500, Integer.MAX_VALUE));
         kconfigTreePanel.setPreferredSize(new Dimension(350, Integer.MAX_VALUE));
@@ -78,7 +71,6 @@ public class EspIdfMenuConfigPanel extends JPanel {
         contentPanel = new KconfigContentPanel(contentCards, cardLayout, this::sendCmd);
         add(contentPanel, BorderLayout.CENTER);
         kconfigTreePanel.addTreeSelectionListener(this::onTreeCheck);
-        kconfigTreePanel.onTreeSearchResult(this::onTreeSearchResult);
         kconfServer.setOnStopCallback(() -> {
             initOk = false;
             ApplicationManager.getApplication().invokeLater(() -> {
@@ -89,6 +81,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 contentPanel.updateUI();
             });
         });
+        initToolBar();
     }
 
     private void sendCmd(KconfigSetCommand kconfigSetCommand) {
@@ -109,61 +102,10 @@ public class EspIdfMenuConfigPanel extends JPanel {
         toolBar.add(actionToolbar.getComponent());
         toolBar.setBorder(null);
         add(toolBar, BorderLayout.NORTH);
-        searchInputBox
-                .withClearCallback(() -> kconfigTreePanel.filterTree(searchInputBox.getText()))
-                .withKeyboardListener(
-                        new KeyBoardListener().withKeyReleasedCB(e -> {
-                                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                                        showSearchResult(search());
-                                    }
-                                }
-                        ));
+        searchInputBox.setMaxSearchCount($sysInt("esp.idf.kconfig.search.count", 50));
+        searchInputBox.init(treeRootModel, kconfigTreePanel::jumpTo);
     }
 
-    private LinkedHashSet<ConfModel> search() {
-        LinkedHashSet<ConfModel> results = new LinkedHashSet<>();
-        String text = searchInputBox.getText();
-        String lowerKeyword = text.toLowerCase();
-        TreeUtils.treeEachWithBreak(treeRootModel, (model) -> {
-            if (results.size() >= 50) {
-                return false;
-            }
-            boolean isMatch = isMatch(model, lowerKeyword);
-            if (isMatch) {
-                if (model.getRedefinedType() == KconfigType.CHOICE_ITEM) {
-                    ConfModel parent = model.getParent();
-                    results.add(parent);
-                } else {
-                    results.add(model);
-                }
-            }
-            return results.size() < 50;
-        });
-        return results;
-    }
-
-    private void showSearchResult(Collection<ConfModel> result) {
-        DefaultActionGroup actionGroup = new DefaultActionGroup();
-        for (ConfModel confModel : result) {
-            actionGroup.add(new JumpToSearchResultAction(confModel));
-        }
-        JComponent component = searchInputBox;
-        DataContext dataContext = DataManager.getInstance().getDataContext(component);
-        ListPopup popup = JBPopupFactory.getInstance().createActionGroupPopup("Search Result",
-                actionGroup, dataContext, JBPopupFactory.ActionSelectionAid.SPEEDSEARCH, false);
-        RelativePoint pos = RelativePoint.getSouthWestOf(component);
-        popup.showInScreenCoordinates(component, pos.getScreenPoint());
-    }
-
-    private boolean isMatch(ConfModel model, String keyword) {
-        if (keyword == null || keyword.isEmpty()) return true;
-        if (!model.isVisible()) {
-            return false;
-        }
-        return (model.getId() != null && model.getId().toLowerCase().contains(keyword)) ||
-                (model.getName() != null && model.getName().toLowerCase().contains(keyword)) ||
-                (model.getTitle() != null && model.getTitle().toLowerCase().contains(keyword));
-    }
 
     private static @NotNull ActionToolbar getActionToolbar(JPanel toolBar) {
         var actionManager = ActionManager.getInstance();
@@ -202,12 +144,6 @@ public class EspIdfMenuConfigPanel extends JPanel {
 
     private void onTreeCheck(TreeSelectionEvent e, ConfModel confModel) {
         contentPanel.showCard(confModel);
-    }
-
-    private void onTreeSearchResult(ConfModel confModel) {
-        if (confModel.isHasPanelItem()) {
-            contentPanel.showCardWithSelectItem(confModel);
-        }
     }
 
     private void loadPage() {

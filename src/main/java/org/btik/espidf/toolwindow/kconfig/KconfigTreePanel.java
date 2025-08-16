@@ -1,6 +1,5 @@
 package org.btik.espidf.toolwindow.kconfig;
 
-import com.intellij.openapi.util.Pair;
 import com.intellij.ui.treeStructure.Tree;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
@@ -17,23 +16,17 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
 
-import java.util.List;
 import java.util.function.Consumer;
-
-import static org.btik.espidf.util.I18nMessage.$i18n;
 
 public class KconfigTreePanel extends JScrollPane {
     private final Tree tree;
     private DefaultMutableTreeNode rootNode;
     private final ConfModel treeRootModel;
     private final HashMap<String, DefaultMutableTreeNode> searchMap = new HashMap<>();
-    private final HashMap<String, DefaultMutableTreeNode> filteredSearchMap = new HashMap<>();
     private final TreeModel defaultTreeModel;
-    private Consumer<ConfModel> treeSearchListener;
     private TreeChoseListener<ConfModel> treeChoseListener;
     private final KconfTreeCellRenderer kconfTreeCellRenderer;
 
-    private ConfModel lastCheckedModel;
     private final Consumer<KconfigSetCommand> commandSender;
 
     private boolean isTreeCheckEnabled = true;
@@ -103,9 +96,6 @@ public class KconfigTreePanel extends JScrollPane {
         TreeModel model = tree.getModel();
         if (model instanceof DefaultTreeModel treeModel) {
             treeModel.setRoot(rootNode);
-        }
-        if (lastCheckedModel != null) {
-            treeSearchListener.accept(lastCheckedModel);
         }
 
     }
@@ -180,126 +170,13 @@ public class KconfigTreePanel extends JScrollPane {
             if (!(userObject instanceof ConfModel confModel)) {
                 return;
             }
-            lastCheckedModel = confModel;
             if (defaultTreeModel == tree.getModel()) {
-                treeChoseListener.checkedTree(e, confModel);
-                return;
-            }
-            if (treeSearchListener != null) {
-                treeSearchListener.accept(confModel);
+                this.treeChoseListener.checkedTree(e, confModel);
             }
         });
     }
 
-    public void onTreeSearchResult(Consumer<ConfModel> treeSearchListener) {
-        this.treeSearchListener = treeSearchListener;
-    }
+    public void jumpTo(ConfModel searchModel) {
 
-    public void filterTree(String keyword) {
-
-        if (keyword == null || keyword.isEmpty()) {
-            tree.setModel(defaultTreeModel);
-            tree.expandPath(new TreePath(rootNode.getPath()));
-            lastCheckedModel = treeRootModel;
-            treeChoseListener.checkedTree(null, treeRootModel);
-            return;
-        }
-        ConfModel targetModel = new ConfModel();
-        treeRootModel.copyTo(targetModel);
-        boolean hasMatches = filterSubtree(treeRootModel, targetModel, keyword);
-        if (hasMatches) {
-            filteredSearchMap.clear();
-            DefaultMutableTreeNode filteredRootNode = KConfParser.buildTree(targetModel, filteredSearchMap);
-            tree.setModel(new DefaultTreeModel(filteredRootNode));
-            expandFirst(filteredRootNode);
-        } else {
-            DefaultMutableTreeNode emptyRoot = new DefaultMutableTreeNode($i18n("esp.idf.kconfig.search.not.found"));
-            tree.setModel(new DefaultTreeModel(emptyRoot));
-        }
-    }
-
-    private void expandFirst(DefaultMutableTreeNode filteredRootNode) {
-        if (filteredRootNode == null) {
-            return;
-        }
-        DefaultMutableTreeNode firstLeaf = filteredRootNode.getFirstLeaf();
-        if (firstLeaf == null) {
-            return;
-        }
-        TreePath treePath = new TreePath(firstLeaf.getPath());
-        tree.expandPath(treePath);
-        Object userObject = firstLeaf.getUserObject();
-        if (treeSearchListener != null && userObject instanceof ConfModel confModel) {
-            treeSearchListener.accept(confModel);
-        }
-    }
-
-    private boolean filterSubtree(ConfModel sourceModel, ConfModel targetModel, String keyword) {
-        if (!sourceModel.isVisible()) {
-            return false;
-        }
-        boolean isCurrentMatched = isMatch(sourceModel, keyword);
-        boolean hasChildrenMatched = false;
-        List<ConfModel> newChildren = new ArrayList<>();
-
-        List<ConfModel> children = sourceModel.getChildren();
-        if (children != null) {
-            for (ConfModel child : children) {
-                ConfModel newChild = new ConfModel();
-                newChild.setParent(targetModel);
-                boolean childMatched = filterSubtree(child, newChild, keyword);
-                if (childMatched) {
-                    hasChildrenMatched = true;
-                    newChildren.add(newChild);
-                } else if (isCurrentMatched && sourceModel.isHasPanelItem()) {
-                    deepCopy(child, newChild);
-                    newChildren.add(newChild);
-                }
-            }
-        }
-
-        if (isCurrentMatched || hasChildrenMatched) {
-            sourceModel.copyTo(targetModel);
-            if (!newChildren.isEmpty()) {
-                targetModel.setChildren(newChildren);
-            } else {
-                targetModel.setChildren(null);
-            }
-            return true;
-        }
-        return false;
-    }
-
-    private void deepCopy(ConfModel sourceModel, ConfModel targetModel) {
-        if (sourceModel == null || targetModel == null) {
-            return;
-        }
-        LinkedList<Pair<ConfModel, ConfModel>> queue = new LinkedList<>();
-        queue.offer(Pair.create(sourceModel, targetModel));
-        while (!queue.isEmpty()) {
-            Pair<ConfModel, ConfModel> pair = queue.poll();
-            ConfModel source = pair.getFirst();
-            ConfModel target = pair.getSecond();
-            source.copyTo(target);
-            List<ConfModel> children = source.getChildren();
-            if (children != null && !children.isEmpty()) {
-                List<ConfModel> newChildren = new ArrayList<>();
-                for (ConfModel child : children) {
-                    ConfModel newChild = new ConfModel();
-                    newChildren.add(newChild);
-                    queue.offer(Pair.create(child, newChild));
-                }
-                target.setChildren(newChildren);
-            }
-        }
-    }
-
-    private boolean isMatch(ConfModel model, String keyword) {
-        if (keyword == null || keyword.isEmpty()) return true;
-
-        String lowerKeyword = keyword.toLowerCase();
-        return (model.getId() != null && model.getId().toLowerCase().contains(lowerKeyword)) ||
-                (model.getName() != null && model.getName().toLowerCase().contains(lowerKeyword)) ||
-                (model.getTitle() != null && model.getTitle().toLowerCase().contains(lowerKeyword));
     }
 }

@@ -22,6 +22,9 @@ public class SysConf extends DynamicBundle {
     public static String $sys(String key) {
         return INSTANCE.messageOrDefault(key, key);
     }
+    public static int $sysInt(String key, int defaultValue) {
+        return getInt(key, defaultValue);
+    }
 
     public static String getF(String key, @NotNull Object... params) {
         return String.format(get(key), params);
