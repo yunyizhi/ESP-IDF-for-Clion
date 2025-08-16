@@ -5,10 +5,8 @@ import com.intellij.execution.ExecutionManager;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.configuration.EnvironmentVariablesData;
-import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.PtyCommandLine;
 import com.intellij.execution.executors.DefaultRunExecutor;
-import com.intellij.execution.process.ProcessEvent;
 import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.notification.NotificationType;
@@ -44,7 +42,7 @@ import static org.btik.espidf.util.EnvironmentVarUtil.diffWithSystem;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.util.OsUtil.*;
-import static org.btik.espidf.util.OsUtil.Const.POWER_SHELL_ENV_PREFIX;
+import static org.btik.espidf.util.OsUtil.Const.*;
 
 /**
  * @author lustre
@@ -68,7 +66,6 @@ public class TreeNodeCmdExecutor {
         commandLine.addParameters(commandNode.getCommand().split(" "));
         if (IS_WINDOWS) {
             commandLine.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
-
         }
         IdfConsoleRunProfile idfConsoleRunProfile = new IdfConsoleRunProfile(commandNode.getDisplayName(),
                 EspIdfIcon.IDF_16_16, commandLine);
@@ -86,7 +83,7 @@ public class TreeNodeCmdExecutor {
             return;
         }
         MonitorProcessHandler aliveHandler = monitorProcessHandlers.get(port);
-        if (aliveHandler == null || aliveHandler.isProcessTerminated()) {
+        if (aliveHandler == null || (!aliveHandler.getProcess().isAlive())) {
             execTask(project, idfConsoleRunProfile, null);
             return;
         }
@@ -149,6 +146,9 @@ public class TreeNodeCmdExecutor {
             runConfiguration.setScriptText(StringUtil.isEmpty(command) ?
                     envPrefix : envPrefix + Const.IDF_EXE + " -B " + cmakeBuildDir + " " + command);
         } else {
+            // setEnvData 暂未兼容COMP_WORDBREAKS生成语句 先舍弃
+            environments.remove(IDF_PY_COMP_WORDBREAKS);
+            environments.remove(COMP_WORDBREAKS);
             runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, false));
             runConfiguration.setScriptText(StringUtil.isEmpty(command) ? "" : Const.IDF_EXE + " -B " + cmakeBuildDir + " " + command);
         }
@@ -162,12 +162,15 @@ public class TreeNodeCmdExecutor {
     }
 
     public static void execute(RawCommandNode commandNode, @NotNull Project project) {
-        GeneralCommandLine commandLine = new GeneralCommandLine();
+        PtyCommandLine commandLine = new PtyCommandLine();
         commandLine.setExePath(getCmdEnv());
         commandLine.setWorkDirectory(project.getBasePath());
         commandLine.withEnvironment(getEnvsWithProjectSettings(project));
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
         commandLine.addParameters(getCmdArg(), commandNode.getCommand());
+        if (IS_WINDOWS) {
+            commandLine.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
+        }
         try {
             CmdTaskExecutor.execute(project, new IdfConsoleRunProfile(commandNode.getDisplayName(),
                     EspIdfIcon.IDF_16_16, commandLine), null);

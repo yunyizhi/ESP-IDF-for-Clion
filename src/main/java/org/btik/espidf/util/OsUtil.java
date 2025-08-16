@@ -21,6 +21,12 @@ public class OsUtil {
         String IDF_EXE = "idf.py";
 
         String POWER_SHELL_ENV_PREFIX = "$env:";
+
+        String BASH_ENV_PREFIX = "export ";
+
+        String IDF_PY_COMP_WORDBREAKS = "IDF_PY_COMP_WORDBREAKS";
+
+        String COMP_WORDBREAKS = "COMP_WORDBREAKS";
     }
 
     public final static boolean IS_WINDOWS = OS.CURRENT == OS.Windows;
