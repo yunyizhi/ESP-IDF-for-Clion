@@ -2,8 +2,6 @@ package org.btik.espidf.state;
 
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.PtyCommandLine;
-import com.intellij.execution.process.ProcessEvent;
-import com.intellij.execution.process.ProcessListener;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
@@ -39,9 +37,11 @@ public class CheckBuildTypeAction extends AnAction implements DumbAware {
     private final String chipTarget;
     public final Runnable callback;
 
-    public CheckBuildTypeAction(@Nullable @NlsActions.ActionText String text, @NotNull String chipTarget, Runnable callback) {
+    private final boolean preview;
+    public CheckBuildTypeAction(@Nullable @NlsActions.ActionText String text, @NotNull String chipTarget, boolean previewSelected, Runnable callback) {
         super(text);
         this.chipTarget = chipTarget;
+        this.preview = previewSelected;
         this.callback = callback;
     }
 
@@ -62,6 +62,9 @@ public class CheckBuildTypeAction extends AnAction implements DumbAware {
         commandLine.setWorkDirectory(project.getBasePath());
         commandLine.withEnvironment(envs);
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
+        if (preview) {
+            commandLine.addParameters("--preview");
+        }
         commandLine.addParameters(
                 "-B", project.getService(IdfProjectConfigService.class).getCmakeBuildDir(),
                 "set-target", chipTarget

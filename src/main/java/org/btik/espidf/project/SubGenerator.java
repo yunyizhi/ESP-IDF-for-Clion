@@ -98,7 +98,7 @@ public abstract class SubGenerator<T> {
         generate.setWorkDirectory(baseDir.getPath());
         generate.withEnvironment(envs);
         generate.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-        generate.addParameters("set-target", idfTarget);
+        generate.addParameters("--preview", "set-target", idfTarget);
         IdfConsoleRunProfile setTargetProfile = new IdfConsoleRunProfile($i18n("idf.set.project.target"),
                 EspIdfIcon.IDF_16_16, generate);
 

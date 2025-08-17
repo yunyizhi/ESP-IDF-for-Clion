@@ -1,12 +1,9 @@
 package org.btik.espidf.toolwindow.kconfig.model;
 
 import com.google.gson.annotations.SerializedName;
-import com.intellij.openapi.util.Pair;
 import org.btik.espidf.util.TreeBean;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -146,22 +143,6 @@ public class ConfModel implements TreeBean<ConfModel> {
             case BOOL, CHOICE, STRING, INT, HEX -> true;
             default -> false;
         };
-    }
-
-    public void copyTo(ConfModel target) {
-        target.setRedefinedType(this.getRedefinedType());
-        target.setType(this.getType());
-        target.setName(this.getName());
-        target.setTitle(this.getTitle());
-        target.setHelp(this.getHelp());
-        target.setId(this.getId());
-        target.setMenuconfig(this.isMenuconfig());
-        target.setRange(this.getRange());
-        target.setValue(this.getValue());
-        target.setAsMenuPanelItem(this.isAsMenuPanelItem());
-        target.setVisible(this.isVisible());
-        target.setHasPanelItem(this.isHasPanelItem());
-        target.setParent(this.getParent());
     }
 
     public void cutChain() {

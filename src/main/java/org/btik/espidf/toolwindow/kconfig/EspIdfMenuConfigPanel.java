@@ -8,10 +8,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.icons.AllIcons;
 import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.service.IdfProjectConfigService;
-import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
-import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
-import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
-import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
+import org.btik.espidf.toolwindow.kconfig.model.*;
 import org.btik.espidf.util.TreeUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -22,6 +19,7 @@ import java.awt.*;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.List;
+import java.util.function.Consumer;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
@@ -37,6 +35,8 @@ public class EspIdfMenuConfigPanel extends JPanel {
     private final Project project;
     private final SearchTextBox searchInputBox = new SearchTextBox();
     private final KconfServerAction kconfServerAction = new KconfServerAction();
+    KconfOptAction loadAction, saveAction;
+    private final List<Consumer<Boolean>> kConfRunStatusListener = new ArrayList<>();
     private final KconfigTreePanel kconfigTreePanel;
     private final KconfigContentPanel contentPanel;
 
@@ -71,16 +71,24 @@ public class EspIdfMenuConfigPanel extends JPanel {
         contentPanel = new KconfigContentPanel(contentCards, cardLayout, this::sendCmd);
         add(contentPanel, BorderLayout.CENTER);
         kconfigTreePanel.addTreeSelectionListener(this::onTreeCheck);
+        loadAction = new KconfOptAction($i18n("esp.idf.kconfig.load.tip"), null, AllIcons.General.Reset,
+                () -> kconfServer.sendCommand(KconfigMeta.LOAD_DEFAULT));
+        saveAction = new KconfOptAction($i18n("esp.idf.kconfig.save.tip"), null, AllIcons.Actions.MenuSaveall,
+                () -> kconfServer.sendCommand(KconfigMeta.SAVE_DEFAULT));
+        kConfRunStatusListener.add(kconfServerAction::setStatus);
+        kConfRunStatusListener.add(loadAction::setStatus);
+        kConfRunStatusListener.add(saveAction::setStatus);
         kconfServer.setOnStopCallback(() -> {
             initOk = false;
             ApplicationManager.getApplication().invokeLater(() -> {
-                kconfServerAction.setStatus(false);
+                kConfRunStatusListener.forEach(l -> l.accept(false));
                 contentPanel.clear();
                 kconfigTreePanel.clear();
                 treeRootModel.cutChain();
                 contentPanel.updateUI();
             });
         });
+
         initToolBar();
     }
 
@@ -107,19 +115,10 @@ public class EspIdfMenuConfigPanel extends JPanel {
     }
 
 
-    private static @NotNull ActionToolbar getActionToolbar(JPanel toolBar) {
+    private @NotNull ActionToolbar getActionToolbar(JPanel toolBar) {
         var actionManager = ActionManager.getInstance();
-        ActionGroup actionGroup = new DefaultActionGroup(new AnAction(AllIcons.General.Reset) {
-            @Override
-            public void actionPerformed(@NotNull AnActionEvent e) {
 
-            }
-        }, new AnAction(AllIcons.Actions.MenuSaveall) {
-            @Override
-            public void actionPerformed(@NotNull AnActionEvent e) {
-
-            }
-        });
+        ActionGroup actionGroup = new DefaultActionGroup(loadAction, saveAction);
         ActionToolbar actionToolbar = actionManager.createActionToolbar(ActionPlaces.TOOLBAR, actionGroup, true);
         actionToolbar.setTargetComponent(toolBar);
         return actionToolbar;
@@ -131,7 +130,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
             if (!kconfServerAction.isRunning()) {
                 kconfigTreePanel.setVisible(true);
                 contentPanel.setVisible(true);
-                kconfServerAction.setStatus(true);
+                kConfRunStatusListener.forEach(l -> l.accept(true));
                 loadPage();
             } else {
                 kconfServer.stop();
@@ -192,6 +191,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
             initOk = true;
             onInitOk(status);
             kconfServerAction.setStatus(initOk);
+            kConfRunStatusListener.forEach(l -> l.accept(initOk));
         } else {
             if (status.isError()) {
                 LOG.warn(status.getError().toString());

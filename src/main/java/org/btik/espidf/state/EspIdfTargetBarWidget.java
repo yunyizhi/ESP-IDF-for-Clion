@@ -1,9 +1,9 @@
 package org.btik.espidf.state;
 
 import com.intellij.execution.configurations.GeneralCommandLine;
+import com.intellij.icons.AllIcons;
 import com.intellij.ide.DataManager;
-import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.actionSystem.DefaultActionGroup;
+import com.intellij.openapi.actionSystem.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
@@ -16,6 +16,7 @@ import com.intellij.openapi.wm.impl.status.TextPanel;
 import com.intellij.platform.ide.progress.TasksKt;
 import com.intellij.ui.ClickListener;
 import com.intellij.ui.awt.RelativePoint;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.icon.EspIdfIcon;
@@ -29,6 +30,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.util.Map;
 
@@ -40,19 +42,36 @@ import static org.btik.espidf.util.SysConf.$sys;
  */
 public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBarWidget.Multiframe, CustomStatusBarWidget {
 
-    private final TextPanel.WithIconAndArrows myComponent;
-
+    private final JPanel toolBar;
+    private final TextPanel.WithIconAndArrows targetPanel;
+    private final JBCheckBox preview;
     private final Project project;
 
     public EspIdfTargetBarWidget(Project project) {
         super(project);
         this.project = project;
-        myComponent = new TextPanel.WithIconAndArrows();
-        myComponent.setBorder(JBUI.CurrentTheme.StatusBar.Widget.border());
-        myComponent.setIcon(EspIdfIcon.IDF_16_16);
+        toolBar = new JPanel();
+        toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.X_AXIS));
+        toolBar.setOpaque(false); // 去除背景色干扰
+
+
+        preview = new JBCheckBox();
+        preview.setIcon(AllIcons.Actions.Preview);
+        preview.setToolTipText("<html><b>Preview</b></html>");
+        preview.setMargin(JBUI.emptyInsets());
+        preview.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5));
+        preview.setMaximumSize(preview.getPreferredSize());
+        toolBar.add(preview);
+
+        targetPanel = new TextPanel.WithIconAndArrows();
+        targetPanel.setIcon(EspIdfIcon.IDF_16_16);
+        targetPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 5)); // 上左下右 = 0
+        toolBar.add(targetPanel);
+
         IdfProjectConfigService service = project.getService(IdfProjectConfigService.class);
         service.addProfileChangeListener(this::update);
     }
+
 
     @Override
     public @NotNull @NonNls String ID() {
@@ -63,14 +82,14 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
     public void install(@NotNull StatusBar statusBar) {
         super.install(statusBar);
 
-        myComponent.setToolTipText("ESP-IDF Target");
+        targetPanel.setToolTipText("ESP-IDF Target");
         new ClickListener() {
             @Override
             public boolean onClick(@NotNull MouseEvent event, int clickCount) {
                 showSelectBuildTypePopup();
                 return true;
             }
-        }.installOn(myComponent, true);
+        }.installOn(targetPanel, true);
         ApplicationManager.getApplication().invokeLater(this::update);
     }
 
@@ -81,7 +100,12 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         Map<String, String> environments = idfEnvironmentService.getEnvironments();
         listTarget.withEnvironment(environments);
         listTarget.setExePath(EnvironmentVarUtil.findIdfFullPath(environments));
-        listTarget.addParameters("--list-targets", "--preview");
+
+        listTarget.addParameters("--list-targets");
+        boolean previewSelected = preview.isSelected();
+        if (previewSelected) {
+            listTarget.addParameters("--preview");
+        }
         String targets = TasksKt.runWithModalProgressBlocking(project, "Loading Targets", (scope, continuation) -> CmdTaskExecutor.exeGetStdOut(listTarget, 60 * 1000));
         String[] targetsArray;
         if (StringUtils.isEmpty(targets)) {
@@ -91,7 +115,7 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         }
         DefaultActionGroup actionGroup = new DefaultActionGroup();
         for (String target : targetsArray) {
-            actionGroup.add(new CheckBuildTypeAction(target, target, this::update));
+            actionGroup.add(new CheckBuildTypeAction(target, target, previewSelected, this::update));
         }
         JComponent component = getComponent();
         DataContext dataContext = DataManager.getInstance().getDataContext(component);
@@ -110,7 +134,7 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
 
     @Override
     public JComponent getComponent() {
-        return myComponent;
+        return toolBar;
     }
 
 
@@ -119,6 +143,6 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         if (debugConfigModel == null) {
             return;
         }
-        myComponent.setText(debugConfigModel.getTarget());
+        targetPanel.setText(debugConfigModel.getTarget());
     }
 }

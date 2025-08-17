@@ -10,6 +10,7 @@ import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.process.ProcessListener;
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.sh.run.ShConfigurationType;
@@ -69,30 +70,25 @@ public class TreeNodeCmdExecutor {
         }
         IdfConsoleRunProfile idfConsoleRunProfile = new IdfConsoleRunProfile(commandNode.getDisplayName(),
                 EspIdfIcon.IDF_16_16, commandLine);
-        try {
-            if (commandNode.isUseMonitor()) {
-                registerMonitorHandler(port, idfConsoleRunProfile);
-            }
-            idfConsoleRunProfile.setUseOutFilter(commandNode.isOutFilter());
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
-        }
+        idfConsoleRunProfile.setUseOutFilter(commandNode.isOutFilter());
 
         if (!commandNode.isRequestPort()) {
-            execTask(project, idfConsoleRunProfile, null);
+            execTask(commandNode.isUseMonitor(), port, project, idfConsoleRunProfile, null);
             return;
         }
         MonitorProcessHandler aliveHandler = monitorProcessHandlers.get(port);
         if (aliveHandler == null || (!aliveHandler.getProcess().isAlive())) {
-            execTask(project, idfConsoleRunProfile, null);
+            execTask(commandNode.isUseMonitor(), port, project, idfConsoleRunProfile, null);
             return;
         }
         // 等待关停后拉起新任务
+        String finalPort = port;
         aliveHandler.addProcessListener(new ProcessEventAdaptor().withProcessTerminatedCb((event) -> {
                     I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("esp.idf.monitor.task.auto.stop.title"),
                             $i18nF("esp.idf.monitor.task.auto.stop.msg", aliveHandler.getTaskRawName(), commandNode.getDisplayName()),
                             NotificationType.INFORMATION).notify(project);
-                    execTask(project, idfConsoleRunProfile, null);
+                    ApplicationManager.getApplication().invokeLater(() ->
+                            execTask(commandNode.isUseMonitor(), finalPort, project, idfConsoleRunProfile, null));
                 }
         ));
         // 关停带monitor的同端口任务
@@ -100,9 +96,12 @@ public class TreeNodeCmdExecutor {
 
     }
 
-    private static void execTask(@NotNull Project project,
+    private static void execTask(boolean useMonitor, String port, @NotNull Project project,
                                  IdfConsoleRunProfile idfConsoleRunProfile, ProcessListener processListener) {
         try {
+            if (useMonitor) {
+                registerMonitorHandler(port, idfConsoleRunProfile);
+            }
             CmdTaskExecutor.execute(project, idfConsoleRunProfile, processListener);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);

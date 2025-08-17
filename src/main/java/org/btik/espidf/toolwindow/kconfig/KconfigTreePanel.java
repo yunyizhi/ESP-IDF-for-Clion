@@ -16,6 +16,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 public class KconfigTreePanel extends JScrollPane {
@@ -83,11 +84,13 @@ public class KconfigTreePanel extends JScrollPane {
 
     public void clear() {
         rootNode.removeAllChildren();
-        tree.setModel(defaultTreeModel);
+        rootNode = null;
         tree.updateUI();
+        tree.setVisible(false);
     }
 
     public void onConfigNodesInit() {
+        tree.setVisible(true);
         viewport.setView(tree);
         rootNode = KConfParser.buildTree(treeRootModel, searchMap);
         if (rootNode == null) {
@@ -101,32 +104,34 @@ public class KconfigTreePanel extends JScrollPane {
     }
 
     public void onConfigNodesChange(KconfigStatus status, HashMap<String, ConfModel> confModelMap) {
-        Map<String, Boolean> visible = status.getVisible();
-        visible.forEach((key, value) -> {
-            ConfModel confModel = confModelMap.get(key);
-
-            boolean wasVisible = confModel.isVisible();
-            if (wasVisible == value) {
-                return;
-            }
-            confModel.setVisible(value);
-            if (!confModel.isTreeNode()) {
-                return;
-            }
-            if (value) {
-                addNode(confModel, visible);
-            } else {
-                DefaultMutableTreeNode defaultMutableTreeNode = searchMap.get(confModel.getParent().getId());
-                DefaultMutableTreeNode current = searchMap.get(confModel.getId());
-                if (defaultMutableTreeNode != null && current != null) {
-                    if (defaultMutableTreeNode.isNodeChild(current)) {
-                        defaultMutableTreeNode.remove(current);
+        try {
+            Map<String, Boolean> visible = status.getVisible();
+            visible.forEach((key, value) -> {
+                ConfModel confModel = confModelMap.get(key);
+                boolean wasVisible = confModel.isVisible();
+                if (wasVisible == value) {
+                    return;
+                }
+                confModel.setVisible(value);
+                if (!confModel.isTreeNode()) {
+                    return;
+                }
+                if (value) {
+                    addNode(confModel, visible);
+                } else {
+                    DefaultMutableTreeNode defaultMutableTreeNode = searchMap.get(confModel.getParent().getId());
+                    DefaultMutableTreeNode current = searchMap.get(confModel.getId());
+                    if (defaultMutableTreeNode != null && current != null) {
+                        if (defaultMutableTreeNode.isNodeChild(current)) {
+                            defaultMutableTreeNode.remove(current);
+                        }
                     }
                 }
-            }
-        });
-        tree.updateUI();
-        isTreeCheckEnabled = true;
+            });
+            tree.updateUI();
+        } finally {
+            isTreeCheckEnabled = true;
+        }
     }
 
     private DefaultMutableTreeNode addNode(ConfModel confModel, Map<String, Boolean> visible) {
@@ -177,6 +182,31 @@ public class KconfigTreePanel extends JScrollPane {
     }
 
     public void jumpTo(ConfModel searchModel) {
+            TreePath path = buildPathTo(searchModel);
+            if (path == null) {
+                return;
+            }
+            tree.scrollPathToVisible(path);
+            tree.setSelectionPath(path);
+            tree.expandPath(path);
 
+    }
+    public TreePath buildPathTo(ConfModel target) {
+        if (target == null) {
+            return null;
+        }
+        DefaultMutableTreeNode defaultMutableTreeNode = searchMap.get(target.getId());
+        if (defaultMutableTreeNode == null) {
+            return null;
+        }
+        List<TreeNode> path = new ArrayList<>();
+        TreeNode current = defaultMutableTreeNode;
+        while (current != null) {
+            path.add(current);
+            current = current.getParent();
+        }
+
+        Collections.reverse(path);
+        return new TreePath(path.toArray());
     }
 }

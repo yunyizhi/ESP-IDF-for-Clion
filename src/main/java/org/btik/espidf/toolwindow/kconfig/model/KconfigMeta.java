@@ -6,4 +6,10 @@ package org.btik.espidf.toolwindow.kconfig.model;
  */
 public interface KconfigMeta {
     String ERROR = "error";
+
+    String SAVE_DEFAULT = """
+            {"version":2,"save":null}""";
+
+    String LOAD_DEFAULT = """
+            {"version":2,"load":null}""";
 }
