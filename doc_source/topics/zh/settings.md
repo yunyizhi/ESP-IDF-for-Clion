@@ -31,3 +31,33 @@ idf.py会把会把波特率传给esptool.py。
 ## CMake Profile
 可以指定任务树使用的CMake Profile用于执行任务时指定cmake build目录。
 可以参考 [Profiles](profiles.md)
+
+
+## 设置Target(芯片类型)
+
+如果是esp-idf项目，build目录生成后，含对应描述json,
+
+默认情况下在**右下角状态栏**会有本插件的icon和芯片类型
+
+![set-target_statusBar](set-target_statusBar.png)
+
+* 不勾选前面Preview复选框时列出芯片类型
+
+    ![no_preview_targets.png](no_preview_targets.png)
+
+
+* 勾选前面Preview复选框时列出芯片类型
+
+    ![targets_with_preview.png](targets_with_preview.png)
+
+* 点击具体选项，也会按`Preview复选框`勾选状态 决定是否添加`--preview`参数
+
+### 目前的问题
+
+* 该命令不属于cmake target，使用无法使用ninja make等执行，设置具体的build输出目录并不能更改具体的目录的target，而只能修改默认的profile对应的target
+
+    建议多profile项目通过Profile里面cmake cache变量设置
+
+    ![profile_set_target.png](profile_set_target.png)
+
+* 多profile项目在使用当前功能设置target之后也会触发重新加载cmake,可能会报错target不匹配，可手动删除其build输出目录,重新加载cmake

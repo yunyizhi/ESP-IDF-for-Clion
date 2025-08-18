@@ -9,8 +9,10 @@
     <toc-element topic="home.md"/>
     <toc-element topic="newProject.md"/>
     <toc-element topic="toolTree.md"/>
-    <toc-element topic="openIdfProject.md"/>
     <toc-element topic="settings.md"/>
+    <toc-element topic="configUi.md"/>
+    <toc-element topic="openIdfProject.md"/>
+
     <toc-element topic="debug.md"/>
     <toc-element topic="profiles.md"/>
     <toc-element topic="toolchain.md"/>

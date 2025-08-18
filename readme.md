@@ -31,3 +31,6 @@
 
 ![task_tree.png](https://yunyizhi.github.io/ESP-IDF-for-Clion/images/task_tree.png)
 
+#### Menuconfig UI
+
+![Menuconfig](https://yunyizhi.github.io/ESP-IDF-for-Clion/images/kconf_ui_base.png)

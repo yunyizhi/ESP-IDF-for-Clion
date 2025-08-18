@@ -2,7 +2,9 @@
 
 这是一个非官方的ESP-IDF CLion插件。
 
-当前文档对应插件版本:0.5。
+当前文档对应插件版本:0.6。
+
+若无法升级搭配当前版本，可以升级clion版本再尝试。
 
 在clion官方文档中[clion可无插件配置ESP-IDF](https://www.jetbrains.com/help/clion/esp-idf.html)。
 
@@ -52,3 +54,10 @@ release仓会出现预览版，插件市场一般需要两个工作日审核，�
 支持单项目配置
 
 ![settings.png](settings.png)
+
+
+## Menuconfig GUI
+
+对Menuconfig做了图形封装
+
+![kconf_ui_base.png](kconf_ui_base.png)

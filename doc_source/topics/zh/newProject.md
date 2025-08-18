@@ -168,7 +168,7 @@ git clone --recursive https://github.com/espressif/esp-idf.git
 mkdir -p ~/esp
 cd ~/esp
 wget https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v5.5/esp-idf-v5.5.zip
-unzip esp-idf
+unzip esp-idf-v5.5.zip
 mv esp-idf-v5.5/ esp-idf
 </code-block>
 </tab>
@@ -207,6 +207,7 @@ export IDF_GITHUB_ASSETS="dl.espressif.com/github_assets"
 <tab title="完全使用中国站(乐鑫中国站和python清华源)">
 
 ```bash
+cd ~/esp/esp-idf
 export IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
 export PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
 export PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
@@ -220,8 +221,9 @@ export PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
 
 设置对应target,然后新建项目。
 
+![linux_new.png](linux_new.png)
 
-## Macos
+## Macos源码安装
 >这里使用m4测试成功
 
 ### 安装具体依赖的组件
@@ -232,21 +234,42 @@ export PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
 
 ### 克隆代码
 
-进入一个没有空格的目录，克隆代码。
-```bash
+<tabs>
+    <tab title="clone代码">
+<code-block>
+mkdir -p ~/esp
+cd ~/esp
 git clone --recursive https://github.com/espressif/esp-idf.git
-```
+</code-block>
+</tab>
+    <tab title="通过HTTP代理克隆">
 
-### 无法克隆时使用代理
-
-需要替换代理服务器地址为实际代理程序真实监听地址
-```Bash
+```bash
+mkdir -p ~/esp
+cd ~/esp
 export http_proxy=http://127.0.0.1:7890
 export https_proxy=http://127.0.0.1:7890
 git clone --recursive https://github.com/espressif/esp-idf.git
 ```
 
+</tab>
+    <tab title="从中国站直接下载">
+
+ 以idf5.5为例，将idf5.5的release中附件esp-idf-v5.5.zip的url复制出<br>
+ 然后替换`github.com` 到 `dl.espressif.cn/github_assets`
+```Bash
+mkdir -p ~/esp
+cd ~/esp
+curl -O  https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v5.5/esp-idf-v5.5.zip
+unzip esp-idf-v5.5.zip
+mv esp-idf-v5.5/ esp-idf
+```
+
+</tab>
+</tabs>
+
 ### 切换到一个具体的稳定版本(可选)
+> 使用中国站下载源码包已经是具体版本了无需进行这一步
 
 例如`v5.5`标签
 ```Bash
@@ -259,27 +282,38 @@ git submodule update --init --recursive
 ### 安装
 安装会下载一些东西,根据需要选择后续是否使用镜像站
 
-* 直接安装
+<tabs>
+    <tab title="直接安装">
+
 ```bash
+cd ~/esp/esp-idf
 ./install.sh
 ```
+</tab>
+    <tab title="安装设置使用乐鑫下载站">
 
-* 或者使用乐鑫下载站
 ```bash
+cd ~/esp/esp-idf
 export IDF_GITHUB_ASSETS="dl.espressif.com/github_assets"
 ./install.sh
 ```
+</tab>
+<tab title="完全使用中国站(乐鑫中国站和python清华源)">
 
-* 或者使用乐鑫中国下载站
->不必过http代理，可新开终端，或者ssh会话。
 ```bash
+cd ~/esp/esp-idf
 export IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
+export PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+export PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
 ./install.sh
 ```
-
+</tab>
+</tabs>
 安装完成之后创建`ESP-IDF`项目时选择源码路径下`export.sh`所在的目录。
 
 设置对应target,然后新建项目。
+
+![macos_new.png](macos_new.png)
 
 
 ## 重命名Toolchain
