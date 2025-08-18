@@ -6,7 +6,6 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.util.Consumer;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
@@ -37,7 +36,6 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
      * 是否由ESPIDF插件创建，不需要持久化
      * */
     private boolean createByEspIdf = false;
-    private Consumer<Boolean> statusBarRefreshHook;
 
     public IdfProjectConfigComponent(Project project) {
         this.project = project;
@@ -104,11 +102,6 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
 
     @Override
     public void onProfileChanged() {
-        boolean isEspIdfProject = EspIdfProjectUtil.isEspIdfProject(project);
-        statusBarRefreshHook.accept(isEspIdfProject);
-        if (!isEspIdfProject) {
-            return;
-        }
         for (Runnable profileChangeListener : profileChangeListeners) {
             ApplicationManager.getApplication().invokeLater(profileChangeListener);
         }
@@ -122,11 +115,6 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     @Override
     public void setCreateByEspIdf(boolean createByEspIdf) {
         this.createByEspIdf = createByEspIdf;
-    }
-
-    @Override
-    public void setStatusBarRefreshHook(Consumer<Boolean> callback) {
-        this.statusBarRefreshHook = callback;
     }
 
     @Override

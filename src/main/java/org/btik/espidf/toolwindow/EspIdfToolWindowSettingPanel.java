@@ -28,6 +28,7 @@ import java.awt.event.*;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.btik.espidf.service.IdfEnvironmentService.*;
 import static org.btik.espidf.util.UIUtils.createConstraints;
@@ -108,7 +109,22 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
         {
             CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
             List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
-            cmakeProfile.removeAllItems();
+
+            int itemCount = cmakeProfile.getItemCount();
+            if (itemCount != activeProfiles.size()) {
+                cmakeProfile.removeAllItems();
+            } else {
+                for (int i = 0; i < itemCount; i++) {
+                    if (!Objects.equals(cmakeProfile.getItemAt(i), activeProfiles.get(i).getName())) {
+                        cmakeProfile.removeAllItems();
+                        break;
+                    }
+                }
+            }
+
+            if (cmakeProfile.getItemCount() > 0) {
+                return;
+            }
             HashSet<String> activeProfileNames = new HashSet<>();
             for (CMakeSettings.Profile profile : activeProfiles) {
                 cmakeProfile.addItem(profile.getName());

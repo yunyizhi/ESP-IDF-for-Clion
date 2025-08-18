@@ -45,7 +45,6 @@ public class EspIdfMenuConfigPanel extends JPanel {
     private final ConfModel treeRootModel = new ConfModel();
     List<ConfModel> confModels;
     HashMap<String, ConfModel> confModelMap = new HashMap<>();
-    Map<String, Object> sdkConfig;
 
 
     public EspIdfMenuConfigPanel(Project project) {
@@ -182,7 +181,6 @@ public class EspIdfMenuConfigPanel extends JPanel {
             LOG.error(sdkConfigPath + " does not exist");
             return;
         }
-        sdkConfig = KConfParser.parseSdkConfig(sdkConfigPath);
         kconfServer.start();
     }
 

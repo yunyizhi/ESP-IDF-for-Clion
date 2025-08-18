@@ -13,10 +13,12 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.impl.status.EditorBasedWidget;
 import com.intellij.openapi.wm.impl.status.TextPanel;
+import com.intellij.openapi.wm.impl.status.widget.StatusBarWidgetsManager;
 import com.intellij.platform.ide.progress.TasksKt;
 import com.intellij.ui.ClickListener;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.components.JBCheckBox;
+import com.intellij.util.Consumer;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.icon.EspIdfIcon;
@@ -30,7 +32,6 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.util.Map;
 
@@ -46,10 +47,14 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
     private final TextPanel.WithIconAndArrows targetPanel;
     private final JBCheckBox preview;
     private final Project project;
+    private final Consumer<Boolean> setAvailable;
+    private final EspIdfTargetBarBarWidgetFactory espIdfTargetBarBarWidgetFactory;
 
-    public EspIdfTargetBarWidget(Project project) {
+    public EspIdfTargetBarWidget(Project project, Consumer<Boolean> setAvailable, EspIdfTargetBarBarWidgetFactory espIdfTargetBarBarWidgetFactory) {
         super(project);
         this.project = project;
+        this.setAvailable = setAvailable;
+        this.espIdfTargetBarBarWidgetFactory = espIdfTargetBarBarWidgetFactory;
         toolBar = new JPanel();
         toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.X_AXIS));
         toolBar.setOpaque(false); // 去除背景色干扰
@@ -129,7 +134,7 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
     @NotNull
     @Override
     public StatusBarWidget copy() {
-        return new EspIdfTargetBarWidget(getProject());
+        return new EspIdfTargetBarWidget(getProject(), setAvailable, espIdfTargetBarBarWidgetFactory);
     }
 
     @Override
@@ -141,8 +146,12 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
     public void update() {
         DebugConfigModel debugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
         if (debugConfigModel == null) {
+            setAvailable.accept(false);
+            project.getService(StatusBarWidgetsManager.class).updateWidget(espIdfTargetBarBarWidgetFactory);
             return;
         }
+        setAvailable.accept(true);
+        project.getService(StatusBarWidgetsManager.class).updateWidget(espIdfTargetBarBarWidgetFactory);
         targetPanel.setText(debugConfigModel.getTarget());
     }
 }

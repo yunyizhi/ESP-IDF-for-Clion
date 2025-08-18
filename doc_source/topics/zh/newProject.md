@@ -34,26 +34,23 @@
 然后创建项目即可。
 
 
-## 源码安装(windows/linux/macos)
-
-通过克隆 ESP-IDF项目，并在对应平台使用install脚本安装ESP-IDF。这样可以通过git更新IDF。
-
-
-### Windows下源码安装
+## Windows下源码安装
 >windows下这里默认是在安装过离线版本后测试，不能确保未安装离线版的环境，源码安装时一些需要的依赖项已经安装。
 >测试时python git等也有单独安装的版本
 
-克隆代码后使用install脚本进行安装。
-
-#### 克隆代码
+### 克隆代码
+在一个没有空格路径下打开`cmd`执行以下命令(powershell设置环境变量的方式不同)
 >git需要自行安装
+<tabs>
+    <tab title="clone代码">
 
-在一个没有空格路径下打开cmd执行以下命令
 ```bash
 git clone --recursive https://github.com/espressif/esp-idf.git
 ```
-#### 无法克隆时使用代理
-需要替换代理服务器地址为实际代理程序真实监听地址
+</tab>
+    <tab title="通过http代理 clone代码">
+
+以本机运行代理软件http代理场景为例
 ```Bash
 :: 设置 HTTP 代理
 set http_proxy=http://127.0.0.1:7890
@@ -62,8 +59,22 @@ set https_proxy=http://127.0.0.1:7890
 
 git clone --recursive https://github.com/espressif/esp-idf.git
 ```
+</tab>
+    <tab title="乐鑫中国站下载全量源码(含子模块)">
 
-#### 切换到一个具体的稳定版本(可选)
+以idf5.5为例，将idf5.5的release中附件esp-idf-v5.5.zip的url复制出，<br>
+然后替换`github.com` 到 `dl.espressif.cn/github_assets`
+
+得到其乐鑫中国站下载地址如下:
+
+`https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v5.5/esp-idf-v5.5.zip`
+
+可用浏览器下载，后解压到一个没有空格的目录
+</tab>
+</tabs>
+
+### 切换到一个具体的稳定版本(可选)
+> 使用中国站下载源码包已经是具体版本了无需进行这一步
 
 例如`v5.5`标签
 ```Bash
@@ -73,27 +84,40 @@ git submodule update --init --recursive
 
 ```
 
-#### 安装
+### 安装
 安装会下载一些东西,根据需要选择后续是否使用镜像站
 
-* 直接安装
-```bash
-install.bat
-```
+命令行进入源码目录，然后执行以下操作
 
-* 或者使用乐鑫下载站
-```bash
-set IDF_GITHUB_ASSETS="dl.espressif.com/github_assets"
-install.bat
-```
-* 或者使用乐鑫中国下载站
->这一步不必过http代理，通过新建命令行则不会继承之前克隆源码时设置的临时环境变量。
-```bash
-set IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
-install.bat
-```
+<tabs>
+    <tab title="直接安装">
 
-#### 新建项目
+```bash
+install.bat
+```
+</tab>
+    <tab title="安装设置使用乐鑫下载站">
+
+```bash
+set IDF_GITHUB_ASSETS=dl.espressif.com/github_assets
+install.bat
+```
+</tab>
+<tab title="完全使用中国站(乐鑫中国站和python清华源)">
+
+```bash
+set IDF_GITHUB_ASSETS=dl.espressif.cn/github_assets
+set PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+set PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
+install.bat
+```
+</tab>
+</tabs>
+
+
+
+
+### 新建项目
 并将Env Type 选为`ESP-IDF`
 
 ![win_source.png](win_source.png)
@@ -102,33 +126,56 @@ install.bat
 
 设置对应target,然后新建项目。
 
-### Linux
+## Linux源码安装
 
 
-#### 安装具体依赖的组件
+### 安装具体依赖的组件
 需要手动安装一些组件，再使用install脚本。
 参考[Linux安装具体的组件](https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32/get-started/linux-macos-setup.html#linux)
 
-#### 克隆代码
-
-进入一个没有空格的目录，克隆代码。
+以ubuntu为例
 ```bash
-git clone --recursive https://github.com/espressif/esp-idf.git
+sudo apt update
+sudo apt-get install git wget flex bison gperf python3 python3-pip python3-venv cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
 ```
-#### 无法克隆时使用代理
+### 克隆代码
 
-> 很多时候代理软件可能只能在windows和macos上安装，在将代理软件的局域网模式打开，防火墙要运行应用程序过防火墙。
-> 然后在linux的终端上设置为其局域网具体地址
-```Bash
+<tabs>
+    <tab title="clone代码">
+<code-block>
+mkdir -p ~/esp
+cd ~/esp
+git clone --recursive https://github.com/espressif/esp-idf.git
+</code-block>
+</tab>
+    <tab title="通过HTTP代理克隆">
+<code-block>
+# 很多时候代理软件可能只能在windows和macos上安装，在将代理软件的局域网模式打开，防火墙要运行应用程序过防火墙。
+# 然后在linux的终端上设置为其局域网具体地址
+mkdir -p ~/esp
+cd ~/esp
 # 设置 HTTP 代理
 export http_proxy=http://192.168.137.1:7890
 # 设置 HTTPS 代理
 export https_proxy=http://192.168.137.1:7890
-
 git clone --recursive https://github.com/espressif/esp-idf.git
-```
+</code-block>
+</tab>
+    <tab title="从中国站直接下载">
+<code-block>
+# 以idf5.5为例，将idf5.5的release中附件esp-idf-v5.5.zip的url复制出
+# 然后替换`github.com` 到 `dl.espressif.cn/github_assets`
+mkdir -p ~/esp
+cd ~/esp
+wget https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v5.5/esp-idf-v5.5.zip
+unzip esp-idf
+mv esp-idf-v5.5/ esp-idf
+</code-block>
+</tab>
+</tabs>
 
 #### 切换到一个具体的稳定版本(可选)
+> 使用中国站下载源码包已经是具体版本了无需进行这一步
 
 例如`v5.5`标签
 ```Bash
@@ -138,48 +185,59 @@ git submodule update --init --recursive
 
 ```
 
-#### 安装
+### 安装
 安装会下载一些东西,根据需要选择后续是否使用镜像站
 
-* 直接安装
+<tabs>
+    <tab title="直接安装">
+
 ```bash
+cd ~/esp/esp-idf
 ./install.sh
 ```
+</tab>
+    <tab title="安装设置使用乐鑫下载站">
 
-* 或者使用乐鑫下载站
 ```bash
+cd ~/esp/esp-idf
 export IDF_GITHUB_ASSETS="dl.espressif.com/github_assets"
 ./install.sh
 ```
-* 或者使用乐鑫中国下载站
->不必过http代理，可新开终端，或者ssh会话。
+</tab>
+<tab title="完全使用中国站(乐鑫中国站和python清华源)">
+
 ```bash
 export IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
+export PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
+export PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
 ./install.sh
 ```
-#### 新建项目
+</tab>
+</tabs>
+
+### 新建项目
 安装完成之后创建`ESP-IDF`项目时选择源码路径下`export.sh`所在的目录。
 
 设置对应target,然后新建项目。
 
 
-### Macos
+## Macos
 >这里使用m4测试成功
 
-#### 安装具体依赖的组件
+### 安装具体依赖的组件
 
 需要手动安装一些组件。
 参考[macos安装具体的组件](https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32/get-started/linux-macos-setup.html#macos)
 >这里m4使用HomeBrew安装具体组件测试成功,`ccache`也进行了安装
 
-#### 克隆代码
+### 克隆代码
 
 进入一个没有空格的目录，克隆代码。
 ```bash
 git clone --recursive https://github.com/espressif/esp-idf.git
 ```
 
-#### 无法克隆时使用代理
+### 无法克隆时使用代理
 
 需要替换代理服务器地址为实际代理程序真实监听地址
 ```Bash
@@ -188,7 +246,7 @@ export https_proxy=http://127.0.0.1:7890
 git clone --recursive https://github.com/espressif/esp-idf.git
 ```
 
-#### 切换到一个具体的稳定版本(可选)
+### 切换到一个具体的稳定版本(可选)
 
 例如`v5.5`标签
 ```Bash
@@ -198,7 +256,7 @@ git submodule update --init --recursive
 
 ```
 
-#### 安装
+### 安装
 安装会下载一些东西,根据需要选择后续是否使用镜像站
 
 * 直接安装
@@ -224,7 +282,7 @@ export IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
 设置对应target,然后新建项目。
 
 
-### 重命名Toolchain
+## 重命名Toolchain
 
 生成的Toolchain名称前缀为`EspIdfAutoGen`，目前本插件不依赖Toolchain名称，可以重命名。
 重命名后，已经配置过的项目需要在cmake profile处重新指定对应名称即可。

@@ -1,6 +1,5 @@
 package org.btik.espidf.service;
 
-import com.intellij.util.Consumer;
 import org.btik.espidf.conf.IdfProjectConfig;
 
 /**
@@ -25,8 +24,6 @@ public interface IdfProjectConfigService {
     boolean isCreateByEspIdf();
 
     void setCreateByEspIdf(boolean createByEspIdf);
-
-    void setStatusBarRefreshHook(Consumer<Boolean> callback);
 
     void updateProfile(String displayName);
 }
