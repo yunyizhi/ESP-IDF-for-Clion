@@ -4,8 +4,11 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.StatusBarWidgetFactory;
+import com.intellij.openapi.wm.impl.status.widget.StatusBarWidgetsManager;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author lustre
@@ -13,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class EspIdfTargetBarBarWidgetFactory implements StatusBarWidgetFactory {
 
-    private boolean available = true;
+    private final ConcurrentHashMap<String,Boolean> availableMap = new ConcurrentHashMap<>();
 
     @Override
     public @NotNull @NonNls String getId() {
@@ -27,11 +30,27 @@ public class EspIdfTargetBarBarWidgetFactory implements StatusBarWidgetFactory {
 
     @Override
     public @NotNull StatusBarWidget createWidget(@NotNull Project project) {
-        return new EspIdfTargetBarWidget(project, (isEspIdfProject) -> this.available = isEspIdfProject, this);
+        return new EspIdfTargetBarWidget(project, (isEspIdfProject) -> {
+            String basePath = project.getBasePath();
+            if (basePath == null) {
+                return;
+            }
+            this.availableMap.put(basePath, isEspIdfProject);
+            project.getService(StatusBarWidgetsManager.class).updateWidget(this);
+        }, this);
     }
 
     @Override
     public boolean isAvailable(@NotNull Project project) {
-        return available;
+        String basePath = project.getBasePath();
+        if (basePath == null) {
+            return false;
+        }
+        Boolean b = availableMap.get(basePath);
+        if (b == null) {
+            availableMap.put(basePath, true);
+            return true;
+        }
+        return b;
     }
 }

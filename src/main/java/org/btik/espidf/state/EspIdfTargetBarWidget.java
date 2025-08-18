@@ -13,7 +13,6 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.impl.status.EditorBasedWidget;
 import com.intellij.openapi.wm.impl.status.TextPanel;
-import com.intellij.openapi.wm.impl.status.widget.StatusBarWidgetsManager;
 import com.intellij.platform.ide.progress.TasksKt;
 import com.intellij.ui.ClickListener;
 import com.intellij.ui.awt.RelativePoint;
@@ -100,6 +99,9 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
 
 
     private void showSelectBuildTypePopup() {
+        if (espIdfTargetBarBarWidgetFactory != null && (!espIdfTargetBarBarWidgetFactory.isAvailable(project))) {
+            return;
+        }
         GeneralCommandLine listTarget = new GeneralCommandLine();
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         Map<String, String> environments = idfEnvironmentService.getEnvironments();
@@ -147,11 +149,13 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         DebugConfigModel debugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
         if (debugConfigModel == null) {
             setAvailable.accept(false);
-            project.getService(StatusBarWidgetsManager.class).updateWidget(espIdfTargetBarBarWidgetFactory);
+            getComponent().setVisible(false);
             return;
         }
         setAvailable.accept(true);
-        project.getService(StatusBarWidgetsManager.class).updateWidget(espIdfTargetBarBarWidgetFactory);
         targetPanel.setText(debugConfigModel.getTarget());
+        if (!getComponent().isVisible()) {
+            getComponent().setVisible(true);
+        }
     }
 }

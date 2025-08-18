@@ -98,7 +98,24 @@ set {uint32_t } 0x6000400c |= (1 << 2)
 
 `libusb_open() failed with LIBUSB_ERROR_ACCESS`
 
-在idf命令行 执行`LIBUSB_DEBUG=1 idf.py openocd`
+对应设备无权限 ,在tools 目录找到openocd目录下的`60-openocd.rules`
+
+一般在用户目录`.espressif`下
+
+例如
+```bash
+lustre@pssdhost:~$ find .espressif/ -name 60-openocd.rules
+.espressif/tools/openocd-esp32/v0.12.0-esp32-20250422/openocd-esp32/share/openocd/contrib/60-openocd.rules
+```
+
+将60-openocd.rules复制到/etc/udev/rules.d/并刷新规则
+```bash
+cp ~/.espressif/tools/openocd-esp32/v0.12.0-esp32-20250422/openocd-esp32/share/openocd/contrib/60-openocd.rules /etc/udev/rules.d/
+sudo udevadm control --reload-rules
+sudo udevadm trigger
+```
+
+或者按openocd报错日志临时赋予权限，执行`LIBUSB_DEBUG=1 idf.py openocd`
 ```text
 libusb: error [get_usbfs_fd] libusb couldn't open USB device /dev/bus/usb/001/005, errno=13
 libusb: error [get_usbfs_fd] libusb requires write access to USB device nodes
