@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Vendors>
+    <vendor id="0403" name="Future Technology Devices International, Ltd" default-name="ftdi device">
+        <product id="6001" type="FT232R"/>
+        <product id="6010" type="FT2232H"/>
+        <product id="6011" type="FT4232H"/>
+        <product id="6014" type="FT232H"/>
+        <product id="6015" type="FT230X|FT231X|FT234XD"/>
+    </vendor>
+    <vendor id="10c4" name="Silicon Labs" default-name="cp210x device">
+        <product id="ea60" type="CP2102"/>
+        <product id="ea70" type="CP2105"/>
+        <product id="ea71" type="CP2108"/>
+    </vendor>
+
+    <vendor id="067b" name="Prolific Technology, Inc.">
+        <product id="2303" type="PL2303HX"/>
+        <product id="23a3" type="PL2303GC"/>
+        <product id="23b3" type="PL2303GB"/>
+        <product id="23c3" type="PL2303GT"/>
+        <product id="23d3" type="PL2303GL"/>
+        <product id="23e3" type="PL2303GE"/>
+        <product id="23f3" type="PL2303GS"/>
+    </vendor>
+    <vendor id="1a86" name="QinHeng Electronics" default-name="ch34x device">
+        <product id="5523" type="CH341A"/>
+        <product id="7523" type="CH340"/>
+        <product id="55d3" type="CH343"/>
+        <product id="55d4" type="CH9102F"/>
+    </vendor>
+    <vendor id="2e8a" name="Raspberry Pi">
+        <product id="0005" type="Raspberry Pi Pico Micropython"/>
+        <product id="000a" type="Raspberry Pi Pico SDK"/>
+    </vendor>
+    <vendor id="2341" name="Arduino SA">
+        <product id="0001" type="Uno"/>
+        <product id="0010" type="Mega 2560"/>
+        <product id="0036" type="Leonardo Bootloader"/>
+        <product id="003b" type="Serial Adapter"/>
+        <product id="003d" type="Due Programming Port"/>
+        <product id="003e" type="Due"/>
+        <product id="003f" type="Mega ADK"/>
+        <product id="0042" type="Mega 2560 R3"/>
+        <product id="0043" type="Uno R3"/>
+        <product id="0044" type="Mega ADK R3"/>
+        <product id="0045" type="Serial R3"/>
+        <product id="0049" type="ISP"/>
+        <product id="8036" type="Leonardo"/>
+        <product id="8038" type="Robot Control Board"/>
+        <product id="8039" type="Robot Motor Board"/>
+    </vendor>
+    <vendor id="16c0" name="Van Ooijen Technische Informatica">
+        <product id="0483" type="Teensyduino"/>
+    </vendor>
+    <vendor id="03eb" name="Atmel Corp.">
+        <product id="2044" type="Atmel Lufa"/>
+    </vendor>
+    <vendor id="1eaf" name="Leaflabs">
+        <product id="0004" type="Leaflabs Maple"/>
+    </vendor>
+    <vendor id="0d28" name="NXP">
+        <product id="0204" type="ARM mbed"/>
+    </vendor>
+    <vendor id="0483" name="STMicroelectronics">
+        <product id="5740" type="ST CDC "/>
+    </vendor>
+    <vendor id="303A" name="Espressif Systems" default-name="esp32 usb cdc">
+        <product id="1001" type="ESP32"/>
+    </vendor>
+</Vendors>
+
+
+
+
+
+
+
+
+

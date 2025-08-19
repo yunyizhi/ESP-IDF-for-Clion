@@ -22,6 +22,7 @@ repositories {
 dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.mockito:mockito-core:4.5.1")
+    testImplementation("com.fazecast:jSerialComm:2.11.2")
     intellijPlatform {
         clion("2025.2") { useInstaller = false }
         bundledPlugins(
