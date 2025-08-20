@@ -11,8 +11,9 @@ import java.awt.*;
 
 
 public class SerialPortCellRenderer implements ListCellRenderer<SerialPortInfo> {
-    public static final SimpleTextAttributes SMALL_ATTRIBUTES = new SimpleTextAttributes(SimpleTextAttributes.STYLE_SMALLER, null);
+
     public static final SimpleTextAttributes GRAY_ITALIC_SMALL_ATTRIBUTES = new SimpleTextAttributes(SimpleTextAttributes.STYLE_SMALLER | SimpleTextAttributes.STYLE_ITALIC, JBColor.GRAY);
+
     @Override
     public Component getListCellRendererComponent(
             JList<? extends SerialPortInfo> list,
