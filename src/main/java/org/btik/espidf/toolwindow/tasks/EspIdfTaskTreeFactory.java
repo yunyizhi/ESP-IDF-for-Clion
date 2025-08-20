@@ -15,8 +15,7 @@ import java.util.function.Function;
 import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.*;
 import static org.btik.espidf.util.DomUtil.eachChildrenElement;
 import static org.btik.espidf.util.DomUtil.getFirstElementByName;
-import static org.btik.espidf.util.I18nMessage.$i18n;
-import static org.btik.espidf.util.I18nMessage.NOTIFICATION_GROUP;
+import static org.btik.espidf.util.I18nMessage.*;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
 /**
@@ -49,7 +48,7 @@ public class EspIdfTaskTreeFactory {
         Element treeRoot = getFirstElementByName(documentElement, TREE_ROOT);
         if (null == treeRoot) {
             NOTIFICATION_GROUP.createNotification($i18n("notification.group.idf"),
-                    $i18n("tree.load.failed"), NotificationType.ERROR).notify(null);
+                    $i18nF("idf.xml.load.failed", TREE_ROOT), NotificationType.ERROR).notify(null);
             return null;
         }
 
@@ -128,7 +127,7 @@ public class EspIdfTaskTreeFactory {
         taskTreeNode.setToolTip(toolTip);
         taskTreeNode.setId(element.getAttribute(ID));
         taskTreeNode.setIcon(element.getAttribute(ICON));
-        return new NodeModel<>(new DefaultMutableTreeNode(taskTreeNode),element);
+        return new NodeModel<>(new DefaultMutableTreeNode(taskTreeNode), element);
     }
 
 }

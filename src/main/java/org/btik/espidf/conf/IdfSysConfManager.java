@@ -18,6 +18,8 @@ import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.run.config.model.Serial;
 import org.btik.espidf.service.IdfSysConfService;
 import com.intellij.openapi.diagnostic.Logger;
+import org.btik.espidf.toolwindow.settings.SerialPortLoader;
+import org.btik.espidf.toolwindow.settings.model.CdcAcmVendorInfo;
 import org.btik.espidf.util.ClassMetaUtils;
 
 import java.io.IOException;
@@ -62,7 +64,10 @@ public class IdfSysConfManager implements IdfSysConfService {
 
     private List<ClassMetaUtils.PropOptMeta> propOptMetas;
 
+    private final Map<Integer, Map<Integer, CdcAcmVendorInfo>> vendorInfoMap;
+
     public IdfSysConfManager() {
+        vendorInfoMap = SerialPortLoader.loadCdcAcmVendorInfo();
         parseGdbConf();
         parseDebugModelSerialMeta();
 
@@ -215,6 +220,20 @@ public class IdfSysConfManager implements IdfSysConfService {
     @Override
     public List<ClassMetaUtils.PropOptMeta> getPropOptMetas() {
         return propOptMetas == null ? List.of() : propOptMetas;
+    }
+
+    @Override
+    public CdcAcmVendorInfo getCdcAcmVendorInfo(int vendorId, int productId) {
+        Map<Integer, CdcAcmVendorInfo> vendorProductMap = vendorInfoMap.get(vendorId);
+        if (vendorProductMap == null) {
+            return null;
+        }
+        CdcAcmVendorInfo cdcAcmVendorInfo = vendorProductMap.get(productId);
+        if (cdcAcmVendorInfo != null) {
+            return cdcAcmVendorInfo;
+        }
+        cdcAcmVendorInfo = vendorProductMap.get(null);
+        return cdcAcmVendorInfo;
     }
 
     private void saveConfig() {

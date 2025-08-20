@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <Vendors>
-    <vendor id="0403" name="Future Technology Devices International, Ltd" default-name="ftdi device">
+    <vendor id="0403" name="Future Technology Devices International, Ltd" default-name="Ftdi device">
         <product id="6001" type="FT232R"/>
         <product id="6010" type="FT2232H"/>
         <product id="6011" type="FT4232H"/>
         <product id="6014" type="FT232H"/>
         <product id="6015" type="FT230X|FT231X|FT234XD"/>
     </vendor>
-    <vendor id="10c4" name="Silicon Labs" default-name="cp210x device">
+    <vendor id="10c4" name="Silicon Labs" default-name="Cp210x device">
         <product id="ea60" type="CP2102"/>
         <product id="ea70" type="CP2105"/>
         <product id="ea71" type="CP2108"/>
@@ -22,11 +22,14 @@
         <product id="23e3" type="PL2303GE"/>
         <product id="23f3" type="PL2303GS"/>
     </vendor>
-    <vendor id="1a86" name="QinHeng Electronics" default-name="ch34x device">
+    <vendor id="1a86" name="QinHeng Electronics" default-name="WCH Device">
         <product id="5523" type="CH341A"/>
+        <product id="7522" type="CH340K"/>
         <product id="7523" type="CH340"/>
+        <product id="55d2" type="CH342"/>
         <product id="55d3" type="CH343"/>
         <product id="55d4" type="CH9102F"/>
+        <product id="55d5" type="CH344"/>
     </vendor>
     <vendor id="2e8a" name="Raspberry Pi">
         <product id="0005" type="Raspberry Pi Pico Micropython"/>
@@ -64,8 +67,8 @@
     <vendor id="0483" name="STMicroelectronics">
         <product id="5740" type="ST CDC "/>
     </vendor>
-    <vendor id="303A" name="Espressif Systems" default-name="esp32 usb cdc">
-        <product id="1001" type="ESP32"/>
+    <vendor id="303A" name="Espressif Systems" default-name="Espressif Device">
+        <product id="1001" type="ESP32 CDC"/>
     </vendor>
 </Vendors>
 

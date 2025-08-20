@@ -1,6 +1,9 @@
 package org.btik.espidf.toolwindow.settings.model;
 
-public class SerialPortInfo {
+import org.jetbrains.annotations.NotNull;
+
+public class SerialPortInfo implements Comparable<SerialPortInfo> {
+
     private String comPort;
     private String type;
     private String descriptivePortName;
@@ -86,5 +89,31 @@ public class SerialPortInfo {
                 ", productName='" + productName + '\'' +
                 ", vendorName='" + vendorName + '\'' +
                 '}';
+    }
+
+    @Override
+    public int compareTo(@NotNull SerialPortInfo other) {
+        boolean thisHasVendorAndProduct = this.vendorId != -1 && this.productId != -1;
+        boolean otherHasVendorAndProduct = other.vendorId != -1 && other.productId != -1;
+
+        if (thisHasVendorAndProduct && !otherHasVendorAndProduct) {
+            return -1;
+        }
+        if (!thisHasVendorAndProduct && otherHasVendorAndProduct) {
+            return 1;
+        }
+
+        if (this.comPort != null && other.comPort != null) {
+            return this.comPort.compareTo(other.comPort);
+        }
+
+        if (this.comPort == null && other.comPort == null) return 0;
+        return this.comPort == null ? -1 : 1;
+    }
+
+
+    @Override
+    public String toString() {
+        return comPort;
     }
 }

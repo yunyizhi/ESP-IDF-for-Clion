@@ -2,6 +2,7 @@ package org.btik.espidf.service;
 
 import com.intellij.openapi.project.Project;
 import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.toolwindow.settings.model.CdcAcmVendorInfo;
 import org.btik.espidf.util.ClassMetaUtils;
 
 import java.nio.file.Path;
@@ -31,4 +32,6 @@ public interface IdfSysConfService {
     String getGdbExecutable(String target);
 
     List<ClassMetaUtils.PropOptMeta> getPropOptMetas();
+
+    CdcAcmVendorInfo getCdcAcmVendorInfo(int vendorId, int productId);
 }
