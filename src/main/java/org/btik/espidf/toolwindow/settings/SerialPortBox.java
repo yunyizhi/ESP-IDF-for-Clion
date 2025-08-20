@@ -3,6 +3,7 @@ package org.btik.espidf.toolwindow.settings;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.ColoredListCellRenderer;
 import com.intellij.ui.SimpleTextAttributes;
+import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.toolwindow.settings.model.SerialPortInfo;
 import org.jetbrains.annotations.NotNull;
 
@@ -19,6 +20,8 @@ public class SerialPortBox extends ComboBox<SerialPortInfo> {
 
             @Override
             protected void customizeCellRenderer(@NotNull JList<? extends SerialPortInfo> list, SerialPortInfo value, int index, boolean selected, boolean hasFocus) {
+                int vendorId = value.getVendorId();
+                setIcon(vendorId != -1 ? EspIdfIcon.USB : EspIdfIcon.SERIAL_PORT);
                 append(value.getComPort(), SimpleTextAttributes.REGULAR_BOLD_ATTRIBUTES);
                 append(" ");
                 if (value.getProductName() != null) {

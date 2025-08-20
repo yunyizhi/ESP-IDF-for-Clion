@@ -14,5 +14,11 @@ public class EspIdfIcon {
         return IconLoader.getIcon(path, EspIdfIcon.class);
 
     }
-  public static final @NotNull Icon IDF_16_16 = load("/org-btik-esp-idf/image/idf16_16.svg");
+
+    public static final @NotNull Icon IDF_16_16 = load("/org-btik-esp-idf/image/idf16_16.svg");
+
+    public static final @NotNull Icon USB = load("/org-btik-esp-idf/image/usb.svg");
+
+    public static final @NotNull Icon SERIAL_PORT = load("/org-btik-esp-idf/image/serial_port.svg");
+
 }
