@@ -19,13 +19,12 @@ import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.toolwindow.settings.SerialPortBox;
-import org.btik.espidf.toolwindow.settings.SerialPortLoader;
 import org.btik.espidf.toolwindow.settings.model.SerialPortInfo;
+import org.btik.espidf.util.UIUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.HashSet;
@@ -70,6 +69,7 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
         firstRowConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         wrapper.add(portField, firstRowConstraints);
         portField.setEditable(true);
+        UIUtils.setWidth(portField, 300);
         rowIndex++;
 
         wrapper.add(i18nLabel("idf.project.setting.monitor.baud"), createConstraints(rowIndex, 0));
@@ -168,8 +168,12 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
 
             Map<String, String> environments = environmentService.getEnvironments();
             String port = environments.get(ESP_PORT);
+
             if (!StringUtil.isEmpty(port)) {
-                //portField.setText(port);
+                Component editorComponent = portField.getEditor().getEditorComponent();
+                if (editorComponent instanceof JTextField textField) {
+                    textField.setText(port);
+                }
             }
             String monitorBaudValue = environments.get(MONITOR_BAUD);
             if (StringUtil.isEmpty(monitorBaudValue)) {
