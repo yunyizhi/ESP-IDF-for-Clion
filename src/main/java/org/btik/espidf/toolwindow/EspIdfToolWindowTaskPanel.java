@@ -34,8 +34,7 @@ import static org.btik.espidf.util.I18nMessage.$i18n;
  */
 public class EspIdfToolWindowTaskPanel extends JScrollPane {
     private final Project project;
-    private Tree tree;
-    private DefaultMutableTreeNode rootNode;
+    private final Tree tree;
     private DefaultMutableTreeNode customTaskNode;
     private final TreeNode customTaskPreSetLastChildNode;
 
@@ -43,7 +42,7 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
 
     public EspIdfToolWindowTaskPanel(@NotNull Project project) {
         this.project = project;
-        rootNode = EspIdfTaskTreeFactory.load();
+        DefaultMutableTreeNode rootNode = EspIdfTaskTreeFactory.load();
         if (rootNode == null) {
             rootNode = new DefaultMutableTreeNode("load Failed");
         }
@@ -70,6 +69,8 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
                         TreeNodeCmdExecutor.execute(taskTerminalCommandNode, project);
                     } else if (userObject instanceof RawCommandNode rawCommandNode) {
                         TreeNodeCmdExecutor.execute(rawCommandNode, project);
+                    } else if (userObject instanceof LocalExecNode localExecNode) {
+                        TreeNodeCmdExecutor.execute(localExecNode, project);
                     } else if (userObject instanceof EspIdfTaskActionNode actionNode) {
                         Runnable runnable = actionMap.get(actionNode.getId());
                         if (runnable != null) {

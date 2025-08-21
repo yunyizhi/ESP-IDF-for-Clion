@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema"
+           xmlns:tns="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema"
+           elementFormDefault="qualified">
+
+    <xs:element name="esp-tasks" type="tns:EspTasksType"/>
+
+    <xs:complexType name="EspTasksType">
+        <xs:sequence>
+            <xs:choice maxOccurs="unbounded">
+                <xs:element name="command" type="tns:CommandType"/>
+                <xs:element name="console-command" type="tns:ConsoleCommandType"/>
+                <xs:element name="exec" type="tns:ExecType"/>
+            </xs:choice>
+        </xs:sequence>
+    </xs:complexType>
+    <xs:simpleType name="IconType">
+        <xs:restriction base="xs:string">
+            <xs:enumeration value="ij:AllIcons.FileTypes.Config"/>
+            <xs:enumeration value="ij:AllIcons.General.Delete"/>
+            <xs:enumeration value="ij:AllIcons.Actions.Compile"/>
+            <xs:enumeration value="ij:AllIcons.General.Web"/>
+            <xs:enumeration value="ij:AllIcons.Actions.Refresh"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:complexType name="CommandType">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="value" type="xs:string" use="required"/>
+        <xs:attribute name="console-filter" type="xs:boolean" use="optional" default="false"/>
+        <xs:attribute name="toolTip" type="xs:string" use="optional"/>
+        <xs:attribute name="request-port" type="xs:boolean" use="optional" default="false"/>
+        <xs:attribute name="use-monitor" type="xs:boolean" use="optional" default="false"/>
+        <xs:attribute name="icon" type="tns:IconType" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="ConsoleCommandType">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="value" type="xs:string" use="required"/>
+        <xs:attribute name="toolTip" type="xs:string" use="optional"/>
+    </xs:complexType>
+
+    <xs:complexType name="ExecType">
+        <xs:attribute name="name" type="xs:string" use="required"/>
+        <xs:attribute name="path" type="xs:string" use="optional"/>
+        <xs:attribute name="args" type="xs:string" use="optional"/>
+        <xs:attribute name="in-terminal" type="xs:boolean" use="optional" default="false"/>
+        <xs:attribute name="idf-env" type="xs:boolean" use="optional" default="false"/>
+        <xs:attribute name="toolTip" type="xs:string" use="optional"/>
+        <xs:attribute name="icon" type="tns:IconType" use="optional"/>
+    </xs:complexType>
+
+</xs:schema>

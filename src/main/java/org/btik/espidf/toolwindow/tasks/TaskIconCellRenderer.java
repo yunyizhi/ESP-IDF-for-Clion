@@ -33,6 +33,7 @@ public class TaskIconCellRenderer extends DefaultTreeCellRenderer {
         metaIconMap.put(EspIdfTaskConsoleCommandNode.class, AllIcons.Nodes.Console);
         metaIconMap.put(EspIdfTaskActionNode.class, AllIcons.Nodes.Console);
         metaIconMap.put(RawCommandNode.class, icons.ExternalSystemIcons.Task);
+        metaIconMap.put(LocalExecNode.class, icons.ExternalSystemIcons.Task);
     }
 
     JLabel label = new JLabel();

@@ -1,0 +1,38 @@
+package org.btik.espidf.toolwindow.tasks.model;
+
+public class LocalExecNode extends EspIdfTaskTreeNode {
+    private final String path;
+    private final String args;
+    private boolean useIdfEnv = false;
+    private boolean useTerminal = false;
+    public LocalExecNode(String displayName, String path, String args) {
+        super(displayName);
+        this.path = path;
+        this.args = args;
+    }
+
+    public boolean isUseIdfEnv() {
+        return useIdfEnv;
+    }
+
+    public void setUseIdfEnv(boolean useIdfEnv) {
+        this.useIdfEnv = useIdfEnv;
+    }
+
+    public boolean isUseTerminal() {
+        return useTerminal;
+    }
+
+    public void setUseTerminal(boolean useTerminal) {
+        this.useTerminal = useTerminal;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    public String getArgs() {
+        return args;
+    }
+}
+

@@ -126,7 +126,12 @@ public class EspIdfTaskTreeFactory {
 
     private static NodeModel<Element> newLocalExec(Element element) {
         String name = element.getAttribute(NAME);
-        return null;
+        String path = element.getAttribute(EXEC_PATH).trim();
+        String args = element.getAttribute(EXEC_ARGS).trim();
+        LocalExecNode localExecNode = new LocalExecNode(name, path, args);
+        localExecNode.setUseTerminal(Boolean.parseBoolean(element.getAttribute(USE_TERMINAL)));
+        localExecNode.setUseIdfEnv(Boolean.parseBoolean(element.getAttribute(EXEC_WITH_IDF_ENV)));
+        return buildNode(element, localExecNode);
     }
 
     private static NodeModel<Element> buildNode(Element element, EspIdfTaskTreeNode taskTreeNode) {

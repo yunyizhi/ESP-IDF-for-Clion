@@ -15,6 +15,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.sh.run.ShConfigurationType;
 import com.intellij.sh.run.ShRunConfiguration;
+import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.command.MonitorProcessHandler;
 import org.btik.espidf.command.ProcessEventAdaptor;
@@ -22,14 +23,8 @@ import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.service.IdfProjectConfigService;
-import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskActionNode;
-import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskCommandNode;
-import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskConsoleCommandNode;
-import org.btik.espidf.toolwindow.tasks.model.RawCommandNode;
-import org.btik.espidf.util.CmdTaskExecutor;
-import org.btik.espidf.util.EnvironmentVarUtil;
-import org.btik.espidf.util.I18nMessage;
-import org.btik.espidf.util.SysConf;
+import org.btik.espidf.toolwindow.tasks.model.*;
+import org.btik.espidf.util.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.Charset;
@@ -159,41 +154,83 @@ public class TreeNodeCmdExecutor {
             ExecutionManager.getInstance(project).restartRunProfile(builder.build());
         }
     }
+    public static void executeAsCommand(LocalExecNode commandNode, @NotNull Project project) {
+        PtyCommandLine commandLine = new PtyCommandLine();
 
-    private static void executeInInTerminal(RawCommandNode commandNode, @NotNull Project project) {
+        commandLine.setWorkDirectory(project.getBasePath());
+        if (commandNode.isUseIdfEnv()) {
+            commandLine.withEnvironment(getEnvsWithProjectSettings(project));
+        }
+        commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
+        if (StringUtils.isEmpty(commandNode.getPath())){
+            commandLine.setExePath(getCmdEnv());
+            commandLine.addParameters(getCmdArg(), commandNode.getArgs());
+        } else {
+            commandLine.setExePath(commandNode.getPath());
+            commandLine.addParameters(CommandLineParser.parseArgs(commandNode.getArgs()));
+        }
+
+        if (IS_WINDOWS) {
+            commandLine.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
+        }
+        try {
+            CmdTaskExecutor.execute(project, new IdfConsoleRunProfile(commandNode.getDisplayName(),
+                    EspIdfIcon.IDF_16_16, commandLine), null);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static String buildPowershellEnv(@NotNull Project project) {
+        Map<String, String> environments = getEnvsWithProjectSettings(project);
+        StringBuilder envPrefixBuilder = new StringBuilder();
+        diffWithSystem(environments).forEach((key, value) -> {
+            envPrefixBuilder.append(POWER_SHELL_ENV_PREFIX).append(key).append("=");
+            if (!value.startsWith("\"")) {
+                envPrefixBuilder.append("\"").append(value).append("\"");
+            } else {
+                envPrefixBuilder.append(value);
+            }
+            envPrefixBuilder.append(";");
+        });
+        return envPrefixBuilder.toString();
+    }
+
+    public static void execute(LocalExecNode commandNode, @NotNull Project project) {
+        if (!commandNode.isUseTerminal()) {
+            executeAsCommand(commandNode, project);
+            return;
+        }
         String basePath = project.getBasePath();
         if (basePath == null) {
             return;
         }
-        String cmakeBuildDir = project.getService(IdfProjectConfigService.class).getCmakeBuildDir();
         RunnerAndConfigurationSettings settings = RunManager.getInstance(project)
                 .createConfiguration(commandNode.getDisplayName(), ShConfigurationType.class);
         ShRunConfiguration runConfiguration = (ShRunConfiguration) settings.getConfiguration();
-        runConfiguration.setExecuteInTerminal(commandNode.isUseTerminal());
+        runConfiguration.setExecuteInTerminal(true);
         runConfiguration.setExecuteScriptFile(false);
         runConfiguration.setInterpreterPath(getCmdEnv());
-        Map<String, String> environments = getEnvsWithProjectSettings(project);
-        String command = commandNode.getCommand();
+
+        String command = commandNode.getArgs();
         if (IS_WINDOWS) {
-            StringBuilder envPrefixBuilder = new StringBuilder();
-            diffWithSystem(environments).forEach((key, value) -> {
-                envPrefixBuilder.append(POWER_SHELL_ENV_PREFIX).append(key).append("=");
-                if (!value.startsWith("\"")) {
-                    envPrefixBuilder.append("\"").append(value).append("\"");
-                } else {
-                    envPrefixBuilder.append(value);
-                }
-                envPrefixBuilder.append(";");
-            });
-            String envPrefix = envPrefixBuilder.toString();
-            runConfiguration.setScriptText(StringUtil.isEmpty(command) ?
-                    envPrefix : envPrefix + Const.IDF_EXE + " -B " + cmakeBuildDir + " " + command);
+            StringBuilder cmdPrefixBuilder = new StringBuilder();
+            if (commandNode.isUseIdfEnv()) {
+                cmdPrefixBuilder.append(buildPowershellEnv(project));
+            }
+            cmdPrefixBuilder.append(commandNode.getPath())
+                            .append(" ")
+                                    .append(commandNode.getArgs());
+            runConfiguration.setScriptText(cmdPrefixBuilder.toString());
         } else {
-            // setEnvData 暂未兼容COMP_WORDBREAKS生成语句 先舍弃
-            environments.remove(IDF_PY_COMP_WORDBREAKS);
-            environments.remove(COMP_WORDBREAKS);
-            runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, false));
-            runConfiguration.setScriptText(StringUtil.isEmpty(command) ? "" : Const.IDF_EXE + " -B " + cmakeBuildDir + " " + command);
+            if (commandNode.isUseIdfEnv()) {
+                Map<String, String> environments = getEnvsWithProjectSettings(project);
+                // setEnvData 暂未兼容COMP_WORDBREAKS生成语句 先舍弃
+                environments.remove(IDF_PY_COMP_WORDBREAKS);
+                environments.remove(COMP_WORDBREAKS);
+                runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, false));
+            }
+            runConfiguration.setScriptText(commandNode.getPath() + " " + commandNode.getArgs());
         }
         runConfiguration.setScriptWorkingDirectory(basePath);
 
@@ -205,10 +242,6 @@ public class TreeNodeCmdExecutor {
     }
 
     public static void execute(RawCommandNode commandNode, @NotNull Project project) {
-        if (commandNode.isUseTerminal()) {
-            executeInInTerminal(commandNode, project);
-            return;
-        }
         PtyCommandLine commandLine = new PtyCommandLine();
         commandLine.setExePath(getCmdEnv());
         commandLine.setWorkDirectory(project.getBasePath());

@@ -37,7 +37,7 @@ public interface TreeXmlMeta {
 
     String UNIX_VALUE = "unix-value";
 
-    String USE_TERMINAL = "use-terminal";
+    String USE_TERMINAL = "in-terminal";
 
     String RES_BUNDLE_EXP_START = "${";
 

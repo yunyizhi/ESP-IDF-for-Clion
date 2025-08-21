@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<esp-tasks>
-    <command name="List Targets" value="--list-targets"/>
+<esp-tasks xmlns="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema https://yunyizhi.github.io/ESP-IDF-for-Clion/esp-tasks.xsd">
+
+    <command name="List Targets" value="--list-targets" icon="ij:AllIcons.Actions.Compile"/>
     <console-command name="Size" value="size" />
-    <exec path="/bin/bash" args="-c echo 1" idf-env="true" />
+    <exec name="echo IDF_PATH" args="echo $IDF_PATH " idf-env="true" />
+    <exec name="test py" path="/bin/env" args="python3 -V" />
+    <exec name="bash echo 1" path="/bin/bash"
+          args="-c &quot; echo 111 &quot;" in-terminal="true" />
+    <exec name="test py" path="./a.sh" in-terminal="true" />
+    <exec name="echo in terminal" args="echo 1 " in-terminal="true" />
 </esp-tasks>
