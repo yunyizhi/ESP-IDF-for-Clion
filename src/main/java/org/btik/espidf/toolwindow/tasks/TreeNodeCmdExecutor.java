@@ -160,7 +160,55 @@ public class TreeNodeCmdExecutor {
         }
     }
 
+    private static void executeInInTerminal(RawCommandNode commandNode, @NotNull Project project) {
+        String basePath = project.getBasePath();
+        if (basePath == null) {
+            return;
+        }
+        String cmakeBuildDir = project.getService(IdfProjectConfigService.class).getCmakeBuildDir();
+        RunnerAndConfigurationSettings settings = RunManager.getInstance(project)
+                .createConfiguration(commandNode.getDisplayName(), ShConfigurationType.class);
+        ShRunConfiguration runConfiguration = (ShRunConfiguration) settings.getConfiguration();
+        runConfiguration.setExecuteInTerminal(commandNode.isUseTerminal());
+        runConfiguration.setExecuteScriptFile(false);
+        runConfiguration.setInterpreterPath(getCmdEnv());
+        Map<String, String> environments = getEnvsWithProjectSettings(project);
+        String command = commandNode.getCommand();
+        if (IS_WINDOWS) {
+            StringBuilder envPrefixBuilder = new StringBuilder();
+            diffWithSystem(environments).forEach((key, value) -> {
+                envPrefixBuilder.append(POWER_SHELL_ENV_PREFIX).append(key).append("=");
+                if (!value.startsWith("\"")) {
+                    envPrefixBuilder.append("\"").append(value).append("\"");
+                } else {
+                    envPrefixBuilder.append(value);
+                }
+                envPrefixBuilder.append(";");
+            });
+            String envPrefix = envPrefixBuilder.toString();
+            runConfiguration.setScriptText(StringUtil.isEmpty(command) ?
+                    envPrefix : envPrefix + Const.IDF_EXE + " -B " + cmakeBuildDir + " " + command);
+        } else {
+            // setEnvData 暂未兼容COMP_WORDBREAKS生成语句 先舍弃
+            environments.remove(IDF_PY_COMP_WORDBREAKS);
+            environments.remove(COMP_WORDBREAKS);
+            runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, false));
+            runConfiguration.setScriptText(StringUtil.isEmpty(command) ? "" : Const.IDF_EXE + " -B " + cmakeBuildDir + " " + command);
+        }
+        runConfiguration.setScriptWorkingDirectory(basePath);
+
+        ExecutionEnvironmentBuilder builder =
+                ExecutionEnvironmentBuilder.createOrNull(DefaultRunExecutor.getRunExecutorInstance(), runConfiguration);
+        if (builder != null) {
+            ExecutionManager.getInstance(project).restartRunProfile(builder.build());
+        }
+    }
+
     public static void execute(RawCommandNode commandNode, @NotNull Project project) {
+        if (commandNode.isUseTerminal()) {
+            executeInInTerminal(commandNode, project);
+            return;
+        }
         PtyCommandLine commandLine = new PtyCommandLine();
         commandLine.setExePath(getCmdEnv());
         commandLine.setWorkDirectory(project.getBasePath());

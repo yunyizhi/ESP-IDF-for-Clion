@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<esp-tasks>
+    <command name="List Targets" value="--list-targets"/>
+    <console-command name="Size" value="size" />
+    <exec path="/bin/bash" args="-c echo 1" idf-env="true" />
+</esp-tasks>

@@ -1,21 +1,32 @@
 package org.btik.espidf.toolwindow;
 
+import com.intellij.notification.NotificationType;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VfsUtil;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.treeStructure.Tree;
 import org.btik.espidf.toolwindow.tasks.EspIdfTaskTreeFactory;
 import org.btik.espidf.toolwindow.tasks.TaskIconCellRenderer;
 import org.btik.espidf.toolwindow.tasks.TreeNodeCmdExecutor;
-import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskActionNode;
-import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskCommandNode;
-import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskConsoleCommandNode;
-import org.btik.espidf.toolwindow.tasks.model.RawCommandNode;
+import org.btik.espidf.toolwindow.tasks.model.*;
+import org.btik.espidf.util.I18nMessage;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
+import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.List;
+
+import static org.btik.espidf.util.I18nMessage.$i18n;
 
 /**
  * @author lustre
@@ -23,18 +34,24 @@ import java.awt.event.MouseEvent;
  */
 public class EspIdfToolWindowTaskPanel extends JScrollPane {
     private final Project project;
+    private Tree tree;
+    private DefaultMutableTreeNode rootNode;
+    private DefaultMutableTreeNode customTaskNode;
+    private final TreeNode customTaskPreSetLastChildNode;
 
-    public EspIdfToolWindowTaskPanel( @NotNull Project project) {
+    private final HashMap<String, Runnable> actionMap = new HashMap<>();
+
+    public EspIdfToolWindowTaskPanel(@NotNull Project project) {
         this.project = project;
-        DefaultMutableTreeNode root = EspIdfTaskTreeFactory.load();
-        if (root == null) {
-            root = new DefaultMutableTreeNode("load Failed");
+        rootNode = EspIdfTaskTreeFactory.load();
+        if (rootNode == null) {
+            rootNode = new DefaultMutableTreeNode("load Failed");
         }
         viewport.setBorder(null);
         setBorder(BorderFactory.createEmptyBorder());
-        Tree tree = new Tree(root);
+        tree = new Tree(rootNode);
         viewport.setView(tree);
-        tree.expandPath(new TreePath(root.getPath()));
+        tree.expandPath(new TreePath(rootNode.getPath()));
         tree.setCellRenderer(new TaskIconCellRenderer());
         tree.addMouseListener(new MouseAdapter() {
             @Override
@@ -54,10 +71,97 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
                     } else if (userObject instanceof RawCommandNode rawCommandNode) {
                         TreeNodeCmdExecutor.execute(rawCommandNode, project);
                     } else if (userObject instanceof EspIdfTaskActionNode actionNode) {
+                        Runnable runnable = actionMap.get(actionNode.getId());
+                        if (runnable != null) {
+                            runnable.run();
+                            return;
+                        }
                         TreeNodeCmdExecutor.execute(actionNode, project);
                     }
                 }
             }
         });
+        actionMap.put("idf.custom.tasks.load", this::loadCustomTask);
+        for (int i = 0; i < rootNode.getChildCount(); i++) {
+            TreeNode child = rootNode.getChildAt(i);
+            if (!(child instanceof DefaultMutableTreeNode defaultMutableTreeNode)) {
+                continue;
+            }
+            Object userObject = defaultMutableTreeNode.getUserObject();
+            if (!(userObject instanceof EspIdfTaskTreeNode taskTreeNode)) {
+                continue;
+            }
+            if ("custom.tasks.folder".equals(taskTreeNode.getId())) {
+                customTaskNode = defaultMutableTreeNode;
+                break;
+            }
+        }
+        if (customTaskNode == null) {
+            throw new RuntimeException("customTask folder not found");
+        }
+        customTaskPreSetLastChildNode = customTaskNode.getLastChild();
+        loadCustomTaskInit();
+    }
+
+    private void loadCustomTaskInit() {
+        String basePath = project.getBasePath();
+        if (basePath == null) {
+            return;
+        }
+        Path baseDir = Path.of(basePath);
+        File taskXml = baseDir.resolve("esp_custom_tasks.xml").toFile();
+        if (!taskXml.exists()) {
+            return;
+        }
+        List<DefaultMutableTreeNode> defaultMutableTreeNodes = EspIdfTaskTreeFactory.loadCustomTask(taskXml);
+        for (DefaultMutableTreeNode defaultMutableTreeNode : defaultMutableTreeNodes) {
+            customTaskNode.add(defaultMutableTreeNode);
+        }
+        tree.updateUI();
+    }
+
+    private void loadCustomTask() {
+        String basePath = project.getBasePath();
+        if (basePath == null) {
+            I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.failed"),
+                    $i18n("action.exec.base.path.notfound"),
+                    NotificationType.ERROR).notify(project);
+            return;
+        }
+        Path baseDir = Path.of(basePath);
+        File taskXml = baseDir.resolve("esp_custom_tasks.xml").toFile();
+        if (!taskXml.exists()) {
+            I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.failed"),
+                    $i18n("action.exec.task.xml.notfound"),
+                    NotificationType.ERROR).notify(project);
+            return;
+        }
+        VirtualFile xmlVirtual = VfsUtil.findFileByIoFile(taskXml, true);
+        if (xmlVirtual == null) {
+           return;
+        }
+        FileDocumentManager docManager = FileDocumentManager.getInstance();
+        Document document = docManager.getCachedDocument(xmlVirtual);
+        if (document != null) {
+           docManager.saveDocument(document);
+        }
+        ApplicationManager.getApplication().invokeLater(() -> {
+            int lastIndex = customTaskNode.getIndex(customTaskPreSetLastChildNode);
+            int childCount = customTaskNode.getChildCount();
+            for (int i = childCount - 1; i > lastIndex; i--) {
+                DefaultMutableTreeNode childToRemove = (DefaultMutableTreeNode) customTaskNode.getChildAt(i);
+                customTaskNode.remove(childToRemove);
+            }
+            List<DefaultMutableTreeNode> defaultMutableTreeNodes = EspIdfTaskTreeFactory.loadCustomTask(taskXml);
+            for (DefaultMutableTreeNode defaultMutableTreeNode : defaultMutableTreeNodes) {
+                customTaskNode.add(defaultMutableTreeNode);
+                System.out.println(defaultMutableTreeNode);
+            }
+            tree.updateUI();
+            I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.task.xml.load.ok"),
+                    $i18n("action.exec.task.xml.load.ok"),
+                    NotificationType.INFORMATION).notify(project);
+        });
+
     }
 }

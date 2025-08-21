@@ -42,4 +42,15 @@ public interface TreeXmlMeta {
     String RES_BUNDLE_EXP_START = "${";
 
     String RES_BUNDLE_EXP_END = "}";
+
+    String ESP_TASKS_ROOT = "esp-tasks";
+
+    String LOCAL_EXEC = "exec";
+
+    String EXEC_PATH = "path";
+
+    String EXEC_ARGS = "args";
+
+    String EXEC_WITH_IDF_ENV = "idf-env";
+
 }

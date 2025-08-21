@@ -1,5 +1,9 @@
 package org.btik.espidf.toolwindow.tasks.model;
 
+import org.btik.espidf.toolwindow.tasks.EspIdfTaskTreeFactory;
+
+import static org.btik.espidf.util.I18nMessage.$i18n;
+
 /**
  * @author lustre
  * @since 2024/2/18 14:15
@@ -14,7 +18,11 @@ public class EspIdfTaskTreeNode {
     protected String toolTip;
 
     public EspIdfTaskTreeNode(String displayName) {
-        this.displayName = displayName;
+        String i18nName = EspIdfTaskTreeFactory.getI18n(displayName);
+        if (i18nName == null) {
+            i18nName = $i18n("esp.idf.nameless.node");
+        }
+        this.displayName = i18nName;
     }
 
     public String getDisplayName() {

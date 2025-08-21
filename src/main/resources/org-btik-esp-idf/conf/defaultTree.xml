@@ -14,7 +14,7 @@
             <command name="Full Clean" value="fullclean" icon="ij:AllIcons.General.Delete" toolTip="${idf.tip.full.clean}" />
             <console-command name="Menu Config" value="menuconfig" />
             <console-command name="IDF Console" value="" />
-            <action name="IDF Export Console" id="idf.export.console" terminal="true" />
+            <action name="IDF Export Console" id="idf.export.console" />
         </folder>
         <folder name="Miscellaneous">
             <command name="Erase" value="erase-flash" request-port="true" />
@@ -25,6 +25,10 @@
         </folder>
         <folder name="Help">
             <command name="ESP-IDF Docs" value="docs" icon="ij:AllIcons.General.Web"/>
+        </folder>
+        <folder name="${esp.idf.task.tree.custom.tasks}" id="custom.tasks.folder">
+            <action name="${esp.idf.task.custom.tasks.load}" id="idf.custom.tasks.load" icon="ij:AllIcons.Actions.Refresh"
+                    toolTip="${esp.idf.task.custom.tasks.load.from.xml}"/>
         </folder>
     </tree>
 </taskTree>

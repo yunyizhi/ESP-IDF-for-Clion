@@ -4,12 +4,16 @@ import com.intellij.notification.NotificationType;
 import org.btik.espidf.toolwindow.common.NodeModel;
 import org.btik.espidf.toolwindow.tasks.model.*;
 import org.btik.espidf.util.DomUtil;
+import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import javax.swing.tree.DefaultMutableTreeNode;
+import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Function;
 
 import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.*;
@@ -31,6 +35,7 @@ public class EspIdfTaskTreeFactory {
         factories.put(CONSOLE_COMMAND, EspIdfTaskTreeFactory::newConsoleCmd);
         factories.put(RAW_COMMAND, EspIdfTaskTreeFactory::newRawCmd);
         factories.put(ACTION, EspIdfTaskTreeFactory::newAction);
+        factories.put(LOCAL_EXEC, EspIdfTaskTreeFactory::newLocalExec);
     }
 
     public static DefaultMutableTreeNode load() {
@@ -119,15 +124,55 @@ public class EspIdfTaskTreeFactory {
         return buildNode(element, new RawCommandNode(name, command));
     }
 
+    private static NodeModel<Element> newLocalExec(Element element) {
+        String name = element.getAttribute(NAME);
+        return null;
+    }
+
     private static NodeModel<Element> buildNode(Element element, EspIdfTaskTreeNode taskTreeNode) {
         String toolTip = element.getAttribute(TOOL_TIP);
-        if (toolTip.startsWith(RES_BUNDLE_EXP_START) && toolTip.endsWith(RES_BUNDLE_EXP_END)) {
-            toolTip = $i18n(toolTip.substring(RES_BUNDLE_EXP_START.length(), toolTip.length() - 1));
-        }
-        taskTreeNode.setToolTip(toolTip);
+        taskTreeNode.setToolTip(getI18n(toolTip));
         taskTreeNode.setId(element.getAttribute(ID));
         taskTreeNode.setIcon(element.getAttribute(ICON));
         return new NodeModel<>(new DefaultMutableTreeNode(taskTreeNode), element);
     }
 
+    public static String getI18n(String rawName) {
+        if (rawName == null) {
+            return null;
+        }
+        if (rawName.startsWith(RES_BUNDLE_EXP_START) && rawName.endsWith(RES_BUNDLE_EXP_END)) {
+            return $i18n(rawName.substring(RES_BUNDLE_EXP_START.length(), rawName.length() - 1));
+        }
+        return rawName;
+    }
+
+    public static @NotNull List<DefaultMutableTreeNode> loadCustomTask(File taskXml) {
+        Element documentElement;
+        try {
+            Document treeConf = DomUtil.parse(taskXml);
+            documentElement = treeConf.getDocumentElement();
+
+        } catch (Exception e) {
+            NOTIFICATION_GROUP.createNotification($i18n("notification.group.idf"),
+                    e.getMessage(), NotificationType.ERROR).notify(null);
+            return List.of();
+        }
+        if (!ESP_TASKS_ROOT.equals(documentElement.getTagName())) {
+            NOTIFICATION_GROUP.createNotification($i18n("notification.group.idf"),
+                    $i18nF("idf.xml.load.failed", ESP_TASKS_ROOT), NotificationType.ERROR).notify(null);
+            return List.of();
+        }
+        List<DefaultMutableTreeNode> defaultMutableTreeNodes = new ArrayList<>();
+        eachChildrenElement(documentElement, (child) -> {
+            String type = child.getTagName();
+            Function<Element, NodeModel<Element>> elementNodeModelFunction = factories.get(type);
+            if (elementNodeModelFunction == null) {
+                return;
+            }
+            NodeModel<Element> childXmlNode = elementNodeModelFunction.apply(child);
+            defaultMutableTreeNodes.add(childXmlNode.getNode());
+        });
+        return defaultMutableTreeNodes;
+    }
 }
