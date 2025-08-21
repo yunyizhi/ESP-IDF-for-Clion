@@ -212,7 +212,6 @@ public class TreeNodeCmdExecutor {
         runConfiguration.setExecuteScriptFile(false);
         runConfiguration.setInterpreterPath(getCmdEnv());
 
-        String command = commandNode.getArgs();
         if (IS_WINDOWS) {
             StringBuilder cmdPrefixBuilder = new StringBuilder();
             if (commandNode.isUseIdfEnv()) {
