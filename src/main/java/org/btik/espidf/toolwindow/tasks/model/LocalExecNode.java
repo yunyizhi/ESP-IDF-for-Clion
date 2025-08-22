@@ -1,8 +1,8 @@
 package org.btik.espidf.toolwindow.tasks.model;
 
 public class LocalExecNode extends EspIdfTaskTreeNode {
-    private final String path;
-    private final String args;
+    private  String path;
+    private  String args;
     private boolean useIdfEnv = false;
     private boolean useTerminal = false;
     public LocalExecNode(String displayName, String path, String args) {
@@ -33,6 +33,14 @@ public class LocalExecNode extends EspIdfTaskTreeNode {
 
     public String getArgs() {
         return args;
+    }
+
+    public void setPath(String path) {
+        this.path = path;
+    }
+
+    public void setArgs(String args) {
+        this.args = args;
     }
 }
 

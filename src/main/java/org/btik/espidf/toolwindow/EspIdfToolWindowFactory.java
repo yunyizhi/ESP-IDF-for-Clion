@@ -4,11 +4,11 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
-import com.intellij.ui.content.Content;
-import com.intellij.ui.content.ContentFactory;
-import com.intellij.ui.content.ContentManager;
+import com.intellij.ui.content.*;
 import org.btik.espidf.toolwindow.kconfig.EspIdfMenuConfigPanel;
 import org.jetbrains.annotations.NotNull;
+
+import javax.swing.*;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
 
@@ -29,5 +29,16 @@ public class EspIdfToolWindowFactory implements ToolWindowFactory {
         contentManager.addContent(setttingsContent);
         Content kconfigContent = contentFactory.createContent(new EspIdfMenuConfigPanel(project), $i18n("esp.idf.tool.window.sdk.config"), false);
         contentManager.addContent(kconfigContent);
+        Content  componentsBrowser = contentFactory.createContent(new ComponentsBrowserPanel(), $i18n("esp.idf.tool.window.components.browser"), false);
+        contentManager.addContent(componentsBrowser);
+        contentManager.addContentManagerListener(new ContentManagerListener() {
+            @Override
+            public void selectionChanged(@NotNull ContentManagerEvent event) {
+                JComponent component = event.getContent().getComponent();
+                if (component instanceof ComponentsBrowserPanel componentsBrowserPanel) {
+                    componentsBrowserPanel.loadUrl("https://components.espressif.com/");
+                }
+            }
+        });
     }
 }

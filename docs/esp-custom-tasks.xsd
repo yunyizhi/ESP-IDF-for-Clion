@@ -4,7 +4,42 @@
            xmlns:tns="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema"
            elementFormDefault="qualified">
 
-    <xs:element name="esp-tasks" type="tns:EspTasksType"/>
+    <xs:complexType name="BaseCommandType" abstract="true">
+        <xs:attribute name="name" type="xs:string" use="required">
+            <xs:annotation>
+                <xs:documentation>
+                    <p>unique name</p>
+                    <p>不可重复的名称</p>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="icon" type="tns:IconType" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    <p>Currently supported icon types from IntelliJ platform:</p>
+                    <p>目前支持的图标类型：</p>
+                    <ul>
+                        <li>ij:AllIcons.FileTypes.Config</li>
+                        <li>ij:AllIcons.General.Delete</li>
+                        <li>ij:AllIcons.Actions.Compile</li>
+                        <li>ij:AllIcons.General.Web</li>
+                        <li>ij:AllIcons.Actions.Refresh</li>
+                    </ul>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="toolTip" type="xs:string" use="optional">
+        </xs:attribute>
+    </xs:complexType>
+
+    <!-- 🏁 根元素 -->
+    <xs:element name="esp-tasks" type="tns:EspTasksType">
+        <!-- ✅ 全局约束：所有子元素的 @name 必须唯一 -->
+        <xs:unique name="UniqueCommandName">
+            <xs:selector xpath="*"/>
+            <xs:field xpath="@name"/>
+        </xs:unique>
+    </xs:element>
 
     <xs:complexType name="EspTasksType">
         <xs:sequence>
@@ -37,6 +72,7 @@
         </xs:sequence>
     </xs:complexType>
 
+    <!-- 🎨 图标类型 -->
     <xs:simpleType name="IconType">
         <xs:restriction base="xs:string">
             <xs:enumeration value="ij:AllIcons.FileTypes.Config"/>
@@ -47,85 +83,80 @@
         </xs:restriction>
     </xs:simpleType>
 
+    <!-- 🧩 command 继承 BaseCommandType -->
     <xs:complexType name="CommandType">
-        <xs:attribute name="name" type="xs:string" use="required"/>
-        <xs:attribute name="value" type="xs:string" use="required"/>
-        <xs:attribute name="console-filter" type="xs:boolean" use="optional" default="false"/>
-        <xs:attribute name="toolTip" type="xs:string" use="optional"/>
-        <xs:attribute name="request-port" type="xs:boolean" use="optional" default="false">
-            <xs:annotation>
-                <xs:documentation>
-                    <p>Requests serial port. Automatically terminates any Monitor task currently using the requested port.</p>
-                    <p>请求串口。会关闭当前占用该串口的Monitor任务</p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="use-monitor" type="xs:boolean" use="optional" default="false">
-            <xs:annotation>
-                <xs:documentation>
-                    <p>Registers as a Monitor task. Any active task on the same serial port will be interrupted by a port-requesting task. This attribute implicitly enables 'request-port' capability.</p>
-                    <p>注册为Monitor任务，同一串口的当前任务会被request-port任务中断，本属性也包含request-port能力</p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="icon" type="tns:IconType" use="optional"/>
+        <xs:complexContent>
+            <xs:extension base="tns:BaseCommandType">
+                <xs:attribute name="value" type="xs:string" use="required"/>
+                <xs:attribute name="console-filter" type="xs:boolean" use="optional" default="false"/>
+                <xs:attribute name="request-port" type="xs:boolean" use="optional" default="false">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <p>Requests serial port. Automatically terminates any Monitor task currently using the requested port.</p>
+                            <p>请求串口。会关闭当前占用该串口的Monitor任务</p>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="use-monitor" type="xs:boolean" use="optional" default="false">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <p>Registers as a Monitor task. Any active task on the same serial port will be interrupted by a port-requesting task. This attribute implicitly enables 'request-port' capability.</p>
+                            <p>注册为Monitor任务，同一串口的当前任务会被request-port任务中断，本属性也包含request-port能力</p>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
 
+
+    <!-- 🧩 console-command 继承 BaseCommandType -->
     <xs:complexType name="ConsoleCommandType">
-        <xs:attribute name="name" type="xs:string" use="required"/>
-        <xs:attribute name="value" type="xs:string" use="required"/>
-        <xs:attribute name="toolTip" type="xs:string" use="optional"/>
+        <xs:complexContent>
+            <xs:extension base="tns:BaseCommandType">
+                <xs:attribute name="value" type="xs:string" use="required"/>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
 
+    <!-- 🧩 exec 继承 BaseCommandType -->
     <xs:complexType name="ExecType">
-        <xs:attribute name="name" type="xs:string" use="required"/>
-        <xs:attribute name="path" type="xs:string" use="optional">
-            <xs:annotation>
-                <xs:documentation>
-                    <p>Executable file path. Can be absolute or relative to the current project. If empty, uses system default shell (cmd/bash/zsh) to execute.</p>
-                    <p>可执行文件路径，可以是全路径，也可以是基于当前项目的相对路径。为空时默认使用cmd/bash/zsh执行</p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="args" type="xs:string" use="optional">
-            <xs:annotation>
-                <xs:documentation>
-                    <p>Command-line arguments for the executable.</p>
-                    <p>命令参数</p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="in-terminal" type="xs:boolean" use="optional" default="false">
-            <xs:annotation>
-                <xs:documentation>
-                    <p>Determines whether to execute in a terminal emulator.</p>
-                    <p>是否在终端中执行</p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="idf-env" type="xs:boolean" use="optional" default="false">
-            <xs:annotation>
-                <xs:documentation>
-                    <p>Inherits the current project's ESP-IDF environment variables.</p>
-                    <p>是否继承当前项目的esp-idf的环境变量</p>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
-        <xs:attribute name="toolTip" type="xs:string" use="optional"/>
-        <xs:attribute name="icon" type="tns:IconType" use="optional">
-            <xs:annotation>
-                <xs:documentation>
-                    <p>Currently supported icon types from IntelliJ platform:</p>
-                    <p>目前支持的图标类型：</p>
-                    <ul>
-                        <li>ij:AllIcons.FileTypes.Config</li>
-                        <li>ij:AllIcons.General.Delete</li>
-                        <li>ij:AllIcons.Actions.Compile</li>
-                        <li>ij:AllIcons.General.Web</li>
-                        <li>ij:AllIcons.Actions.Refresh</li>
-                    </ul>
-                </xs:documentation>
-            </xs:annotation>
-        </xs:attribute>
+        <xs:complexContent>
+            <xs:extension base="tns:BaseCommandType">
+                <xs:attribute name="path" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <p>Executable file path. Can be absolute or relative to the current project. If empty, uses system default shell (cmd/bash/zsh) to execute.</p>
+                            <p>可执行文件路径，可以是全路径，也可以是基于当前项目的相对路径。为空时默认使用cmd/bash/zsh执行</p>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="args" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <p>Command-line arguments for the executable.</p>
+                            <p>命令参数</p>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="in-terminal" type="xs:boolean" use="optional" default="false">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <p>Determines whether to execute in a terminal emulator.</p>
+                            <p>是否在终端中执行</p>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="idf-env" type="xs:boolean" use="optional" default="false">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <p>Inherits the current project's ESP-IDF environment variables.</p>
+                            <p>是否继承当前项目的esp-idf的环境变量</p>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
     </xs:complexType>
+
 </xs:schema>
