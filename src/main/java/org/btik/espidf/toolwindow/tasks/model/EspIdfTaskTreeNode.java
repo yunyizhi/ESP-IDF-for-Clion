@@ -1,5 +1,6 @@
 package org.btik.espidf.toolwindow.tasks.model;
 
+import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.toolwindow.tasks.EspIdfTaskTreeFactory;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
@@ -19,7 +20,7 @@ public class EspIdfTaskTreeNode {
 
     public EspIdfTaskTreeNode(String displayName) {
         String i18nName = EspIdfTaskTreeFactory.getI18n(displayName);
-        if (i18nName == null) {
+        if (StringUtils.isEmpty(i18nName)) {
             i18nName = $i18n("esp.idf.nameless.node");
         }
         this.displayName = i18nName;

@@ -11,6 +11,7 @@ import com.intellij.ui.treeStructure.Tree;
 import org.btik.espidf.toolwindow.tasks.EspIdfTaskTreeFactory;
 import org.btik.espidf.toolwindow.tasks.TaskIconCellRenderer;
 import org.btik.espidf.toolwindow.tasks.TreeNodeCmdExecutor;
+import org.btik.espidf.toolwindow.tasks.TreeXmlMeta;
 import org.btik.espidf.toolwindow.tasks.model.*;
 import org.btik.espidf.util.I18nMessage;
 import org.jetbrains.annotations.NotNull;
@@ -130,7 +131,7 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
             return;
         }
         Path baseDir = Path.of(basePath);
-        File taskXml = baseDir.resolve("esp_custom_tasks.xml").toFile();
+        File taskXml = baseDir.resolve(TreeXmlMeta.ESP_CUSTOM_TASKS_XML).toFile();
         if (!taskXml.exists()) {
             I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.failed"),
                     $i18n("action.exec.task.xml.notfound"),

@@ -11,22 +11,32 @@
             <xs:choice maxOccurs="unbounded">
                 <xs:element name="command" type="tns:CommandType">
                     <xs:annotation>
-                        <xs:documentation>idf.py命令任务，比起终端任务可以实现串口占用抢占和控制台过滤器(文件链接可以跳转ide的具体行等)</xs:documentation>
+                        <xs:documentation>
+                            <p><code>idf.py</code> command tasks with advanced features like serial port preemption and console filters (e.g., file links can jump to specific IDE lines).</p>
+                            <p><code>idf.py</code>命令任务，比起终端任务可以实现串口占用抢占和控制台过滤器(文件链接可以跳转ide的具体行等)</p>
+                        </xs:documentation>
                     </xs:annotation>
                 </xs:element>
                 <xs:element name="console-command" type="tns:ConsoleCommandType">
                     <xs:annotation>
-                        <xs:documentation>idf.py命令终端任务 比起普通任务终端具备完整TTY能力</xs:documentation>
+                        <xs:documentation>
+                            <p><code>idf.py</code> command terminal task with full TTY capabilities compared to regular terminal tasks.</p>
+                            <p><code>idf.py</code>命令终端任务，比起普通任务终端具备完整TTY能力</p>
+                        </xs:documentation>
                     </xs:annotation>
                 </xs:element>
                 <xs:element name="exec" type="tns:ExecType">
                     <xs:annotation>
-                        <xs:documentation>本地任务，也可继承当前环境变量，执行任务</xs:documentation>
+                        <xs:documentation>
+                            <p>Local task that can inherit current environment variables to execute commands.</p>
+                            <p>本地任务，也可继承当前环境变量，执行任务</p>
+                        </xs:documentation>
                     </xs:annotation>
                 </xs:element>
             </xs:choice>
         </xs:sequence>
     </xs:complexType>
+
     <xs:simpleType name="IconType">
         <xs:restriction base="xs:string">
             <xs:enumeration value="ij:AllIcons.FileTypes.Config"/>
@@ -44,19 +54,17 @@
         <xs:attribute name="toolTip" type="xs:string" use="optional"/>
         <xs:attribute name="request-port" type="xs:boolean" use="optional" default="false">
             <xs:annotation>
-                <xs:documentation>请求串口。会关闭被对请求串口执行的Monitor任务</xs:documentation>
+                <xs:documentation>
+                    <p>Requests serial port. Automatically terminates any Monitor task currently using the requested port.</p>
+                    <p>请求串口。会关闭当前占用该串口的Monitor任务</p>
+                </xs:documentation>
             </xs:annotation>
         </xs:attribute>
         <xs:attribute name="use-monitor" type="xs:boolean" use="optional" default="false">
             <xs:annotation>
                 <xs:documentation>
-                    <p>
-                        Register as a Monitor task. Any current task on the same serial port will be interrupted
-                        by a task that requests the port. This attribute implies 'request-port' capability.
-                    </p>
-                    <p>
-                        注册为Monitor任务，同一串口的当前任务会被request-port任务中断，本属性也包含request-port能力
-                    </p>
+                    <p>Registers as a Monitor task. Any active task on the same serial port will be interrupted by a port-requesting task. This attribute implicitly enables 'request-port' capability.</p>
+                    <p>注册为Monitor任务，同一串口的当前任务会被request-port任务中断，本属性也包含request-port能力</p>
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
@@ -71,12 +79,53 @@
 
     <xs:complexType name="ExecType">
         <xs:attribute name="name" type="xs:string" use="required"/>
-        <xs:attribute name="path" type="xs:string" use="optional"/>
-        <xs:attribute name="args" type="xs:string" use="optional"/>
-        <xs:attribute name="in-terminal" type="xs:boolean" use="optional" default="false"/>
-        <xs:attribute name="idf-env" type="xs:boolean" use="optional" default="false"/>
+        <xs:attribute name="path" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    <p>Executable file path. Can be absolute or relative to the current project. If empty, uses system default shell (cmd/bash/zsh) to execute.</p>
+                    <p>可执行文件路径，可以是全路径，也可以是基于当前项目的相对路径。为空时默认使用cmd/bash/zsh执行</p>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="args" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    <p>Command-line arguments for the executable.</p>
+                    <p>命令参数</p>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="in-terminal" type="xs:boolean" use="optional" default="false">
+            <xs:annotation>
+                <xs:documentation>
+                    <p>Determines whether to execute in a terminal emulator.</p>
+                    <p>是否在终端中执行</p>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+        <xs:attribute name="idf-env" type="xs:boolean" use="optional" default="false">
+            <xs:annotation>
+                <xs:documentation>
+                    <p>Inherits the current project's ESP-IDF environment variables.</p>
+                    <p>是否继承当前项目的esp-idf的环境变量</p>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
         <xs:attribute name="toolTip" type="xs:string" use="optional"/>
-        <xs:attribute name="icon" type="tns:IconType" use="optional"/>
+        <xs:attribute name="icon" type="tns:IconType" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    <p>Currently supported icon types from IntelliJ platform:</p>
+                    <p>目前支持的图标类型：</p>
+                    <ul>
+                        <li>ij:AllIcons.FileTypes.Config</li>
+                        <li>ij:AllIcons.General.Delete</li>
+                        <li>ij:AllIcons.Actions.Compile</li>
+                        <li>ij:AllIcons.General.Web</li>
+                        <li>ij:AllIcons.Actions.Refresh</li>
+                    </ul>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
     </xs:complexType>
-
 </xs:schema>
