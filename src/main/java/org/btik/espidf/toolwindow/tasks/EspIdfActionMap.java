@@ -5,6 +5,7 @@ import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
@@ -34,6 +35,11 @@ public class EspIdfActionMap {
     static {
         actionMap = new HashMap<>();
         actionMap.put("idf.export.console", EspIdfActionMap::exportConsole);
+        actionMap.put("open.component.registry",EspIdfActionMap::openComponentRegistry);
+    }
+
+    private static void openComponentRegistry(EspIdfTaskActionNode espIdfTaskActionNode, Project project) {
+        BrowserUtil.browse($sys("esp.component.registry.url"));
     }
 
     private static void exportConsole(EspIdfTaskActionNode actionNode, Project project) {

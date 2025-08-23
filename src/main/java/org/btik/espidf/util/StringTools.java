@@ -1,5 +1,7 @@
 package org.btik.espidf.util;
 
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import java.util.function.Function;
 
@@ -21,5 +23,13 @@ public class StringTools {
             return obj.toString();
         }
         return converter.apply(obj);
+    }
+
+    public static boolean appendNotEmpty(@NotNull  StringBuilder stringBuilder, String string) {
+        if (StringUtils.isNotEmpty(string)) {
+            stringBuilder.append(string);
+            return true;
+        }
+        return false;
     }
 }

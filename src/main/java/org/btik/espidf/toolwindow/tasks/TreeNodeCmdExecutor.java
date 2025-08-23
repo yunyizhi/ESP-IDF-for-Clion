@@ -212,14 +212,16 @@ public class TreeNodeCmdExecutor {
         runConfiguration.setExecuteScriptFile(false);
         runConfiguration.setInterpreterPath(getCmdEnv());
 
+        String execPath = commandNode.getPath();
         if (IS_WINDOWS) {
             StringBuilder cmdPrefixBuilder = new StringBuilder();
             if (commandNode.isUseIdfEnv()) {
                 cmdPrefixBuilder.append(buildPowershellEnv(project));
             }
-            cmdPrefixBuilder.append(commandNode.getPath())
-                            .append(" ")
-                                    .append(commandNode.getArgs());
+            if (StringTools.appendNotEmpty(cmdPrefixBuilder, execPath)){
+                cmdPrefixBuilder.append(" ");
+            }
+            StringTools.appendNotEmpty(cmdPrefixBuilder, commandNode.getArgs());
             runConfiguration.setScriptText(cmdPrefixBuilder.toString());
         } else {
             if (commandNode.isUseIdfEnv()) {
@@ -229,7 +231,12 @@ public class TreeNodeCmdExecutor {
                 environments.remove(COMP_WORDBREAKS);
                 runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, false));
             }
-            runConfiguration.setScriptText(commandNode.getPath() + " " + commandNode.getArgs());
+
+            String bin  = "";
+            if (StringUtils.isNotEmpty(execPath)){
+                bin = execPath + " ";
+            }
+            runConfiguration.setScriptText(bin + commandNode.getArgs());
         }
         runConfiguration.setScriptWorkingDirectory(basePath);
 

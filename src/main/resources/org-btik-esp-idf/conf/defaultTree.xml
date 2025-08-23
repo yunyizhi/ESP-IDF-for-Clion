@@ -19,6 +19,7 @@
         <folder name="Miscellaneous">
             <command name="Erase" value="erase-flash" request-port="true" />
             <command name="Size" value="size"/>
+            <action name="ESP Component Registry" id="open.component.registry" icon="ij:AllIcons.General.Web" />
             <raw-command name="Export Environments"
                          win-value="SET"
                          unix-value="env" />

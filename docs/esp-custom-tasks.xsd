@@ -126,8 +126,11 @@
                 <xs:attribute name="path" type="xs:string" use="optional">
                     <xs:annotation>
                         <xs:documentation>
-                            <p>Executable file path. Can be absolute or relative to the current project. If empty, uses system default shell (cmd/bash/zsh) to execute.</p>
-                            <p>可执行文件路径，可以是全路径，也可以是基于当前项目的相对路径。为空时默认使用cmd/bash/zsh执行</p>
+                            <p>Executable file path: It can be an absolute path, an executable found in directories
+                                listed in the PATH environment variable, or a path relative to the current project.
+                                If left empty, the system default shell (cmd, bash, or zsh) will be used to
+                                execute the command.</p>
+                            <p>可执行文件路径:可以是全路径,PATH变量中的路径下的可执行文件,也可以是基于当前项目的相对路径。为空时默认使用cmd/bash/zsh执行</p>
                         </xs:documentation>
                     </xs:annotation>
                 </xs:attribute>
