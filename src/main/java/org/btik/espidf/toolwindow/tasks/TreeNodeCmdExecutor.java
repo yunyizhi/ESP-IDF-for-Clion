@@ -236,7 +236,7 @@ public class TreeNodeCmdExecutor {
             if (StringUtils.isNotEmpty(execPath)){
                 bin = execPath + " ";
             }
-            runConfiguration.setScriptText(bin + commandNode.getArgs());
+            runConfiguration.setScriptText(bin + StringTools.safeNull(commandNode.getArgs()));
         }
         runConfiguration.setScriptWorkingDirectory(basePath);
 
