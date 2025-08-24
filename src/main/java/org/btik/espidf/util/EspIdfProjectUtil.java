@@ -2,6 +2,7 @@ package org.btik.espidf.util;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
 import com.intellij.execution.ExecutionTarget;
 import com.intellij.execution.ExecutionTargetManager;
@@ -14,12 +15,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.state.model.IdfProfileInfo;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,39 +33,8 @@ import static org.btik.espidf.util.SysConf.$sys;
 public class EspIdfProjectUtil {
     private final static Logger log = Logger.getInstance(EspIdfProjectUtil.class);
     private static final String PROJECT_DESC_FILE_NAME = $sys("esp.idf.build.project.description");
-    private static final String IDF_PATH = $sys("esp.idf.build.idf.path");
-
-    public static boolean isEspIdfProject(Project project) {
-        boolean createByEspIdf = project.getService(IdfProjectConfigService.class).isCreateByEspIdf();
-        if (createByEspIdf) {
-            return true;
-        }
-        String basePath = project.getBasePath();
-
-        if (basePath == null) {
-            return false;
-        }
-        Path baseDir = Path.of(basePath);
-        List<CMakeSettings.Profile> activeProfiles = CMakeSettings.getInstance(project).getActiveProfiles();
-        Gson gson = new Gson();
-        for (CMakeSettings.Profile activeProfile : activeProfiles) {
-            String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project, activeProfile);
-            if (StringUtils.isEmpty(buildOutDir)) {
-                continue;
-            }
-            File descFile = checkDescFile(baseDir.resolve(buildOutDir), PROJECT_DESC_FILE_NAME);
-            if (descFile == null) {
-                continue;
-            }
-            try (FileReader fileReader = new FileReader(descFile);
-                 JsonReader jsonReader = new JsonReader(fileReader)) {
-                JsonElement jsonElement = gson.fromJson(jsonReader, JsonElement.class);
-                return jsonElement.isJsonObject() && jsonElement.getAsJsonObject().has(IDF_PATH);
-            } catch (IOException ignored) {
-            }
-        }
-        return false;
-    }
+    private static final String IDF_PATH = "idf_path";
+    private static final String TARGET = "target";
 
     private static DebugConfigModel parseDesc(File descFile) {
         Gson gson = new Gson();
@@ -156,5 +128,60 @@ public class EspIdfProjectUtil {
         String romElfDir = environments.get(ESP_ROM_ELF_DIR);
         debugConfigModel.setRomElfDir(romElfDir);
         return debugConfigModel;
+    }
+
+    public static List<IdfProfileInfo> getIdfProfiles(Project project) {
+        String basePath = project.getBasePath();
+        if (basePath == null) {
+            return null;
+        }
+        IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
+        Path baseDir = Path.of(basePath);
+        List<CMakeSettings.Profile> activeProfiles = CMakeSettings.getInstance(project).getActiveProfiles();
+        List<IdfProfileInfo> result = new ArrayList<>();
+        Gson gson = new Gson();
+        for (CMakeSettings.Profile activeProfile : activeProfiles) {
+            String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project, activeProfile);
+            if (StringUtils.isEmpty(buildOutDir)) {
+                continue;
+            }
+            File descFile = checkDescFile(baseDir.resolve(buildOutDir), PROJECT_DESC_FILE_NAME);
+            if (descFile == null) {
+                continue;
+            }
+            String name = activeProfile.getName();
+            IdfProfileInfo idfProfileInfo = projectConfigService.getIdfProfileInfo(name);
+            boolean oldIdfProfileIsNull = idfProfileInfo == null;
+            boolean needParseFile = oldIdfProfileIsNull || idfProfileInfo.fileHasUpdate(descFile);
+            if (needParseFile) {
+                try (FileReader fileReader = new FileReader(descFile);
+                     JsonReader jsonReader = new JsonReader(fileReader)) {
+                    JsonElement jsonElement = gson.fromJson(jsonReader, JsonElement.class);
+                    if (jsonElement == null || !jsonElement.isJsonObject()) {
+                        continue;
+                    }
+                    JsonObject asJsonObject = jsonElement.getAsJsonObject();
+                    if (!asJsonObject.has(IDF_PATH)) {
+                        continue;
+                    }
+                    String target = asJsonObject.get(TARGET).getAsString();
+                    if (oldIdfProfileIsNull) {
+                        idfProfileInfo =  new IdfProfileInfo();
+                    }
+                    idfProfileInfo.setBuildDir(buildOutDir);
+                    idfProfileInfo.setTarget(target);
+                    idfProfileInfo.setDescFileChangeTime(descFile.lastModified());
+                    idfProfileInfo.setDescFileSize(descFile.length());
+                    idfProfileInfo.setDisplayName(name);
+                    result.add(idfProfileInfo);
+                } catch (IOException ioException) {
+                    log.warn(ioException);
+                }
+            } else {
+                result.add(idfProfileInfo);
+            }
+
+        }
+        return result;
     }
 }

@@ -18,9 +18,6 @@ public class KconfigContentPanel extends JScrollPane {
     private static final String EMPTY = "empty";
     private final JPanel emptyPanel;
 
-    private static final String FILTERED_TMP_PANEL_ID = "FILTERED_TMP_PANEL";
-    private Component lastTmpView;
-
     private final Consumer<KconfigSetCommand> commandSender;
 
     private final HashMap<String, JComponent> confItemComponentMap = new HashMap<>();
@@ -91,21 +88,6 @@ public class KconfigContentPanel extends JScrollPane {
         }
         component.requestFocus();
         component.scrollRectToVisible(new Rectangle(0, 0, component.getWidth(), component.getHeight()));
-    }
-
-    public void showCardWithSelectItem(ConfModel confModel) {
-        if (lastTmpView != null) {
-            contentCards.remove(lastTmpView);
-        }
-        Component kConfPanel = KConfPanelFactory.createKConfPanel(confModel, commandSender, confItemComponentMap);
-        if (kConfPanel == null) {
-            showEmpty();
-            return;
-        }
-        lastTmpView = kConfPanel;
-        addToCard(kConfPanel, FILTERED_TMP_PANEL_ID);
-        cardLayout.show(contentCards, FILTERED_TMP_PANEL_ID);
-        getViewport().setViewPosition(new Point(0, 0));
     }
 
     public void onConfigNodesChange(KconfigStatus status, HashMap<String, ConfModel> confModelMap) {

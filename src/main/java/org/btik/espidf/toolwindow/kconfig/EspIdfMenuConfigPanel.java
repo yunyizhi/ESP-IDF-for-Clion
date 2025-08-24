@@ -147,6 +147,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
     private void loadPage() {
         String basePath = project.getBasePath();
         if (basePath == null) {
+            kConfRunStatusListener.forEach(listener -> listener.accept(false));
             LOG.error("Base path is null");
             return;
         }
@@ -154,7 +155,8 @@ public class EspIdfMenuConfigPanel extends JPanel {
         String cmakeBuildDir = projectConfigService.getCmakeBuildDir();
         Path menuConfigPath = Path.of(basePath, cmakeBuildDir, $sys("esp.idf.kconfig.menus.dir")).resolve($sys("esp.idf.kconfig.menus.file"));
         if (!menuConfigPath.toFile().exists()) {
-            LOG.error(menuConfigPath + " does not exist");
+            kConfRunStatusListener.forEach(listener -> listener.accept(false));
+            LOG.warn(menuConfigPath + " does not exist");
             return;
         }
         confModels = KConfParser.parseKconfig(menuConfigPath);
@@ -175,11 +177,6 @@ public class EspIdfMenuConfigPanel extends JPanel {
                     child.setRedefinedType(KconfigType.CHOICE_ITEM);
                 }
             });
-        }
-        Path sdkConfigPath = Path.of(basePath, cmakeBuildDir, $sys("esp.idf.kconfig.menus.dir")).resolve($sys("esp.idf.kconfig.sdk.config.file"));
-        if (!sdkConfigPath.toFile().exists()) {
-            LOG.error(sdkConfigPath + " does not exist");
-            return;
         }
         kconfServer.start();
     }

@@ -20,13 +20,13 @@ import com.intellij.ui.components.JBCheckBox;
 import com.intellij.util.Consumer;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.lang3.StringUtils;
+import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.icon.EspIdfIcon;
-import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.EnvironmentVarUtil;
-import org.btik.espidf.util.EspIdfProjectUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
@@ -144,18 +144,27 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         return toolBar;
     }
 
+    private void setStatusBarEnabled(boolean enabled) {
+        setAvailable.accept(enabled);
+        getComponent().setVisible(enabled);
+    }
 
     public void update() {
-        DebugConfigModel debugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
-        if (debugConfigModel == null) {
-            setAvailable.accept(false);
-            getComponent().setVisible(false);
+        IdfProjectConfigService idfProjectConfigService = project.getService(IdfProjectConfigService.class);
+        IdfProjectConfig projectConfig = idfProjectConfigService.getProjectConfig();
+        String cmakeProfile = projectConfig.getCmakeProfile();
+        if (cmakeProfile == null) {
+            setStatusBarEnabled(false);
             return;
         }
-        setAvailable.accept(true);
-        targetPanel.setText(debugConfigModel.getTarget());
+        IdfProfileInfo idfProfileInfo = idfProjectConfigService.getIdfProfileInfo(cmakeProfile);
+        if (idfProfileInfo == null) {
+            setStatusBarEnabled(false);
+            return;
+        }
+        targetPanel.setText(idfProfileInfo.getTarget());
         if (!getComponent().isVisible()) {
-            getComponent().setVisible(true);
+            setStatusBarEnabled(true);
         }
     }
 }

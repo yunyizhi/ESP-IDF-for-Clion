@@ -1,6 +1,9 @@
 package org.btik.espidf.service;
 
 import org.btik.espidf.conf.IdfProjectConfig;
+import org.btik.espidf.state.model.IdfProfileInfo;
+
+import java.util.List;
 
 /**
  * @author lustre
@@ -21,9 +24,11 @@ public interface IdfProjectConfigService {
 
     void onProfileChanged();
 
-    boolean isCreateByEspIdf();
+    IdfProfileInfo getIdfProfileInfo(String profileName);
 
-    void setCreateByEspIdf(boolean createByEspIdf);
+    IdfProfileInfo getFirstIdfProjectConfig();
+
+    List<IdfProfileInfo> getCurrentIdfProjectConfig();
 
     void updateProfile(String displayName);
 }

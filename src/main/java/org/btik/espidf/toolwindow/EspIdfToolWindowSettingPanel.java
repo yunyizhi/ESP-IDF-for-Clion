@@ -1,7 +1,5 @@
 package org.btik.espidf.toolwindow;
 
-import com.intellij.execution.ExecutionTarget;
-import com.intellij.execution.ExecutionTargetManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
@@ -13,11 +11,10 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.Consumer;
 import com.intellij.util.ui.JBUI;
 
-import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
-import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.toolwindow.settings.SerialPortBox;
 import org.btik.espidf.toolwindow.settings.model.SerialPortInfo;
 import org.btik.espidf.util.UIUtils;
@@ -27,7 +24,6 @@ import javax.swing.*;
 import javax.swing.event.DocumentEvent;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -103,23 +99,21 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
     }
 
     private void initCmakeProfile() {
-        IdfProjectConfigService service = project.getService(IdfProjectConfigService.class);
-        service.addProfileChangeListener(this::initCmakeProfileVal);
+        idfProjectConfigService.addProfileChangeListener(this::initCmakeProfileVal);
         initCmakeProfileVal();
     }
 
     private void initCmakeProfileVal() {
         ApplicationManager.getApplication().invokeLater(() ->
         {
-            CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
-            List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
-
+            List<IdfProfileInfo> currentIdfProjectConfig = idfProjectConfigService.getCurrentIdfProjectConfig();
             int itemCount = cmakeProfile.getItemCount();
-            if (itemCount != activeProfiles.size()) {
+            Object oldSelect = cmakeProfile.getSelectedItem();
+            if (itemCount != currentIdfProjectConfig.size()) {
                 cmakeProfile.removeAllItems();
             } else {
                 for (int i = 0; i < itemCount; i++) {
-                    if (!Objects.equals(cmakeProfile.getItemAt(i), activeProfiles.get(i).getName())) {
+                    if (!Objects.equals(cmakeProfile.getItemAt(i), currentIdfProjectConfig.get(i).getDisplayName())) {
                         cmakeProfile.removeAllItems();
                         break;
                     }
@@ -129,16 +123,19 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
             if (cmakeProfile.getItemCount() > 0) {
                 return;
             }
-            HashSet<String> activeProfileNames = new HashSet<>();
-            for (CMakeSettings.Profile profile : activeProfiles) {
-                cmakeProfile.addItem(profile.getName());
-                activeProfileNames.add(profile.getName());
+            for (IdfProfileInfo idfProfileInfo : currentIdfProjectConfig) {
+                cmakeProfile.addItem(idfProfileInfo.getDisplayName());
             }
-            ExecutionTarget activeTarget = ExecutionTargetManager.getActiveTarget(project);
-            String displayName = activeTarget.getDisplayName();
-            if (activeProfileNames.contains(displayName)) {
-                cmakeProfile.setSelectedItem(displayName);
-                idfProjectConfigService.updateProfile(displayName);
+
+            if (oldSelect instanceof String oldSelectName && idfProjectConfigService.getIdfProfileInfo(oldSelectName) != null) {
+                cmakeProfile.setSelectedItem(oldSelectName);
+                idfProjectConfigService.updateProfile(oldSelectName);
+            } else {
+                IdfProfileInfo firstIdfProjectConfig = idfProjectConfigService.getFirstIdfProjectConfig();
+                if (firstIdfProjectConfig != null) {
+                    cmakeProfile.setSelectedItem(firstIdfProjectConfig.getDisplayName());
+                    idfProjectConfigService.updateProfile(firstIdfProjectConfig.getDisplayName());
+                }
             }
 
         });

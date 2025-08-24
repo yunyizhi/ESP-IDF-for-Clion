@@ -29,16 +29,5 @@ public class EspIdfToolWindowFactory implements ToolWindowFactory {
         contentManager.addContent(setttingsContent);
         Content kconfigContent = contentFactory.createContent(new EspIdfMenuConfigPanel(project), $i18n("esp.idf.tool.window.sdk.config"), false);
         contentManager.addContent(kconfigContent);
-        Content  componentsBrowser = contentFactory.createContent(new ComponentsBrowserPanel(), $i18n("esp.idf.tool.window.components.browser"), false);
-        contentManager.addContent(componentsBrowser);
-        contentManager.addContentManagerListener(new ContentManagerListener() {
-            @Override
-            public void selectionChanged(@NotNull ContentManagerEvent event) {
-                JComponent component = event.getContent().getComponent();
-                if (component instanceof ComponentsBrowserPanel componentsBrowserPanel) {
-                    componentsBrowserPanel.loadUrl("https://components.espressif.com/");
-                }
-            }
-        });
     }
 }

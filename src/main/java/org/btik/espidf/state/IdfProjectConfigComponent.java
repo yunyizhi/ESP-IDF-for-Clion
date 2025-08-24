@@ -10,8 +10,10 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
+import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.util.EspIdfProjectUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -32,10 +34,9 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     private final Project project;
 
     private final Set<Runnable> profileChangeListeners = new HashSet<>();
-    /*
-     * 是否由ESPIDF插件创建，不需要持久化
-     * */
-    private boolean createByEspIdf = false;
+
+    private final HashMap<String, IdfProfileInfo> idfProfileInfoMap = new HashMap<>();
+    private List<IdfProfileInfo> currentInfo;
 
     public IdfProjectConfigComponent(Project project) {
         this.project = project;
@@ -102,19 +103,39 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
 
     @Override
     public void onProfileChanged() {
+        updateIdfProfiles();
         for (Runnable profileChangeListener : profileChangeListeners) {
             ApplicationManager.getApplication().invokeLater(profileChangeListener);
         }
     }
 
     @Override
-    public boolean isCreateByEspIdf() {
-        return createByEspIdf;
+    public IdfProfileInfo getIdfProfileInfo(String profileName) {
+        return idfProfileInfoMap.get(profileName);
     }
 
     @Override
-    public void setCreateByEspIdf(boolean createByEspIdf) {
-        this.createByEspIdf = createByEspIdf;
+    public IdfProfileInfo getFirstIdfProjectConfig() {
+        if (CollectionUtils.isEmpty(currentInfo)) {
+            return null;
+        }
+        return currentInfo.get(0);
+    }
+
+    @Override
+    public List<IdfProfileInfo> getCurrentIdfProjectConfig() {
+        return currentInfo == null ? List.of() : currentInfo;
+    }
+
+    private void updateIdfProfiles() {
+        currentInfo = EspIdfProjectUtil.getIdfProfiles(project);
+        idfProfileInfoMap.clear();
+        if (CollectionUtils.isEmpty(currentInfo)) {
+            return;
+        }
+        for (IdfProfileInfo idfProfileInfo : currentInfo) {
+            idfProfileInfoMap.put(idfProfileInfo.getDisplayName(), idfProfileInfo);
+        }
     }
 
     @Override
