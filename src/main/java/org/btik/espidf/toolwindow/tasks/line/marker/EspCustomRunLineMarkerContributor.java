@@ -2,7 +2,6 @@ package org.btik.espidf.toolwindow.tasks.line.marker;
 
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.xml.XmlAttribute;
 import com.intellij.psi.xml.XmlTag;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.toolwindow.tasks.TreeXmlMeta;
@@ -18,6 +17,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.*;
+import static org.btik.espidf.util.XmlPsiTool.*;
 
 public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor {
     private final HashMap<String, Info> runInfoCache = new HashMap<>();
@@ -51,8 +51,9 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
             return null;
         }
         String path = getAttribute(xmlTag, EXEC_PATH);
-        String args = getAttribute(xmlTag, EXEC_ARGS);
-        if (path == null && args == null) {
+        String argsBySubTag = getSubTagTrimmedText(xmlTag, EXEC_ARGS, true);
+        String args = argsBySubTag == null ? getAttribute(xmlTag, EXEC_ARGS) : argsBySubTag;
+        if (StringUtils.isEmpty(path) && StringUtils.isEmpty(args) ) {
             return null;
         }
 
@@ -118,7 +119,7 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
 
     private Info getConsoleInfo(XmlTag xmlTag) {
         String value = getAttribute(xmlTag, TreeXmlMeta.VALUE);
-        if (value == null) {
+        if (StringUtils.isEmpty(value)) {
             return null;
         }
         String name = getAttribute(xmlTag, TreeXmlMeta.NAME);
@@ -134,26 +135,6 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
                         commandNode.setCommand(value);
                     }
                 });
-    }
-
-    private String getAttribute(XmlTag xmlTag, String name) {
-        XmlAttribute value = xmlTag.getAttribute(name);
-        if (value == null) {
-            return null;
-        }
-        return value.getDisplayValue();
-    }
-
-    private boolean getBoolAttribute(XmlTag xmlTag, String name) {
-        return getBoolAttribute(xmlTag, name, false);
-    }
-
-    private boolean getBoolAttribute(XmlTag xmlTag, String name, boolean defaultValue) {
-        XmlAttribute value = xmlTag.getAttribute(name);
-        if (value == null) {
-            return defaultValue;
-        }
-        return Boolean.parseBoolean(value.getValue());
     }
 
 }

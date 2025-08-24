@@ -6,7 +6,12 @@
     <command name="List Targets" value="--list-targets" icon="ij:AllIcons.Actions.Compile"/>
     <console-command name="Size" value="size" />
     <exec name="echo IDF_PATH" args="echo $IDF_PATH " idf-env="true" />
-    <exec name="test py" path="/bin/env" args="python3 -V" />
+    <exec name="test py" path="python3" in-terminal="true">
+        <args><![CDATA[
+print(1)
+exit()
+        ]]></args>
+    </exec>
     <exec name="bash echo 1" path="/bin/bash"
           args="-c &quot; echo 111 &quot;" in-terminal="true" />
     <exec name="test py 1" path="python3 -V" in-terminal="true" />

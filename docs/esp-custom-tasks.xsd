@@ -123,6 +123,17 @@
     <xs:complexType name="ExecType">
         <xs:complexContent>
             <xs:extension base="tns:BaseCommandType">
+               <xs:sequence>
+                <!-- 可选的 args 子元素 -->
+                <xs:element name="args" type="xs:string" minOccurs="0" maxOccurs="1">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <p>Command-line arguments for the executable. Can be specified as a child element.</p>
+                            <p>命令行参数，可作为子元素提供</p>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:element>
+            </xs:sequence>
                 <xs:attribute name="path" type="xs:string" use="optional">
                     <xs:annotation>
                         <xs:documentation>
