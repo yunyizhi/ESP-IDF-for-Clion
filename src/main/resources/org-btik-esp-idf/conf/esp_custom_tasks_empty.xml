@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<esp-tasks xmlns="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema https://yunyizhi.github.io/ESP-IDF-for-Clion/esp-tasks.xsd">
+
+   <command name="" value="" />
+</esp-tasks>

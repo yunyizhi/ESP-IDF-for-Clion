@@ -1,9 +1,13 @@
 package org.btik.espidf.toolwindow;
 
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -23,7 +27,11 @@ import javax.swing.tree.TreePath;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.List;
 
@@ -34,6 +42,7 @@ import static org.btik.espidf.util.I18nMessage.$i18n;
  * @since 2024/2/18 13:05
  */
 public class EspIdfToolWindowTaskPanel extends JScrollPane {
+    private static final Logger LOG = Logger.getInstance(EspIdfToolWindowTaskPanel.class);
     private final Project project;
     private final Tree tree;
     private DefaultMutableTreeNode customTaskNode;
@@ -130,12 +139,39 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
                     NotificationType.ERROR).notify(project);
             return;
         }
+        int lastIndex = customTaskNode.getIndex(customTaskPreSetLastChildNode);
+        int childCount = customTaskNode.getChildCount();
+        for (int i = childCount - 1; i > lastIndex; i--) {
+            DefaultMutableTreeNode childToRemove = (DefaultMutableTreeNode) customTaskNode.getChildAt(i);
+            customTaskNode.remove(childToRemove);
+        }
+        ApplicationManager.getApplication().invokeLater(tree::updateUI);
         Path baseDir = Path.of(basePath);
         File taskXml = baseDir.resolve(TreeXmlMeta.ESP_CUSTOM_TASKS_XML).toFile();
         if (!taskXml.exists()) {
             I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.failed"),
                     $i18n("action.exec.task.xml.notfound"),
-                    NotificationType.ERROR).notify(project);
+                    NotificationType.ERROR).addAction(new AnAction("New") {
+                @Override
+                public void actionPerformed(@NotNull AnActionEvent e) {
+                    try(InputStream resourceAsStream = getClass().getResourceAsStream("/org-btik-esp-idf/conf/esp_custom_tasks.xml")){
+                        if (resourceAsStream != null) {
+                            Files.copy(resourceAsStream, taskXml.toPath(), StandardCopyOption.REPLACE_EXISTING);
+                            VirtualFile xmlVirtual = VfsUtil.findFileByIoFile(taskXml, true);
+                            if (xmlVirtual == null) {
+                                return;
+                            }
+                            ApplicationManager.getApplication().invokeLater(() -> {
+                                FileEditorManager.getInstance(project).openFile(xmlVirtual, true);
+                                loadCustomTaskInit();
+                            });
+
+                        }
+                    } catch (IOException ioe){
+                        LOG.error(ioe);
+                    }
+                }
+            }).notify(project);
             return;
         }
 
@@ -151,12 +187,6 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
         }
 
         ApplicationManager.getApplication().invokeLater(() -> {
-            int lastIndex = customTaskNode.getIndex(customTaskPreSetLastChildNode);
-            int childCount = customTaskNode.getChildCount();
-            for (int i = childCount - 1; i > lastIndex; i--) {
-                DefaultMutableTreeNode childToRemove = (DefaultMutableTreeNode) customTaskNode.getChildAt(i);
-                customTaskNode.remove(childToRemove);
-            }
             List<DefaultMutableTreeNode> defaultMutableTreeNodes = EspIdfTaskTreeFactory.loadCustomTask(taskXml);
             for (DefaultMutableTreeNode defaultMutableTreeNode : defaultMutableTreeNodes) {
                 customTaskNode.add(defaultMutableTreeNode);

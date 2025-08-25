@@ -13,7 +13,7 @@ exit()
         ]]></args>
     </exec>
     <exec name="bash echo 1" path="/bin/bash"
-          args="-c &quot; echo 111 &quot;" in-terminal="true" />
+          args="-c &quot; echo 111 &quot;" />
     <exec name="test py 1" path="python3 -V" in-terminal="true" />
     <exec name="echo in terminal" args="echo 1 " in-terminal="true" icon="ij:AllIcons.Actions.Compile" />
 </esp-tasks>
