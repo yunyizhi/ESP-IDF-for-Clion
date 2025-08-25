@@ -1,9 +1,11 @@
 package org.btik.espidf.toolwindow.tasks.line.marker;
 
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.xml.XmlTag;
 import org.apache.commons.lang3.StringUtils;
+import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.toolwindow.tasks.TreeXmlMeta;
 import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskCommandNode;
 import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskConsoleCommandNode;
@@ -12,7 +14,6 @@ import org.btik.espidf.toolwindow.tasks.model.LocalExecNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -20,7 +21,6 @@ import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.*;
 import static org.btik.espidf.util.XmlPsiTool.*;
 
 public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor {
-    private final HashMap<String, Info> runInfoCache = new HashMap<>();
 
     @Override
     public @Nullable Info getInfo(@NotNull PsiElement element) {
@@ -51,13 +51,13 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
             return null;
         }
         String path = getAttribute(xmlTag, EXEC_PATH);
-        String argsBySubTag = getSubTagTrimmedText(xmlTag, EXEC_ARGS, true);
+        boolean useTerminal = getBoolAttribute(xmlTag, USE_TERMINAL);
+        String argsBySubTag = getSubTagTrimmedText(xmlTag, EXEC_ARGS, useTerminal);
         String args = argsBySubTag == null ? getAttribute(xmlTag, EXEC_ARGS) : argsBySubTag;
-        if (StringUtils.isEmpty(path) && StringUtils.isEmpty(args) ) {
+        if (StringUtils.isEmpty(path) && StringUtils.isEmpty(args)) {
             return null;
         }
 
-        boolean useTerminal = getBoolAttribute(xmlTag, USE_TERMINAL);
         boolean useIdfEnv = getBoolAttribute(xmlTag, EXEC_WITH_IDF_ENV);
         return getCacheOrNewInfo(name,
                 () -> {
@@ -73,7 +73,7 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
                         localExecNode.setUseTerminal(useTerminal);
                         localExecNode.setUseIdfEnv(useIdfEnv);
                     }
-                });
+                }, xmlTag.getProject());
     }
 
     private Info getCommandInfo(@NotNull XmlTag xmlTag) {
@@ -101,14 +101,16 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
                 espIdfTaskTreeNode.setUseMonitor(useMonitor);
                 espIdfTaskTreeNode.setRequestPort(requestPort);
             }
-        });
+        }, xmlTag.getProject());
     }
 
-    private Info getCacheOrNewInfo(@NotNull String name, Supplier<XmlMarkerAction> actionSupplier, Consumer<EspIdfTaskTreeNode> updater) {
-        Info info = runInfoCache.get(name);
+    private Info getCacheOrNewInfo(@NotNull String name, Supplier<XmlMarkerAction> actionSupplier, Consumer<EspIdfTaskTreeNode> updater, @NotNull
+    Project project) {
+        IdfProjectConfigService idfProjectConfigService = project.getService(IdfProjectConfigService.class);
+        Info info = idfProjectConfigService.getRunInfo(name);
         if (info == null || info.actions.length < 1) {
             info = new Info(actionSupplier.get());
-            runInfoCache.put(name, info);
+            idfProjectConfigService.putRunInfo(name, info);
             return info;
         }
         if (info.actions[0] instanceof XmlMarkerAction xmlMarkerAction) {
@@ -129,12 +131,11 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
 
         return getCacheOrNewInfo(name,
                 () -> new XmlMarkerAction(new EspIdfTaskConsoleCommandNode(name, value, true), xmlTag.getProject()),
-
                 (oldNode) -> {
                     if (oldNode instanceof EspIdfTaskConsoleCommandNode commandNode) {
                         commandNode.setCommand(value);
                     }
-                });
+                }, xmlTag.getProject());
     }
 
 }

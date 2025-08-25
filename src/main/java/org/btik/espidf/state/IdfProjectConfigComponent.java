@@ -1,5 +1,6 @@
 package org.btik.espidf.state;
 
+import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
@@ -37,6 +38,8 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
 
     private final HashMap<String, IdfProfileInfo> idfProfileInfoMap = new HashMap<>();
     private List<IdfProfileInfo> currentInfo;
+
+    private final HashMap<String, RunLineMarkerContributor.Info> lineMarkerRunInfoCache = new HashMap<>();
 
     public IdfProjectConfigComponent(Project project) {
         this.project = project;
@@ -142,4 +145,15 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     public void updateProfile(String displayName) {
         idfProjectConfig.setCmakeProfile(displayName);
     }
+
+    @Override
+    public RunLineMarkerContributor.Info getRunInfo(@NotNull String name) {
+        return lineMarkerRunInfoCache.get(name);
+    }
+
+    @Override
+    public void putRunInfo(@NotNull String name, RunLineMarkerContributor.Info info) {
+        lineMarkerRunInfoCache.put(name, info);
+    }
+
 }

@@ -195,6 +195,9 @@ public class KconfigTreePanel extends JScrollPane {
         if (target == null) {
             return null;
         }
+        if (target.getRedefinedType() == KconfigType.CHOICE_ITEM) {
+            target = target.getParent();
+        }
         DefaultMutableTreeNode defaultMutableTreeNode = searchMap.get(target.getId());
         if (defaultMutableTreeNode == null) {
             return null;

@@ -24,10 +24,6 @@ public interface IdfEnvironmentService {
 
     String OPENOCD_COMMANDS = "OPENOCD_COMMANDS";
 
-    Map<String, String> getCmakeSelectEnvironments();
-
-    Map<String, String> getTaskTreeEnvironments();
-
     Map<String, String> getEnvironments();
 
     void putTo(Map<String, String> newEnvironments);

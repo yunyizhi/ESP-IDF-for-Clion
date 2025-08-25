@@ -1,7 +1,5 @@
 package org.btik.espidf.environment;
 
-import com.intellij.execution.ExecutionTarget;
-import com.intellij.execution.ExecutionTargetManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
@@ -19,6 +17,7 @@ import org.btik.espidf.run.config.build.EspIdfBuildTarget;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.service.IdfSysConfService;
+import org.btik.espidf.state.model.IdfProfileInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,10 +38,9 @@ import static org.btik.espidf.util.SysConf.$sys;
  * @since 2024/2/18 17:34
  */
 public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
-    private Map<String, String> environments;
 
     private final Map<String, Map<String, String>> envFile2Envs = new HashMap<>();
-    private String environmentFile;
+
     private final Project project;
 
     private IdfToolConf idfToolConf;
@@ -54,43 +52,40 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         this.espIdfBuildTarget = new EspIdfBuildTarget(project.getName());
     }
 
-    private CPPToolchains.Toolchain getCmakeSelectToolChian() {
-        ExecutionTarget activeTarget = ExecutionTargetManager.getActiveTarget(project);
-        String displayName = activeTarget.getDisplayName();
-        CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
-        CPPToolchains cppToolchains = CPPToolchains.getInstance();
-        CMakeProfileInfo cMakeProfileInfoByName = instance.getCMakeProfileInfoByName(displayName);
-        if (cMakeProfileInfoByName != null) {
-            CMakeSettings.Profile profile = cMakeProfileInfoByName.getProfile();
-            return cppToolchains.getToolchainByNameOrDefault(profile.getToolchainName());
-        }
-
-        List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
-        if (activeProfiles.isEmpty()) {
-            return null;
-        }
-        CMakeSettings.Profile currentProfile = activeProfiles.get(0);
-        return cppToolchains.getToolchainByNameOrDefault(currentProfile.getToolchainName());
-
-    }
-
-    @Override
-    public Map<String, String> getCmakeSelectEnvironments() {
-        CPPToolchains.Toolchain toolchain = getCmakeSelectToolChian();
-        return getEnvOfToolChain(toolchain);
-    }
-
-    @Override
-    public Map<String, String> getTaskTreeEnvironments() {
-        CPPToolchains.Toolchain toolchain;
+    private CPPToolchains.Toolchain getToolChianOfCheckedProfile() {
         IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
         IdfProjectConfig projectConfig = projectConfigService.getProjectConfig();
         String cmakeProfile = projectConfig.getCmakeProfile();
         if (StringUtil.isEmpty(cmakeProfile)) {
-            toolchain = getFirestCMakeToolchain();
-        } else {
-            toolchain = CPPToolchains.getInstance().getToolchainByNameOrDefault(cmakeProfile);
+            return getFirestCMakeToolchain();
         }
+        IdfProfileInfo idfProfileInfo = projectConfigService.getIdfProfileInfo(cmakeProfile);
+        if (idfProfileInfo == null) {
+            return getFirestCMakeToolchain();
+        }
+
+        CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
+        CPPToolchains cppToolchains = CPPToolchains.getInstance();
+        CMakeProfileInfo cMakeProfileInfoByName = instance.getCMakeProfileInfoByName(cmakeProfile);
+        if (cMakeProfileInfoByName != null) {
+            CMakeSettings.Profile profile = cMakeProfileInfoByName.getProfile();
+            return cppToolchains.getToolchainByNameOrDefault(profile.getToolchainName());
+        }
+        projectConfigService.onProfileChanged();
+
+        List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
+        for (CMakeSettings.Profile activeProfile : activeProfiles) {
+            if (projectConfigService.getIdfProfileInfo( activeProfile.getName()) != null) {
+                return cppToolchains.getToolchainByNameOrDefault(activeProfile.getToolchainName());
+            }
+        }
+        return getFirestCMakeToolchain();
+
+    }
+
+    @Override
+    public Map<String, String> getEnvironments() {
+        CPPToolchains.Toolchain toolchain = getToolChianOfCheckedProfile();
         return getEnvOfToolChain(toolchain);
     }
 
@@ -107,21 +102,6 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
             return env;
         }
         return generateEnvironment(toolchain);
-    }
-
-    @Override
-    public Map<String, String> getEnvironments() {
-        CPPToolchains.Toolchain toolchain = getFirestCMakeToolchain();
-        if (toolchain == null) {
-            return new HashMap<>();
-        }
-        if (!Objects.equals(environmentFile, toolchain.getEnvironment())) {
-            generateEnvironment();
-        }
-        if (environments == null) {
-            return new HashMap<>();
-        }
-        return environments;
     }
 
     @Override
@@ -145,27 +125,6 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
                 .getToolchainByNameOrDefault(currentProfile.getToolchainName());
     }
 
-    private void generateEnvironment() {
-        CPPToolchains.Toolchain toolchain = getFirestCMakeToolchain();
-        if (toolchain == null) {
-            return;
-        }
-        String environment = toolchain.getEnvironment();
-        if (StringUtil.isEmpty(environment)) {
-            return;
-        }
-        Map<String, String> rawEnv = TasksKt.runWithModalProgressBlocking(project, $i18n("esp.idf.read.envs"), (scope, continuation) -> {
-            try {
-                return readEnvironment(toolchain, environment);
-            } catch (IOException | com.intellij.execution.ExecutionException e) {
-                throw new RuntimeException(e);
-            }
-        });
-        environments = sanitizeEnv(rawEnv);
-        environmentFile = environment;
-
-    }
-
     private Map<String, String> generateEnvironment(CPPToolchains.Toolchain toolchain) {
         String environment = toolchain.getEnvironment();
         if (StringUtil.isEmpty(environment)) {
@@ -178,7 +137,8 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
                 throw new RuntimeException(e);
             }
         });
-        envFile2Envs.put(environmentFile, rawEnv);
+        rawEnv = sanitizeEnv(rawEnv);
+        envFile2Envs.put(environment, rawEnv);
         return rawEnv;
     }
 

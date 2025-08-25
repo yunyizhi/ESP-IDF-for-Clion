@@ -81,7 +81,7 @@ public class EspIdfProjectUtil {
         if (cMakeProfileInfoByName != null) {
             CMakeSettings.Profile profile = cMakeProfileInfoByName.getProfile();
             String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project, profile);
-            if (StringUtils.isNotEmpty(buildOutDir) && (resolve = checkDescFile(baseDir.resolve(buildOutDir), fileName)) != null) {
+            if (StringUtils.isNotEmpty(buildOutDir) && (resolve = checkFileInBuildDir(baseDir.resolve(buildOutDir), fileName)) != null) {
                 return resolve;
             }
         }
@@ -89,27 +89,27 @@ public class EspIdfProjectUtil {
         CMakeSettings settings = instance.getSettings();
         List<CMakeSettings.Profile> profiles = settings.getProfiles();
         if (profiles.isEmpty()) {
-            return checkDescFile(baseDir.resolve($sys("esp.idf.build.project.build.dir")), fileName);
+            return checkFileInBuildDir(baseDir.resolve($sys("esp.idf.build.project.build.dir")), fileName);
         }
 
         for (CMakeSettings.Profile profile : profiles) {
             String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project, profile);
-            if (StringUtils.isNotEmpty(buildOutDir) && (resolve = checkDescFile(baseDir.resolve(buildOutDir), fileName)) != null) {
+            if (StringUtils.isNotEmpty(buildOutDir) && (resolve = checkFileInBuildDir(baseDir.resolve(buildOutDir), fileName)) != null) {
                 return resolve;
             }
         }
         return null;
     }
 
-    private static File checkDescFile(Path buildDir, final String fileName) {
+    private static File checkFileInBuildDir(Path buildDir, final String fileName) {
         if (!Files.exists(buildDir)) {
             return null;
         }
         if (Objects.equals("/", fileName)) {
             return buildDir.toFile();
         }
-        File projectDesc = buildDir.resolve(fileName).toFile();
-        return projectDesc.exists() && projectDesc.canRead() ? projectDesc : null;
+        File file = buildDir.resolve(fileName).toFile();
+        return file.exists() && file.canRead() ? file : null;
 
     }
 
@@ -145,7 +145,7 @@ public class EspIdfProjectUtil {
             if (StringUtils.isEmpty(buildOutDir)) {
                 continue;
             }
-            File descFile = checkDescFile(baseDir.resolve(buildOutDir), PROJECT_DESC_FILE_NAME);
+            File descFile = checkFileInBuildDir(baseDir.resolve(buildOutDir), PROJECT_DESC_FILE_NAME);
             if (descFile == null) {
                 continue;
             }

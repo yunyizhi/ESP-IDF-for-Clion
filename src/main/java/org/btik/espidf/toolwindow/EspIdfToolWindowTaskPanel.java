@@ -138,6 +138,8 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
                     NotificationType.ERROR).notify(project);
             return;
         }
+
+        // 文件不是实时写入的，解析前需要保存
         VirtualFile xmlVirtual = VfsUtil.findFileByIoFile(taskXml, true);
         if (xmlVirtual == null) {
            return;
@@ -147,6 +149,7 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
         if (document != null) {
            docManager.saveDocument(document);
         }
+
         ApplicationManager.getApplication().invokeLater(() -> {
             int lastIndex = customTaskNode.getIndex(customTaskPreSetLastChildNode);
             int childCount = customTaskNode.getChildCount();
@@ -157,7 +160,6 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
             List<DefaultMutableTreeNode> defaultMutableTreeNodes = EspIdfTaskTreeFactory.loadCustomTask(taskXml);
             for (DefaultMutableTreeNode defaultMutableTreeNode : defaultMutableTreeNodes) {
                 customTaskNode.add(defaultMutableTreeNode);
-                System.out.println(defaultMutableTreeNode);
             }
             tree.updateUI();
             I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.task.xml.load.ok"),

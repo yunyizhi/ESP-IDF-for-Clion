@@ -1,11 +1,12 @@
 package org.btik.espidf.toolwindow.kconfig;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.*;
+import com.intellij.openapi.ui.popup.util.BaseListPopupStep;
 import com.intellij.ui.DocumentAdapter;
 import com.intellij.ui.SearchTextField;
 import com.intellij.ui.awt.RelativePoint;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
-import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 import org.btik.espidf.ui.componets.KeyBoardListener;
 import org.btik.espidf.util.TreeUtils;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +33,11 @@ public class SearchTextBox extends SearchTextField {
     private int lastIndex = 0;
     private int maxSearchCount = 10;
 
+    private final Project project;
+
+    public SearchTextBox(Project project) {
+        this.project = project;
+    }
 
     @Override
     protected void onFieldCleared() {
@@ -56,12 +62,7 @@ public class SearchTextBox extends SearchTextField {
             }
             boolean isMatch = isMatch(model, lowerKeyword);
             if (isMatch) {
-                if (model.getRedefinedType() == KconfigType.CHOICE_ITEM) {
-                    ConfModel parent = model.getParent();
-                    results.add(parent);
-                } else {
-                    results.add(model);
-                }
+                results.add(model);
             }
             return results.size() < maxSearchCount;
         });
@@ -69,8 +70,11 @@ public class SearchTextBox extends SearchTextField {
     }
 
     private void showSearchResult(Collection<ConfModel> result) {
-        KconfSearchItemListPopupStep baseListPopupStep = new KconfSearchItemListPopupStep("Search Result", result);
-        ListPopup popup = JBPopupFactory.getInstance().createListPopup(baseListPopupStep, maxSearchCount);
+        BaseListPopupStep<ConfModel> baseListPopupStep = new BaseListPopupStep<>("Search Result",
+                result.stream().toList());
+        ListPopup popup = JBPopupFactory.getInstance().createListPopup(project, baseListPopupStep,
+                (listCellRenderer -> new SearchResultCellRenderer())
+        );
         popupClosed = false;
         popup.setRequestFocus(false);
         this.popup = popup;
@@ -82,7 +86,7 @@ public class SearchTextBox extends SearchTextField {
             public void onClosed(@NotNull LightweightWindowEvent event) {
                 popupClosed = true;
                 if (!event.isOk()) {
-                  return;
+                    return;
                 }
                 List<ConfModel> values = baseListPopupStep.getValues();
                 if (values.isEmpty()) {
@@ -105,10 +109,10 @@ public class SearchTextBox extends SearchTextField {
                 (model.getTitle() != null && model.getTitle().toLowerCase().contains(keyword));
     }
 
-    public void init(@NotNull ConfModel treeRootModel,@NotNull Consumer<ConfModel> jumpTreeFunc) {
+    public void init(@NotNull ConfModel treeRootModel, @NotNull Consumer<ConfModel> jumpTreeFunc) {
         this.jumpTreeFunc = jumpTreeFunc;
         this.treeRootModel = treeRootModel;
-        addKeyboardListener(new KeyBoardListener().withKeyPressedCB((e) ->{
+        addKeyboardListener(new KeyBoardListener().withKeyPressedCB((e) -> {
             if (e.getKeyCode() != KeyEvent.VK_ENTER) {
                 return;
             }

@@ -135,15 +135,16 @@ public class KConfPanelFactory {
         FontMetrics fm = comboBox.getFontMetrics(comboBox.getFont());
         int width = 200;
         final int paddingAndLogo = 50;
-        for (int i = 0; i < children.size(); i++) {
+        for (int i = 0, comboboxIndex = 0; i < children.size(); i++) {
             ConfModel child = children.get(i);
-            if (child.getRedefinedType() == CHOICE_ITEM) {
+            if (child.isVisible() && child.getRedefinedType() == CHOICE_ITEM) {
                 comboBox.addItem(child);
                 Object value = child.getValue();
                 if (value instanceof Boolean checked && checked) {
-                    comboBox.setSelectedIndex(i);
+                    comboBox.setSelectedIndex(comboboxIndex);
                 }
                 width = Math.max(fm.stringWidth(child.toString()) + paddingAndLogo, width);
+                comboboxIndex ++;
             }
         }
         comboBox.setPreferredSize(new Dimension(width, 30));

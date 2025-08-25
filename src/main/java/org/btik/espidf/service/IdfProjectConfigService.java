@@ -1,7 +1,9 @@
 package org.btik.espidf.service;
 
+import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.state.model.IdfProfileInfo;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
@@ -31,4 +33,8 @@ public interface IdfProjectConfigService {
     List<IdfProfileInfo> getCurrentIdfProjectConfig();
 
     void updateProfile(String displayName);
+
+    RunLineMarkerContributor.Info getRunInfo(@NotNull String name);
+
+    void putRunInfo(@NotNull String name, RunLineMarkerContributor.Info info);
 }

@@ -27,6 +27,7 @@ import org.btik.espidf.run.config.EspIdfRunConfig;
 import org.btik.espidf.run.config.EspIdfRunConfigType;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
+import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.EnvironmentVarUtil;
@@ -161,7 +162,8 @@ public abstract class SubGenerator<T> {
                 .resolve($sys("esp.idf.debug.default.bootloader.dir"))
                 .resolve($sys("esp.idf.debug.default.bootloader.name"))
                 .toString());
-
+        IdfProjectConfigService idfProjectConfigService = project.getService(IdfProjectConfigService.class);
+        idfProjectConfigService.updateProfile(IDF_CMAKE_PROFILE_NAME);
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         String romElfDir = idfEnvironmentService.getEnvironments().get(ESP_ROM_ELF_DIR);
         String romElfPeFix = idfTarget + '_';

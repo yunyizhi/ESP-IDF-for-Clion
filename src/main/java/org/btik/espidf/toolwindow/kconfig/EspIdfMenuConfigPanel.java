@@ -33,7 +33,7 @@ import static org.btik.espidf.util.UIUtils.setWidth;
 public class EspIdfMenuConfigPanel extends JPanel {
     private static final Logger LOG = Logger.getInstance(EspIdfMenuConfigPanel.class);
     private final Project project;
-    private final SearchTextBox searchInputBox = new SearchTextBox();
+    private final SearchTextBox searchInputBox;
     private final KconfServerAction kconfServerAction = new KconfServerAction();
     KconfOptAction loadAction, saveAction;
     private final List<Consumer<Boolean>> kConfRunStatusListener = new ArrayList<>();
@@ -87,7 +87,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 contentPanel.updateUI();
             });
         });
-
+        searchInputBox = new SearchTextBox(project);
         initToolBar();
     }
 
