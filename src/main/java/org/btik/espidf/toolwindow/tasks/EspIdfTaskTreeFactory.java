@@ -1,6 +1,7 @@
 package org.btik.espidf.toolwindow.tasks;
 
 import com.intellij.notification.NotificationType;
+import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.toolwindow.common.NodeModel;
 import org.btik.espidf.toolwindow.tasks.model.*;
 import org.btik.espidf.util.DomUtil;
@@ -127,9 +128,13 @@ public class EspIdfTaskTreeFactory {
     private static NodeModel<Element> newLocalExec(Element element) {
         String name = element.getAttribute(NAME);
         String path = element.getAttribute(EXEC_PATH).trim();
+        String encoding = element.getAttribute(EXEC_ENCODING).trim();
         Element argTag = getFirstElementByName(element, EXEC_ARGS);
         String args = null == argTag ? element.getAttribute(EXEC_ARGS).trim() : argTag.getTextContent();
         LocalExecNode localExecNode = new LocalExecNode(name, path, args);
+        if (StringUtils.isNotEmpty(encoding)) {
+            localExecNode.setEncoding(encoding);
+        }
         localExecNode.setUseTerminal(Boolean.parseBoolean(element.getAttribute(USE_TERMINAL)));
         localExecNode.setUseIdfEnv(Boolean.parseBoolean(element.getAttribute(EXEC_WITH_IDF_ENV)));
         return buildNode(element, localExecNode);

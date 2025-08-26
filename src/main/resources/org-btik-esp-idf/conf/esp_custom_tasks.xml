@@ -1,19 +1,33 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<esp-tasks xmlns="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema"
+<esp-tasks xmlns="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema/v0.7"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema https://yunyizhi.github.io/ESP-IDF-for-Clion/esp-tasks.xsd">
+           xsi:schemaLocation="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema/v0.7 https://yunyizhi.github.io/ESP-IDF-for-Clion/esp-tasks-v0.7.xsd">
 
-    <command name="List Targets" value="--list-targets" icon="ij:AllIcons.Actions.Compile"/>
-    <console-command name="Size" value="size" />
-    <exec name="echo IDF_PATH" args="echo $IDF_PATH " idf-env="true" />
-    <exec name="test py" path="python3" in-terminal="true">
+    <command name="List Targets" value="--preview --list-targets"/>
+
+    <command name="Build App" value="app" icon="ij:AllIcons.Actions.Compile" console-filter="true" />
+
+    <command name="Flash-App And Monitor" value="app-flash monitor"
+             console-filter="true" use-monitor="true"/>
+
+    <console-command name="Size" value="size"/>
+
+    <exec name="Default-Shell Test" args="echo hello world"/>
+
+    <exec name="cmd echo test" path="cmd" args="/c echo hello world"/>
+
+    <exec name="bash echo test" path="/bin/bash" args="-c echo hello world"/>
+
+    <exec name="Test IDF_ENV 1"  path="cmd" args="echo 1" idf-env="true" encoding="utf-8"/>
+
+    <exec name="Test IDF_ENV" path="python" args="-m esptool" idf-env="true" encoding="utf-8"/>
+
+    <exec name="Terminal Base Test" in-terminal="true">
         <args><![CDATA[
-print(1)
-exit()
+echo $env:path
+dir
         ]]></args>
     </exec>
-    <exec name="bash echo 1" path="/bin/bash"
-          args="-c &quot; echo 111 &quot;" />
-    <exec name="test py 1" path="python3 -V" in-terminal="true" />
-    <exec name="echo in terminal" args="echo 1 " in-terminal="true" icon="ij:AllIcons.Actions.Compile" />
+
+
 </esp-tasks>

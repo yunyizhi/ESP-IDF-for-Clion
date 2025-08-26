@@ -59,9 +59,13 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
         }
 
         boolean useIdfEnv = getBoolAttribute(xmlTag, EXEC_WITH_IDF_ENV);
+        String encoding = getAttribute(xmlTag, EXEC_ENCODING);
         return getCacheOrNewInfo(name,
                 () -> {
                     LocalExecNode localExecNode = new LocalExecNode(name, path, args);
+                    if (StringUtils.isNotEmpty(encoding)) {
+                        localExecNode.setEncoding(encoding);
+                    }
                     localExecNode.setUseTerminal(useTerminal);
                     localExecNode.setUseIdfEnv(useIdfEnv);
                     return new XmlMarkerAction(localExecNode, xmlTag.getProject());
@@ -72,6 +76,9 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
                         localExecNode.setArgs(args);
                         localExecNode.setUseTerminal(useTerminal);
                         localExecNode.setUseIdfEnv(useIdfEnv);
+                        if (StringUtils.isNotEmpty(encoding)) {
+                            localExecNode.setEncoding(encoding);
+                        }
                     }
                 }, xmlTag.getProject());
     }

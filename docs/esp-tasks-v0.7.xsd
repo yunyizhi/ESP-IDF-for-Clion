@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-           targetNamespace="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema"
-           xmlns:tns="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema"
+           targetNamespace="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema/v0.7"
+           xmlns:tns="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema/v0.7"
            elementFormDefault="qualified">
 
     <xs:complexType name="BaseCommandType" abstract="true">
@@ -43,7 +43,7 @@
 
     <xs:complexType name="EspTasksType">
         <xs:sequence>
-            <xs:choice maxOccurs="unbounded">
+            <xs:choice maxOccurs="unbounded" minOccurs="0">
                 <xs:element name="command" type="tns:CommandType">
                     <xs:annotation>
                         <xs:documentation>
@@ -87,8 +87,22 @@
     <xs:complexType name="CommandType">
         <xs:complexContent>
             <xs:extension base="tns:BaseCommandType">
-                <xs:attribute name="value" type="xs:string" use="required"/>
-                <xs:attribute name="console-filter" type="xs:boolean" use="optional" default="false"/>
+                <xs:attribute name="value" type="xs:string" use="required">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <p><p>Arguments for <code>idf.py</code></p></p>
+                            <p><code>idf.py</code>的参数</p>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="console-filter" type="xs:boolean" use="optional" default="false">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <p>When this option is enabled, the console view output will be processed: stderr will be highlighted in red, and the printed file lines will become clickable links for navigation.</p>
+                            <p>使能此项后，会对控制台视图输出进行处理，stderr会被以红色标记，打印的具体文件行也会变成链接可以进行跳转</p>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
                 <xs:attribute name="request-port" type="xs:boolean" use="optional" default="false">
                     <xs:annotation>
                         <xs:documentation>
@@ -114,7 +128,14 @@
     <xs:complexType name="ConsoleCommandType">
         <xs:complexContent>
             <xs:extension base="tns:BaseCommandType">
-                <xs:attribute name="value" type="xs:string" use="required"/>
+                <xs:attribute name="value" type="xs:string" use="required">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <p><p>Arguments for <code>idf.py</code></p></p>
+                            <p><code>idf.py</code>的参数</p>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
@@ -166,6 +187,14 @@
                         <xs:documentation>
                             <p>Inherits the current project's ESP-IDF environment variables.</p>
                             <p>是否继承当前项目的esp-idf的环境变量</p>
+                        </xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+                <xs:attribute name="encoding" type="xs:string" use="optional">
+                    <xs:annotation>
+                        <xs:documentation>
+                            <p>The encoding used by the console.</p>
+                            <p>控制台编码(不传时将从操作系统读取)</p>
                         </xs:documentation>
                     </xs:annotation>
                 </xs:attribute>

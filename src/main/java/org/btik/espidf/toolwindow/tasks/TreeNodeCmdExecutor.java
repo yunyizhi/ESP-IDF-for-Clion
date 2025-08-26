@@ -28,6 +28,8 @@ import org.btik.espidf.util.*;
 import org.jetbrains.annotations.NotNull;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -154,6 +156,7 @@ public class TreeNodeCmdExecutor {
             ExecutionManager.getInstance(project).restartRunProfile(builder.build());
         }
     }
+
     public static void executeAsCommand(LocalExecNode commandNode, @NotNull Project project) {
         PtyCommandLine commandLine = new PtyCommandLine();
 
@@ -161,8 +164,17 @@ public class TreeNodeCmdExecutor {
         if (commandNode.isUseIdfEnv()) {
             commandLine.withEnvironment(getEnvsWithProjectSettings(project));
         }
-        commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-        if (StringUtils.isEmpty(commandNode.getPath())){
+        try {
+            Charset charset = Charset.forName(commandNode.getEncoding());
+            commandLine.setCharset(charset);
+        } catch (UnsupportedCharsetException e) {
+            commandLine.setCharset(StandardCharsets.UTF_8);
+            I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.charset.default"),
+                            $i18nF("action.exec.charset.not.support", commandNode.getEncoding()), NotificationType.WARNING)
+                    .notify(project);
+        }
+
+        if (StringUtils.isEmpty(commandNode.getPath())) {
             commandLine.setExePath(getCmdEnv());
             commandLine.addParameters(getCmdArg(), commandNode.getArgs());
         } else {
@@ -218,7 +230,7 @@ public class TreeNodeCmdExecutor {
             if (commandNode.isUseIdfEnv()) {
                 cmdPrefixBuilder.append(buildPowershellEnv(project));
             }
-            if (StringTools.appendNotEmpty(cmdPrefixBuilder, execPath)){
+            if (StringTools.appendNotEmpty(cmdPrefixBuilder, execPath)) {
                 cmdPrefixBuilder.append(" ");
             }
             StringTools.appendNotEmpty(cmdPrefixBuilder, commandNode.getArgs());
@@ -232,8 +244,8 @@ public class TreeNodeCmdExecutor {
                 runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, false));
             }
 
-            String bin  = "";
-            if (StringUtils.isNotEmpty(execPath)){
+            String bin = "";
+            if (StringUtils.isNotEmpty(execPath)) {
                 bin = execPath + " ";
             }
             runConfiguration.setScriptText(bin + StringTools.safeNull(commandNode.getArgs()));

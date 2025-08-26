@@ -5,6 +5,8 @@ public class LocalExecNode extends EspIdfTaskTreeNode {
     private  String args;
     private boolean useIdfEnv = false;
     private boolean useTerminal = false;
+    private String encoding = "UTF-8";
+
     public LocalExecNode(String displayName, String path, String args) {
         super(displayName);
         this.path = path;
@@ -41,6 +43,14 @@ public class LocalExecNode extends EspIdfTaskTreeNode {
 
     public void setArgs(String args) {
         this.args = args;
+    }
+
+    public String getEncoding() {
+        return encoding;
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
     }
 }
 

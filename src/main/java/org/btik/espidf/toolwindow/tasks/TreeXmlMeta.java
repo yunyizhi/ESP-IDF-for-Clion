@@ -51,6 +51,8 @@ public interface TreeXmlMeta {
 
     String EXEC_ARGS = "args";
 
+    String EXEC_ENCODING = "encoding";
+
     String EXEC_WITH_IDF_ENV = "idf-env";
 
     String ESP_CUSTOM_TASKS_XML = "esp_custom_tasks.xml";
