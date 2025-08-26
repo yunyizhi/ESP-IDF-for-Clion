@@ -25,7 +25,10 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 
+import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.ESP_CUSTOM_TASKS_XML_UNIX_TEMPLATE;
+import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.ESP_CUSTOM_TASKS_XML_WIN_TEMPLATE;
 import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
 /**
  * @author lustre
@@ -149,7 +152,8 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
                     NotificationType.ERROR).addAction(
                             new CreateCustomTaskConfFileAction($i18n("action.exec.task.xml.create"), "esp_custom_tasks_empty.xml",
                                     project, this::clearCustomTask)).addAction(
-                    new CreateCustomTaskConfFileAction($i18n("action.exec.task.xml.create.use.template"), "esp_custom_tasks.xml",
+                    new CreateCustomTaskConfFileAction($i18n("action.exec.task.xml.create.use.template"),
+                            IS_WINDOWS ? ESP_CUSTOM_TASKS_XML_WIN_TEMPLATE : ESP_CUSTOM_TASKS_XML_UNIX_TEMPLATE,
                             project, this::loadCustomTaskInit)
             ).notify(project);
             return;

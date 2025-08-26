@@ -57,4 +57,8 @@ public interface TreeXmlMeta {
 
     String ESP_CUSTOM_TASKS_XML = "esp_custom_tasks.xml";
 
+    String ESP_CUSTOM_TASKS_XML_WIN_TEMPLATE = "esp_custom_tasks_windows.xml";
+
+    String ESP_CUSTOM_TASKS_XML_UNIX_TEMPLATE = "esp_custom_tasks_unix_like.xml";
+
 }

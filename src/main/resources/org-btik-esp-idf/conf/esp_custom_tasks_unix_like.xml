@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<esp-tasks xmlns="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema/v0.7"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema/v0.7 https://yunyizhi.github.io/ESP-IDF-for-Clion/esp-tasks-v0.7.xsd">
+
+    <command name="List Targets" value="--preview --list-targets"/>
+
+    <command name="Build App" value="app" icon="ij:AllIcons.Actions.Compile" console-filter="true"/>
+
+    <command name="Flash-App And Monitor" value="app-flash monitor"
+             console-filter="true" use-monitor="true"/>
+
+    <console-command name="Show Memory Usage" value="size"/>
+
+    <exec name="Default-Shell Test" args="echo hello world" toolTip="hello world"/>
+
+    <exec name="Bash Echo Test" path="/bin/bash" args="-c &quot;echo hello world &amp;&amp; pwd&quot; "/>
+
+    <exec name="Test IDF Environments" args="echo $ESP_IDF_VERSION" idf-env="true"/>
+
+    <exec name="Run Single Command with Args" path="python"
+          args="
+            -m esptool
+            --port /dev/ttyUSB0
+            chip_id"
+          idf-env="true"/>
+
+    <exec name="Run Command with Args Block" path="python" idf-env="true">
+        <args>
+            -m esptool
+            --port /dev/ttyUSB0
+            chip_id
+        </args>
+    </exec>
+
+
+    <exec name="Execute Commands Line by Line"
+          args="
+            ls
+            dir
+            echo done"
+          in-terminal="true"/>
+
+    <exec name="Execute Commands from Args Tag" in-terminal="true">
+        <args>
+<!--comment test -->
+echo Hello
+echo "Hello"
+echo "Hello<noCDATA comment="nothing"/>"
+dir
+        </args>
+    </exec>
+
+    <exec name="Execute Commands with CDATA" in-terminal="true">
+        <args><![CDATA[
+echo "<tagTest/>"
+dir
+        ]]></args>
+    </exec>
+
+</esp-tasks>
