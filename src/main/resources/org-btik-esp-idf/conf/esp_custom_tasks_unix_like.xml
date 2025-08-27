@@ -37,7 +37,7 @@
     <exec name="Execute Commands Line by Line"
           args="
             ls
-            dir
+            pwd
             echo done"
           in-terminal="true"/>
 
@@ -47,14 +47,14 @@
 echo Hello
 echo "Hello"
 echo "Hello<noCDATA comment="nothing"/>"
-dir
+ls
         </args>
     </exec>
 
     <exec name="Execute Commands with CDATA" in-terminal="true">
         <args><![CDATA[
 echo "<tagTest/>"
-dir
+ls
         ]]></args>
     </exec>
 
