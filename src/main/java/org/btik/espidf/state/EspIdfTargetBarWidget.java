@@ -13,11 +13,11 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.impl.status.EditorBasedWidget;
 import com.intellij.openapi.wm.impl.status.TextPanel;
+import com.intellij.openapi.wm.impl.status.widget.StatusBarWidgetsManager;
 import com.intellij.platform.ide.progress.TasksKt;
 import com.intellij.ui.ClickListener;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.components.JBCheckBox;
-import com.intellij.util.Consumer;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.conf.IdfProjectConfig;
@@ -46,13 +46,11 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
     private final TextPanel.WithIconAndArrows targetPanel;
     private final JBCheckBox preview;
     private final Project project;
-    private final Consumer<Boolean> setAvailable;
     private final EspIdfTargetBarBarWidgetFactory espIdfTargetBarBarWidgetFactory;
 
-    public EspIdfTargetBarWidget(Project project, Consumer<Boolean> setAvailable, EspIdfTargetBarBarWidgetFactory espIdfTargetBarBarWidgetFactory) {
+    public EspIdfTargetBarWidget(Project project, EspIdfTargetBarBarWidgetFactory espIdfTargetBarBarWidgetFactory) {
         super(project);
         this.project = project;
-        this.setAvailable = setAvailable;
         this.espIdfTargetBarBarWidgetFactory = espIdfTargetBarBarWidgetFactory;
         toolBar = new JPanel();
         toolBar.setLayout(new BoxLayout(toolBar, BoxLayout.X_AXIS));
@@ -73,7 +71,7 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         toolBar.add(targetPanel);
 
         IdfProjectConfigService service = project.getService(IdfProjectConfigService.class);
-        service.addProfileChangeListener(this::update);
+        service.addProfileChangeListener("EspIdfTargetBarWidget::onProfileChanged", this::onProfileChanged);
     }
 
 
@@ -136,7 +134,7 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
     @NotNull
     @Override
     public StatusBarWidget copy() {
-        return new EspIdfTargetBarWidget(getProject(), setAvailable, espIdfTargetBarBarWidgetFactory);
+        return new EspIdfTargetBarWidget(getProject(), espIdfTargetBarBarWidgetFactory);
     }
 
     @Override
@@ -144,9 +142,19 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         return toolBar;
     }
 
-    private void setStatusBarEnabled(boolean enabled) {
-        setAvailable.accept(enabled);
-        getComponent().setVisible(enabled);
+    private void disableStatusBar() {
+        if ((!espIdfTargetBarBarWidgetFactory.isAvailable(project)) && (!getComponent().isVisible())) {
+            return;
+        }
+        if (project.getBasePath() != null) {
+            espIdfTargetBarBarWidgetFactory.setAvailable(project.getBasePath(), false);
+        }
+        getComponent().setVisible(false);
+        project.getService(StatusBarWidgetsManager.class).updateWidget(espIdfTargetBarBarWidgetFactory);
+    }
+
+    private void onProfileChanged(IdfProjectConfigService.ProfileChangeType profileChangeType) {
+        update();
     }
 
     public void update() {
@@ -154,17 +162,22 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         IdfProjectConfig projectConfig = idfProjectConfigService.getProjectConfig();
         String cmakeProfile = projectConfig.getCmakeProfile();
         if (cmakeProfile == null) {
-            setStatusBarEnabled(false);
+            disableStatusBar();
             return;
         }
         IdfProfileInfo idfProfileInfo = idfProjectConfigService.getIdfProfileInfo(cmakeProfile);
         if (idfProfileInfo == null) {
-            setStatusBarEnabled(false);
+            disableStatusBar();
             return;
         }
         targetPanel.setText(idfProfileInfo.getTarget());
         if (!getComponent().isVisible()) {
-            setStatusBarEnabled(true);
+            getComponent().setVisible(true);
         }
+
+        if (!espIdfTargetBarBarWidgetFactory.isAvailable(project)) {
+            espIdfTargetBarBarWidgetFactory.setAvailable(project.getBasePath(), true);
+        }
+        project.getService(StatusBarWidgetsManager.class).updateWidget(espIdfTargetBarBarWidgetFactory);
     }
 }

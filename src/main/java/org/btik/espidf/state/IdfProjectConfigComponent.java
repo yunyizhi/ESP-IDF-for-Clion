@@ -7,6 +7,7 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.util.Consumer;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
@@ -34,7 +35,7 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     private final IdfProjectConfig idfProjectConfig = new IdfProjectConfig();
     private final Project project;
 
-    private final Set<Runnable> profileChangeListeners = new HashSet<>();
+    private final HashMap<String, Consumer<ProfileChangeType>> profileChangeListeners = new HashMap<>();
 
     private final HashMap<String, IdfProfileInfo> idfProfileInfoMap = new HashMap<>();
     private List<IdfProfileInfo> currentInfo;
@@ -58,6 +59,9 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
 
     @Override
     public void updateProjectConfig(IdfProjectConfig idfProjectConfig) {
+        if (!Objects.equals(idfProjectConfig.getCmakeProfile(), this.idfProjectConfig.getCmakeProfile())) {
+            onProfileSelectChanged();
+        }
         XmlSerializerUtil.copyBean(idfProjectConfig, this.idfProjectConfig);
     }
 
@@ -100,16 +104,23 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     }
 
     @Override
-    public void addProfileChangeListener(Runnable callback) {
-        profileChangeListeners.add(callback);
+    public void addProfileChangeListener(String id,Consumer<ProfileChangeType> callback) {
+        profileChangeListeners.put(id, callback);
+    }
+
+    @Override
+    public void onProfileSelectChanged() {
+        profileChangeListeners.forEach((id, callback) ->
+                ApplicationManager.getApplication().invokeLater(() -> callback.accept(ProfileChangeType.PROFILE_SELECT_CHANGE))
+        );
     }
 
     @Override
     public void onProfileChanged() {
         updateIdfProfiles();
-        for (Runnable profileChangeListener : profileChangeListeners) {
-            ApplicationManager.getApplication().invokeLater(profileChangeListener);
-        }
+        profileChangeListeners.forEach( (id, callback) ->
+                ApplicationManager.getApplication().invokeLater(() -> callback.accept(ProfileChangeType.PROFILE_CHANGE))
+        );
     }
 
     @Override
@@ -143,6 +154,9 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
 
     @Override
     public void updateProfile(String displayName) {
+        if (!Objects.equals(displayName, idfProjectConfig.getCmakeProfile())) {
+            onProfileSelectChanged();
+        }
         idfProjectConfig.setCmakeProfile(displayName);
     }
 

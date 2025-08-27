@@ -4,7 +4,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsContexts;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.StatusBarWidgetFactory;
-import com.intellij.openapi.wm.impl.status.widget.StatusBarWidgetsManager;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
@@ -30,14 +29,11 @@ public class EspIdfTargetBarBarWidgetFactory implements StatusBarWidgetFactory {
 
     @Override
     public @NotNull StatusBarWidget createWidget(@NotNull Project project) {
-        return new EspIdfTargetBarWidget(project, (isEspIdfProject) -> {
-            String basePath = project.getBasePath();
-            if (basePath == null) {
-                return;
-            }
-            this.availableMap.put(basePath, isEspIdfProject);
-            project.getService(StatusBarWidgetsManager.class).updateWidget(this);
-        }, this);
+        return new EspIdfTargetBarWidget(project, this);
+    }
+
+    public void setAvailable(String id, boolean isEspIdfProject) {
+        this.availableMap.put(id, isEspIdfProject);
     }
 
     @Override

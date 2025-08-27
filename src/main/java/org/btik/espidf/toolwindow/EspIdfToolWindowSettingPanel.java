@@ -99,7 +99,13 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
     }
 
     private void initCmakeProfile() {
-        idfProjectConfigService.addProfileChangeListener(this::initCmakeProfileVal);
+        idfProjectConfigService.addProfileChangeListener("EspIdfToolWindowSettingPanel::refreshProfileCheckBox",
+                (profileChangeType -> {
+                    if (profileChangeType == IdfProjectConfigService.ProfileChangeType.PROFILE_SELECT_CHANGE) {
+                        return;
+                    }
+                    initCmakeProfileVal();
+                }));
         initCmakeProfileVal();
     }
 
