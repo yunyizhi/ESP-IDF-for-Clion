@@ -20,6 +20,8 @@ import org.btik.espidf.command.ProcessEventAdaptor;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.run.config.EspIdfRunConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
+import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.util.EnvironmentVarUtil;
 import org.btik.espidf.util.EspIdfProjectUtil;
 import org.btik.espidf.util.OsUtil;
@@ -33,6 +35,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.btik.espidf.service.IdfEnvironmentService.ESP_ROM_ELF_DIR;
 import static org.btik.espidf.service.IdfEnvironmentService.OPENOCD_COMMANDS;
@@ -76,6 +79,11 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
     @Override
     public @NotNull GeneralCommandLine createDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType) {
         var configDataModel = espIdfRunConfig.getConfigDataModel();
+        IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
+        IdfProfileInfo selectedIdfProfileInfo = projectConfigService.getSelectedIdfProfileInfo();
+        if ((selectedIdfProfileInfo != null) && (!Objects.equals(configDataModel.getTarget(), selectedIdfProfileInfo.getTarget()))) {
+            // todo warning
+        }
         if (StringUtils.isEmpty(configDataModel.getGdbExe())) {
             throw new RuntimeException($i18n("esp.idf.debugging.gdb.not.selected"));
         }
@@ -126,7 +134,7 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
         if (checkElf(appElf)) {
             commandLine.addParameters("-iex", "file " + gdbConsolePath(appElf));
         } else {
-            File appElfInBuild = EspIdfProjectUtil.getFileInCmakeBuildDir(project, gdbConsolePath(appElf));
+            File appElfInBuild = EspIdfProjectUtil.getFileInCurrentBuildDir(project, gdbConsolePath(appElf));
             if (appElfInBuild != null) {
                 commandLine.addParameters("-iex", "file " + gdbConsolePath(appElfInBuild.getPath()));
             }

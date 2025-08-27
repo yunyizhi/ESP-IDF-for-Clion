@@ -112,7 +112,7 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
     private void initCmakeProfileVal() {
         ApplicationManager.getApplication().invokeLater(() ->
         {
-            List<IdfProfileInfo> currentIdfProjectConfig = idfProjectConfigService.getCurrentIdfProjectConfig();
+            List<IdfProfileInfo> currentIdfProjectConfig = idfProjectConfigService.getIdfProfileInfoList();
             int itemCount = cmakeProfile.getItemCount();
             Object oldSelect = cmakeProfile.getSelectedItem();
             if (itemCount != currentIdfProjectConfig.size()) {
@@ -137,7 +137,7 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
                 cmakeProfile.setSelectedItem(oldSelectName);
                 idfProjectConfigService.updateProfile(oldSelectName);
             } else {
-                IdfProfileInfo firstIdfProjectConfig = idfProjectConfigService.getFirstIdfProjectConfig();
+                IdfProfileInfo firstIdfProjectConfig = idfProjectConfigService.getFirstIdfProfileInfo();
                 if (firstIdfProjectConfig != null) {
                     cmakeProfile.setSelectedItem(firstIdfProjectConfig.getDisplayName());
                     idfProjectConfigService.updateProfile(firstIdfProjectConfig.getDisplayName());

@@ -129,7 +129,7 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     }
 
     @Override
-    public IdfProfileInfo getFirstIdfProjectConfig() {
+    public IdfProfileInfo getFirstIdfProfileInfo() {
         if (CollectionUtils.isEmpty(currentInfo)) {
             return null;
         }
@@ -137,7 +137,17 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     }
 
     @Override
-    public List<IdfProfileInfo> getCurrentIdfProjectConfig() {
+    public IdfProfileInfo getSelectedIdfProfileInfo() {
+        String cmakeProfile = idfProjectConfig.getCmakeProfile();
+        if (StringUtil.isEmpty(cmakeProfile)) {
+            return getFirstIdfProfileInfo();
+        }
+        return idfProfileInfoMap.get(cmakeProfile);
+    }
+
+
+    @Override
+    public List<IdfProfileInfo> getIdfProfileInfoList() {
         return currentInfo == null ? List.of() : currentInfo;
     }
 

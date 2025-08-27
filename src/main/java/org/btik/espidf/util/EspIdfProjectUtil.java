@@ -4,8 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
-import com.intellij.execution.ExecutionTarget;
-import com.intellij.execution.ExecutionTargetManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
@@ -65,38 +63,17 @@ public class EspIdfProjectUtil {
         return null;
     }
 
-    public static File getFileInCmakeBuildDir(Project project, final String fileName) {
-        CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
+    public static File getFileInCurrentBuildDir(Project project, final String fileName) {
         String basePath = project.getBasePath();
-
         if (basePath == null) {
             return null;
         }
         Path baseDir = Path.of(basePath);
-
-        ExecutionTarget activeTarget = ExecutionTargetManager.getActiveTarget(project);
-        String displayName = activeTarget.getDisplayName();
-        CMakeProfileInfo cMakeProfileInfoByName = instance.getCMakeProfileInfoByName(displayName);
+        IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
         File resolve;
-        if (cMakeProfileInfoByName != null) {
-            CMakeSettings.Profile profile = cMakeProfileInfoByName.getProfile();
-            String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project, profile);
-            if (StringUtils.isNotEmpty(buildOutDir) && (resolve = checkFileInBuildDir(baseDir.resolve(buildOutDir), fileName)) != null) {
-                return resolve;
-            }
-        }
-
-        CMakeSettings settings = instance.getSettings();
-        List<CMakeSettings.Profile> profiles = settings.getProfiles();
-        if (profiles.isEmpty()) {
-            return checkFileInBuildDir(baseDir.resolve($sys("esp.idf.build.project.build.dir")), fileName);
-        }
-
-        for (CMakeSettings.Profile profile : profiles) {
-            String buildOutDir = EspIdfProjectUtil.getBuildOutDir(project, profile);
-            if (StringUtils.isNotEmpty(buildOutDir) && (resolve = checkFileInBuildDir(baseDir.resolve(buildOutDir), fileName)) != null) {
-                return resolve;
-            }
+        String cmakeBuildDir = projectConfigService.getCmakeBuildDir();
+        if (StringUtils.isNotEmpty(cmakeBuildDir) && (resolve = checkFileInBuildDir(baseDir.resolve(cmakeBuildDir), fileName)) != null) {
+            return resolve;
         }
         return null;
     }
@@ -115,7 +92,7 @@ public class EspIdfProjectUtil {
 
     public static DebugConfigModel syncProjectDesc(Project project) {
         String projectDescFileName = $sys("esp.idf.build.project.description");
-        File projectDescFile = getFileInCmakeBuildDir(project, projectDescFileName);
+        File projectDescFile = getFileInCurrentBuildDir(project, projectDescFileName);
         if (projectDescFile == null) {
             return null;
         }

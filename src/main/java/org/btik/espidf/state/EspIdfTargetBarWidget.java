@@ -20,7 +20,6 @@ import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.components.JBCheckBox;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.lang3.StringUtils;
-import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
@@ -159,18 +158,12 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
 
     public void update() {
         IdfProjectConfigService idfProjectConfigService = project.getService(IdfProjectConfigService.class);
-        IdfProjectConfig projectConfig = idfProjectConfigService.getProjectConfig();
-        String cmakeProfile = projectConfig.getCmakeProfile();
-        if (cmakeProfile == null) {
+        IdfProfileInfo currentProfileInfo = idfProjectConfigService.getSelectedIdfProfileInfo();
+        if (currentProfileInfo == null) {
             disableStatusBar();
             return;
         }
-        IdfProfileInfo idfProfileInfo = idfProjectConfigService.getIdfProfileInfo(cmakeProfile);
-        if (idfProfileInfo == null) {
-            disableStatusBar();
-            return;
-        }
-        targetPanel.setText(idfProfileInfo.getTarget());
+        targetPanel.setText(currentProfileInfo.getTarget());
         if (!getComponent().isVisible()) {
             getComponent().setVisible(true);
         }

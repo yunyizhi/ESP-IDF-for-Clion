@@ -39,8 +39,6 @@ public class EspIdfRunConfig extends CLionRunConfiguration<EspIdfBuildConf, EspI
 
     private ExecutableData executableData;
     private DebugConfigModel configDataModel;
-    private int historyConfigModelHash = 0;
-    private int thisHistoryHash = 0;
 
     public EspIdfRunConfig(Project project, ConfigurationFactory factory) {
         super(project, factory, $sys("esp.idf.debug.name"));
@@ -75,8 +73,6 @@ public class EspIdfRunConfig extends CLionRunConfiguration<EspIdfBuildConf, EspI
         }
         if (configDataModel == null || Objects.equals(historyConfigDataModel.getTarget(), configDataModel.getTarget())) {
             setConfigDataModel(historyConfigDataModel);
-            this.historyConfigModelHash = System.identityHashCode(historyConfigDataModel);
-            this.thisHistoryHash = System.identityHashCode(this);
         }
     }
 
@@ -141,15 +137,5 @@ public class EspIdfRunConfig extends CLionRunConfiguration<EspIdfBuildConf, EspI
 
     public void setConfigDataModel(DebugConfigModel configDataModel) {
         this.configDataModel = configDataModel;
-    }
-
-    public boolean isFromHistory() {
-        if (configDataModel == null) {
-            return false;
-        }
-        if (System.identityHashCode(this) != this.thisHistoryHash) {
-            return false;
-        }
-        return historyConfigModelHash != 0 && historyConfigModelHash == System.identityHashCode(configDataModel);
     }
 }

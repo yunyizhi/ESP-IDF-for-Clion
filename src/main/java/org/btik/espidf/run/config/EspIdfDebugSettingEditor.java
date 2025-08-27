@@ -139,13 +139,10 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
     private void initValue() {
         DebugConfigModel debugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
         if (debugConfigModel == null) {
-            debugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
-        }
-        if (debugConfigModel == null) {
             return;
         }
         appElf.setText(debugConfigModel.getAppElf());
-        appElf.setRootDir(EspIdfProjectUtil.getFileInCmakeBuildDir(project, "/"));
+        appElf.setRootDir(EspIdfProjectUtil.getFileInCurrentBuildDir(project, "/"));
         bootloaderElf.setText(debugConfigModel.getBootloaderElf());
         String target = debugConfigModel.getTarget();
 
@@ -166,15 +163,15 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         gdb.setText(gdbExecutable);
         Map<String, String> environments = project.getService(IdfEnvironmentService.class).getEnvironments();
         String path = environments.get("Path");
-
+        if (path == null) {
+            path = environments.get("PATH");
+        }
+        if (path == null) {
+            return;
+        }
         File gdbFile = PathEnvironmentVariableUtil.findInPath(gdbExecutable, path, null);
         if (gdbFile != null) {
             gdb.setRootDir(gdbFile.getParentFile());
-        } else {
-            gdbFile = PathEnvironmentVariableUtil.findInPath(gdbExecutable, environments.get("PATH"), null);
-            if (gdbFile != null) {
-                gdb.setRootDir(gdbFile.getParentFile());
-            }
         }
 
     }

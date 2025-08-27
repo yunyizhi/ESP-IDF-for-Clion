@@ -11,7 +11,7 @@ import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.toolchains.OSType;
-import org.btik.espidf.conf.IdfProjectConfig;
+import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.run.config.build.EspIdfBuildTarget;
 import org.btik.espidf.service.IdfEnvironmentService;
@@ -54,25 +54,21 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
 
     private CPPToolchains.Toolchain getToolChianOfCheckedProfile() {
         IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
-        IdfProjectConfig projectConfig = projectConfigService.getProjectConfig();
-        String cmakeProfile = projectConfig.getCmakeProfile();
-        if (StringUtil.isEmpty(cmakeProfile)) {
-            return getFirestCMakeToolchain();
-        }
-        IdfProfileInfo idfProfileInfo = projectConfigService.getIdfProfileInfo(cmakeProfile);
-        if (idfProfileInfo == null) {
+        IdfProfileInfo idfProfileInfo = projectConfigService.getSelectedIdfProfileInfo();
+        if (idfProfileInfo == null || StringUtils.isEmpty(idfProfileInfo.getDisplayName())) {
             return getFirestCMakeToolchain();
         }
 
         CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
         CPPToolchains cppToolchains = CPPToolchains.getInstance();
-        CMakeProfileInfo cMakeProfileInfoByName = instance.getCMakeProfileInfoByName(cmakeProfile);
+        CMakeProfileInfo cMakeProfileInfoByName = instance.getCMakeProfileInfoByName(idfProfileInfo.getDisplayName());
         if (cMakeProfileInfoByName != null) {
             CMakeSettings.Profile profile = cMakeProfileInfoByName.getProfile();
             return cppToolchains.getToolchainByNameOrDefault(profile.getToolchainName());
         }
+        // 强制刷新
         projectConfigService.onProfileChanged();
-
+        // 查询第一个idf的profile的Toolchain
         List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
         for (CMakeSettings.Profile activeProfile : activeProfiles) {
             if (projectConfigService.getIdfProfileInfo( activeProfile.getName()) != null) {

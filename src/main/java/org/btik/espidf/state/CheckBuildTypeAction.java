@@ -11,12 +11,11 @@ import com.intellij.openapi.util.NlsActions;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.command.ProcessEventAdaptor;
 import org.btik.espidf.icon.EspIdfIcon;
-import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.util.CmdTaskExecutor;
 import org.btik.espidf.util.EnvironmentVarUtil;
-import org.btik.espidf.util.EspIdfProjectUtil;
 import org.btik.espidf.util.SysConf;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -38,6 +37,7 @@ public class CheckBuildTypeAction extends AnAction implements DumbAware {
     public final Runnable callback;
 
     private final boolean preview;
+
     public CheckBuildTypeAction(@Nullable @NlsActions.ActionText String text, @NotNull String chipTarget, boolean previewSelected, Runnable callback) {
         super(text);
         this.chipTarget = chipTarget;
@@ -52,8 +52,9 @@ public class CheckBuildTypeAction extends AnAction implements DumbAware {
         if (project == null) {
             return;
         }
-        DebugConfigModel debugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
-        if (debugConfigModel != null && Objects.equals(debugConfigModel.getTarget(), chipTarget)) {
+        IdfProjectConfigService idfProjectConfigService = project.getService(IdfProjectConfigService.class);
+        IdfProfileInfo currentProfileInfo = idfProjectConfigService.getSelectedIdfProfileInfo();
+        if (currentProfileInfo != null && Objects.equals(currentProfileInfo.getTarget(), chipTarget)) {
             return;
         }
         Map<String, String> envs = project.getService(IdfEnvironmentService.class).getEnvironments();
@@ -66,7 +67,7 @@ public class CheckBuildTypeAction extends AnAction implements DumbAware {
             commandLine.addParameters("--preview");
         }
         commandLine.addParameters(
-                "-B", project.getService(IdfProjectConfigService.class).getCmakeBuildDir(),
+                "-B", idfProjectConfigService.getCmakeBuildDir(),
                 "set-target", chipTarget
         );
         if (IS_WINDOWS) {

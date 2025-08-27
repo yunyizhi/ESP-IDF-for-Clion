@@ -36,9 +36,11 @@ public interface IdfProjectConfigService {
 
     IdfProfileInfo getIdfProfileInfo(String profileName);
 
-    IdfProfileInfo getFirstIdfProjectConfig();
+    IdfProfileInfo getFirstIdfProfileInfo();
 
-    List<IdfProfileInfo> getCurrentIdfProjectConfig();
+    IdfProfileInfo getSelectedIdfProfileInfo();
+
+    List<IdfProfileInfo> getIdfProfileInfoList();
 
     void updateProfile(String displayName);
 
