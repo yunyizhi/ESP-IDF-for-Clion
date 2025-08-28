@@ -12,6 +12,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.jetbrains.cidr.ArchitectureType;
+import com.jetbrains.cidr.cpp.execution.CLionRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.debugger.backend.CLionGDBDriverConfiguration;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
@@ -19,7 +20,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.command.ProcessEventAdaptor;
 import org.btik.espidf.icon.EspIdfIcon;
-import org.btik.espidf.run.config.EspIdfRunConfig;
+import org.btik.espidf.run.config.EspIdfCustomDebugRunConfig;
+import org.btik.espidf.run.config.EspIdfGdbInitDebugRunConfig;
+import org.btik.espidf.run.config.build.EspIdfBuildConf;
+import org.btik.espidf.run.config.build.EspIdfBuildTarget;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
@@ -40,8 +44,8 @@ import static org.btik.espidf.service.IdfEnvironmentService.OPENOCD_COMMANDS;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.I18nMessage.$i18nF;
 
-public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
-    private final EspIdfRunConfig espIdfRunConfig;
+public class IdfOpenOcdGDBDriverConfig<T extends CLionRunConfiguration<EspIdfBuildConf, EspIdfBuildTarget>> extends CLionGDBDriverConfiguration {
+    private final T debugRunConfig;
 
     private final Project project;
 
@@ -49,10 +53,10 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
 
     private final IdfOpenOcdProcessListener openOcdProcessListener = new IdfOpenOcdProcessListener();
 
-    public IdfOpenOcdGDBDriverConfig(@NotNull Project project, @Nullable CPPToolchains.Toolchain toolchain, EspIdfRunConfig espIdfRunConfig) {
+    public IdfOpenOcdGDBDriverConfig(@NotNull Project project, @Nullable CPPToolchains.Toolchain toolchain, T debugRunConfig) {
         super(project, toolchain);
         this.project = project;
-        this.espIdfRunConfig = espIdfRunConfig;
+        this.debugRunConfig = debugRunConfig;
     }
 
     @NotNull
@@ -74,9 +78,23 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
         processHandler.addProcessListener(new ProcessEventAdaptor().withProcessTerminatedCb((event) -> openOcdProcessListener.destroy()));
         return processHandler;
     }
-
     @Override
     public @NotNull GeneralCommandLine createDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType) {
+        if(debugRunConfig instanceof EspIdfCustomDebugRunConfig espIdfRunConfig){
+            return createCustomDriverCommandLine(driver, architectureType, espIdfRunConfig);
+        }
+        if (debugRunConfig instanceof EspIdfGdbInitDebugRunConfig espIdfGdbInitDebugRunConfig) {
+            return createGdbInitRunConfig(driver, architectureType, espIdfGdbInitDebugRunConfig);
+        }
+
+        throw new RuntimeException("not supported debugConfig[" + debugRunConfig + "]");
+    }
+
+    private @NotNull GeneralCommandLine createGdbInitRunConfig(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType, EspIdfGdbInitDebugRunConfig espIdfGdbInitDebugRunConfig) {
+        throw new RuntimeException("not supported debugConfig[" + debugRunConfig + "]");
+    }
+
+    private @NotNull GeneralCommandLine createCustomDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType, EspIdfCustomDebugRunConfig espIdfRunConfig) {
         var configDataModel = espIdfRunConfig.getConfigDataModel();
         IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
         IdfProfileInfo selectedIdfProfileInfo = projectConfigService.getSelectedIdfProfileInfo();

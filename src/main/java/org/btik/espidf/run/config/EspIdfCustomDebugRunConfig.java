@@ -34,12 +34,12 @@ import static org.btik.espidf.util.SysConf.$sys;
  * @author lustre
  * @since 2024/9/2 21:17
  */
-public class EspIdfRunConfig extends CLionRunConfiguration<EspIdfBuildConf, EspIdfBuildTarget> {
+public class EspIdfCustomDebugRunConfig extends CLionRunConfiguration<EspIdfBuildConf, EspIdfBuildTarget> {
 
     private ExecutableData executableData;
     private DebugConfigModel configDataModel;
 
-    public EspIdfRunConfig(Project project, ConfigurationFactory factory) {
+    public EspIdfCustomDebugRunConfig(Project project, ConfigurationFactory factory) {
         super(project, factory, $sys("esp.idf.debug.name"));
     }
 
@@ -123,7 +123,7 @@ public class EspIdfRunConfig extends CLionRunConfiguration<EspIdfBuildConf, EspI
 
     @Override
     public @Nullable CommandLineState getState(@NotNull Executor executor, @NotNull ExecutionEnvironment executionEnvironment) {
-        EspIdfLauncher espIdfLauncher = new EspIdfLauncher(executionEnvironment, this);
+        var espIdfLauncher = new EspIdfLauncher<>(executionEnvironment, this);
         return new CidrCommandLineState(executionEnvironment, espIdfLauncher);
     }
 

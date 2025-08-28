@@ -23,7 +23,7 @@ import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.icon.EspIdfIcon;
-import org.btik.espidf.run.config.EspIdfRunConfig;
+import org.btik.espidf.run.config.EspIdfCustomDebugRunConfig;
 import org.btik.espidf.run.config.EspIdfRunConfigType;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
@@ -148,11 +148,11 @@ public abstract class SubGenerator<T> {
         RunManager instance = RunManager.getInstance(project);
         RunnerAndConfigurationSettings idfDebug = instance.createConfiguration($i18n("esp.idf.debug.type"), EspIdfRunConfigType.class);
         RunConfiguration configuration = idfDebug.getConfiguration();
-        if (!(configuration instanceof EspIdfRunConfig espIdfRunConfig)) {
+        if (!(configuration instanceof EspIdfCustomDebugRunConfig espIdfCustomDebugRunConfig)) {
             return;
         }
         DebugConfigModel debugConfigModel = new DebugConfigModel();
-        espIdfRunConfig.setConfigDataModel(debugConfigModel);
+        espIdfCustomDebugRunConfig.setConfigDataModel(debugConfigModel);
         debugConfigModel.setTarget(idfTarget);
         IdfSysConfService idfSysConfService = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         debugConfigModel.setGdbExe(idfSysConfService.getGdbExecutable(idfTarget));

@@ -40,7 +40,8 @@ public class EspIdfRunConfigType implements ConfigurationType {
     @Override
     public ConfigurationFactory[] getConfigurationFactories() {
         return new ConfigurationFactory[]{
-                new EspIdfRunConfigFactory(this)
+                new EspIdfCustomDebugRunConfigFactory(this),
+                new EspIdfGdbInitDebugRunConfigFactory(this),
         };
     }
 

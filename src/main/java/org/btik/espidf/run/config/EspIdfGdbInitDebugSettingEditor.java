@@ -2,7 +2,6 @@ package org.btik.espidf.run.config;
 
 import com.intellij.execution.configuration.EnvironmentVariablesComponent;
 import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
-
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
@@ -15,12 +14,12 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.lang3.StringUtils;
-import org.btik.espidf.service.IdfProjectConfigService;
-import org.btik.espidf.state.model.IdfProfileInfo;
-import org.btik.espidf.ui.componets.TextFieldFileChooser;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
+import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.service.IdfSysConfService;
+import org.btik.espidf.state.model.IdfProfileInfo;
+import org.btik.espidf.ui.componets.TextFieldFileChooser;
 import org.btik.espidf.util.EspIdfProjectUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,7 +38,7 @@ import static org.btik.espidf.util.UIUtils.i18nLabel;
  * @author lustre
  * @since 2024/9/2 22:26
  */
-public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfCustomDebugRunConfig> {
+public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfCustomDebugRunConfig> {
 
     private final JPanel rootPanel;
 
@@ -53,7 +52,7 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfCustomDebugRu
     private final JButton setDefault = new JButton();
     private final Project project;
 
-    public EspIdfDebugSettingEditor(@NotNull Project project) {
+    public EspIdfGdbInitDebugSettingEditor(@NotNull Project project) {
         this.project = project;
         rootPanel = new JPanel(new VerticalFlowLayout(0, 2));
         envComponent = new EnvironmentVariablesComponent();

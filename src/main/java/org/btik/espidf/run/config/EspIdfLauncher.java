@@ -20,6 +20,7 @@ import com.intellij.xdebugger.XDebugSession;
 import com.intellij.xdebugger.ui.XDebugTabLayouter;
 import com.jetbrains.cidr.ArchitectureType;
 import com.jetbrains.cidr.cpp.execution.CLionLauncher;
+import com.jetbrains.cidr.cpp.execution.CLionRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.debugger.peripheralview.SvdPanel;
 import com.jetbrains.cidr.cpp.toolchains.CPPDebugger;
 import com.jetbrains.cidr.cpp.toolchains.CPPEnvironment;
@@ -33,6 +34,8 @@ import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriverConfiguration;
 import com.jetbrains.cidr.toolchains.OSType;
 import kotlin.Pair;
+import org.btik.espidf.run.config.build.EspIdfBuildConf;
+import org.btik.espidf.run.config.build.EspIdfBuildTarget;
 import org.btik.espidf.run.config.openocd.IdfOpenOcdGDBDriverConfig;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.util.EnvironmentVarUtil;
@@ -51,12 +54,12 @@ import java.util.Map;
  * @author lustre
  * @since 2024/9/2 23:05
  */
-public class EspIdfLauncher extends CLionLauncher {
-    private final EspIdfRunConfig espIdfRunConfig;
+public class EspIdfLauncher<T extends CLionRunConfiguration<EspIdfBuildConf, EspIdfBuildTarget>> extends CLionLauncher {
+    private final T debugRunConfig;
 
-    public EspIdfLauncher(@NotNull ExecutionEnvironment executionEnvironment, @NotNull EspIdfRunConfig configuration) {
-        super(executionEnvironment, configuration);
-        this.espIdfRunConfig = configuration;
+    public EspIdfLauncher(@NotNull ExecutionEnvironment executionEnvironment, @NotNull T debugRunConfig) {
+        super(executionEnvironment, debugRunConfig);
+        this.debugRunConfig = debugRunConfig;
     }
 
     @Override
@@ -93,8 +96,8 @@ public class EspIdfLauncher extends CLionLauncher {
         Project project = getProject();
         @SystemIndependent final String projectPath = project.getBasePath();
         CPPToolchains.Toolchain nativeToolchain = TrivialNativeToolchain.Companion.forDebugger(CPPDebugger.customGdb("gdb"), OSType.getCurrent());
-        DebuggerDriverConfiguration debuggerDriverConfiguration = new IdfOpenOcdGDBDriverConfig(project,
-                nativeToolchain, espIdfRunConfig);
+        DebuggerDriverConfiguration debuggerDriverConfiguration = new IdfOpenOcdGDBDriverConfig<>(project,
+                nativeToolchain, debugRunConfig);
 
         GeneralCommandLine commandLine = new GeneralCommandLine("").withWorkDirectory(project.getBasePath());
         TrivialRunParameters parameters = new TrivialRunParameters(debuggerDriverConfiguration, commandLine, ArchitectureType.UNKNOWN);
