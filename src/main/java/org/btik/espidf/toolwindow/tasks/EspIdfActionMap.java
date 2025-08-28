@@ -13,6 +13,7 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.sh.run.ShConfigurationType;
 import com.intellij.sh.run.ShRunConfiguration;
 import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskActionNode;
 import org.btik.espidf.util.I18nMessage;
@@ -36,6 +37,17 @@ public class EspIdfActionMap {
         actionMap = new HashMap<>();
         actionMap.put("idf.export.console", EspIdfActionMap::exportConsole);
         actionMap.put("open.component.registry",EspIdfActionMap::openComponentRegistry);
+        actionMap.put("idf.rebuild.all.env.cache", EspIdfActionMap::reBuildAllIdfEnvCache);
+    }
+
+    private static void reBuildAllIdfEnvCache(EspIdfTaskActionNode espIdfTaskActionNode, Project project) {
+        IdfEnvironmentService service = project.getService(IdfEnvironmentService.class);
+        service.buildEnvironmentsCache();
+        // 如果缓存建立完成，检查是否需要关闭悬浮工具栏
+        service.checkEnvNeedRebuild();
+        I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("esp.idf.rebuild.ok"),
+                $i18n("esp.idf.rebuild.envs.ok"),
+                NotificationType.INFORMATION).notify(project);
     }
 
     private static void openComponentRegistry(EspIdfTaskActionNode espIdfTaskActionNode, Project project) {

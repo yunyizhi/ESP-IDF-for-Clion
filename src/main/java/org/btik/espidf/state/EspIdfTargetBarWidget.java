@@ -171,6 +171,5 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         if (!espIdfTargetBarBarWidgetFactory.isAvailable(project)) {
             espIdfTargetBarBarWidgetFactory.setAvailable(project.getBasePath(), true);
         }
-        project.getService(StatusBarWidgetsManager.class).updateWidget(espIdfTargetBarBarWidgetFactory);
     }
 }

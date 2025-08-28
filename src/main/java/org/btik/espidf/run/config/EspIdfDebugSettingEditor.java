@@ -15,6 +15,8 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.lang3.StringUtils;
+import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.ui.componets.TextFieldFileChooser;
 import org.btik.espidf.run.config.model.DebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
@@ -134,6 +136,11 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
                 }
             }
         });
+        installWatcher(arguments);
+        installWatcher(appElf);
+        installWatcher(bootloaderElf);
+        installWatcher(romElf);
+        installWatcher(gdb);
     }
 
     private void initValue() {
@@ -208,6 +215,11 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfRunConfig> {
         debugConfigModel.setOpenOcdArguments(arguments.getText());
         debugConfigModel.setGdbExe(gdb.getText());
         debugConfigModel.setEnvData(envComponent.getEnvData());
+        IdfProfileInfo selectedIdfProfileInfo = project.getService(IdfProjectConfigService.class).getSelectedIdfProfileInfo();
+        if (selectedIdfProfileInfo == null) {
+            return;
+        }
+        debugConfigModel.setTarget(selectedIdfProfileInfo.getTarget());
     }
 
     @Override

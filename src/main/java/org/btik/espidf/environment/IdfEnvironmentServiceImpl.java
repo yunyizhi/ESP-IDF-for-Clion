@@ -18,6 +18,7 @@ import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.state.model.IdfProfileInfo;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.IOException;
@@ -27,9 +28,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static org.btik.espidf.adapter.Adapter.readEnvironment;
-import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 import static org.btik.espidf.util.SysConf.$sys;
 
@@ -46,6 +50,8 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
     private IdfToolConf idfToolConf;
 
     private final EspIdfBuildTarget espIdfBuildTarget;
+
+    private Consumer<Boolean> floatingToolbarVisibleHandler;
 
     public IdfEnvironmentServiceImpl(Project project) {
         this.project = project;
@@ -71,7 +77,7 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         // 查询第一个idf的profile的Toolchain
         List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
         for (CMakeSettings.Profile activeProfile : activeProfiles) {
-            if (projectConfigService.getIdfProfileInfo( activeProfile.getName()) != null) {
+            if (projectConfigService.getIdfProfileInfo(activeProfile.getName()) != null) {
                 return cppToolchains.getToolchainByNameOrDefault(activeProfile.getToolchainName());
             }
         }
@@ -126,7 +132,7 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         if (StringUtil.isEmpty(environment)) {
             return new HashMap<>();
         }
-        Map<String, String> rawEnv = TasksKt.runWithModalProgressBlocking(project, $i18n("esp.idf.read.envs"), (scope, continuation) -> {
+        Map<String, String> rawEnv = TasksKt.runWithModalProgressBlocking(project, $i18nF("esp.idf.read.envs", toolchain.getName()), (scope, continuation) -> {
             try {
                 return readEnvironment(toolchain, environment);
             } catch (IOException | com.intellij.execution.ExecutionException e) {
@@ -191,6 +197,76 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         return List.of(espIdfBuildTarget);
     }
 
+    private void eachIdfToolChain(Function<CPPToolchains.Toolchain, @NotNull Boolean> callback) {
+        IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
+        CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
+        CPPToolchains cppToolchains = CPPToolchains.getInstance();
+
+        List<IdfProfileInfo> idfProfileInfoList = projectConfigService.getIdfProfileInfoList();
+        for (IdfProfileInfo idfProfileInfo : idfProfileInfoList) {
+            CMakeProfileInfo cMakeProfileInfoByName = instance.getCMakeProfileInfoByName(idfProfileInfo.getDisplayName());
+            if (cMakeProfileInfoByName == null) {
+                continue;
+            }
+            CMakeSettings.Profile profile = cMakeProfileInfoByName.getProfile();
+            CPPToolchains.Toolchain toolChian = cppToolchains.getToolchainByNameOrDefault(profile.getToolchainName());
+            if (toolChian == null) {
+                continue;
+            }
+            boolean next = callback.apply(toolChian);
+            if (!next) {
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void buildEnvironmentsCache() {
+        project.getService(IdfProjectConfigService.class).onProfileChanged();
+        eachIdfToolChain((toolchain -> {
+            generateEnvironment(toolchain);
+            return true;
+        }));
+    }
+
+    @Override
+    public void fixEnvironmentsCache() {
+        eachIdfToolChain((toolchain -> {
+            String environment = toolchain.getEnvironment();
+            if (!envFile2Envs.containsKey(environment)) {
+                generateEnvironment(toolchain);
+            }
+            return true;
+        }));
+    }
+
+    @Override
+    public void checkEnvNeedRebuild() {
+        AtomicBoolean needReload = new AtomicBoolean(false);
+        eachIdfToolChain((toolchain -> {
+            String environment = toolchain.getEnvironment();
+            if (!envFile2Envs.containsKey(environment)) {
+                needReload.set(true);
+                return false;
+            }
+            return true;
+        }));
+        if (floatingToolbarVisibleHandler != null) {
+            floatingToolbarVisibleHandler.accept(needReload.get());
+        }
+    }
+
+    @Override
+    public void register(Consumer<Boolean> floatingToolbarVisibleHandler) {
+        this.floatingToolbarVisibleHandler = floatingToolbarVisibleHandler;
+    }
+
+    @Override
+    public void setFloatingToolbarVisible(boolean visible) {
+        if (floatingToolbarVisibleHandler != null) {
+            floatingToolbarVisibleHandler.accept(visible);
+        }
+    }
 
     private CPPToolchains.Toolchain getToolChain(String envFileName) {
         CPPToolchains.Toolchain existsToolChain = ApplicationManager.getApplication().runReadAction((Computable<CPPToolchains.Toolchain>) () -> {

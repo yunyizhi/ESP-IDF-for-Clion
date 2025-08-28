@@ -19,6 +19,7 @@ import java.util.Map;
 
 import static org.btik.espidf.adapter.Adapter.readEnvironment;
 import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.util.SysConf.$sys;
 
 /**
@@ -54,13 +55,15 @@ public class UnixLikeGenerator<T> extends SubGenerator<T> {
             try {
                 IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
                 IdfToolConf idfToolConf = environmentService.getSourceToolConf(idfFrameworkPath);
-                Map<String, String> readEnvironment = TasksKt.runWithModalProgressBlocking(project, $i18n("esp.idf.read.envs"), (scope, continuation) -> {
-                    try {
-                        return readEnvironment(idfToolConf);
-                    } catch (IOException | ExecutionException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                Map<String, String> readEnvironment = TasksKt.runWithModalProgressBlocking(project,
+                        $i18nF("esp.idf.read.envs", idfToolConf.getToolchain().getName()),
+                        (scope, continuation) -> {
+                            try {
+                                return readEnvironment(idfToolConf);
+                            } catch (IOException | ExecutionException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
                 String toolChainName = idfToolConf.getToolchain().getName();
                 generateProject(readEnvironment, toolChainName);
             } catch (RuntimeException | ExecutionException e) {

@@ -27,7 +27,6 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
-import java.util.Objects;
 
 import static org.btik.espidf.util.SysConf.$sys;
 
@@ -71,9 +70,7 @@ public class EspIdfRunConfig extends CLionRunConfiguration<EspIdfBuildConf, EspI
             }
 
         }
-        if (configDataModel == null || Objects.equals(historyConfigDataModel.getTarget(), configDataModel.getTarget())) {
-            setConfigDataModel(historyConfigDataModel);
-        }
+        setConfigDataModel(historyConfigDataModel);
     }
 
     @Override

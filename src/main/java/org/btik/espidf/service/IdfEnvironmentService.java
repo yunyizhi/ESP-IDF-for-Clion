@@ -1,10 +1,12 @@
 package org.btik.espidf.service;
 
+
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.run.config.build.EspIdfBuildTarget;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * @author lustre
@@ -37,4 +39,21 @@ public interface IdfEnvironmentService {
 
     List<EspIdfBuildTarget> getBuildTargets();
 
+    /**
+     * 构建环境遍历缓存，在初始化或者Toolchain发生变化后调用，会覆盖已有缓存
+     *
+     */
+    void buildEnvironmentsCache();
+
+    /**
+     * 补全未被建缓存的Toolchain环境变量缓存，不修改已有缓存
+     *
+     */
+    void fixEnvironmentsCache();
+
+    void checkEnvNeedRebuild();
+
+    void register(Consumer<Boolean> floatingToolbarVisibleHandler);
+
+    void setFloatingToolbarVisible(boolean visible);
 }

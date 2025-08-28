@@ -7,6 +7,7 @@ import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.process.*;
 import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
@@ -22,10 +23,7 @@ import org.btik.espidf.run.config.EspIdfRunConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
-import org.btik.espidf.util.EnvironmentVarUtil;
-import org.btik.espidf.util.EspIdfProjectUtil;
-import org.btik.espidf.util.OsUtil;
-import org.btik.espidf.util.SysConf;
+import org.btik.espidf.util.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,6 +38,7 @@ import java.util.Objects;
 import static org.btik.espidf.service.IdfEnvironmentService.ESP_ROM_ELF_DIR;
 import static org.btik.espidf.service.IdfEnvironmentService.OPENOCD_COMMANDS;
 import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.I18nMessage.$i18nF;
 
 public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
     private final EspIdfRunConfig espIdfRunConfig;
@@ -82,7 +81,10 @@ public class IdfOpenOcdGDBDriverConfig extends CLionGDBDriverConfiguration {
         IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
         IdfProfileInfo selectedIdfProfileInfo = projectConfigService.getSelectedIdfProfileInfo();
         if ((selectedIdfProfileInfo != null) && (!Objects.equals(configDataModel.getTarget(), selectedIdfProfileInfo.getTarget()))) {
-            // todo warning
+            ApplicationManager.getApplication().invokeLater(
+                    () -> I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("esp.idf.debug.target.miss.match"),
+                            $i18nF("esp.idf.debug.target.miss.match.info", configDataModel.getTarget(), selectedIdfProfileInfo.getTarget()),
+                            NotificationType.WARNING).notify(project));
         }
         if (StringUtils.isEmpty(configDataModel.getGdbExe())) {
             throw new RuntimeException($i18n("esp.idf.debugging.gdb.not.selected"));

@@ -37,6 +37,7 @@ Enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif
                                    id="org.btiik.espidf" order="after jetbrains.cidr.stm32cubemx"/>
         <notificationGroup id="org.btiik.espidf" displayType="BALLOON" bundle="messages.org_btik_espidf"
                            key="notification.group"/>
+        <postStartupActivity implementation="org.btik.espidf.state.EspIdfProjectActivity"/>
         <toolWindow id="ESP-IDF" icon="/org-btik-esp-idf/image/idf13_13.svg" anchor="right"
                     factoryClass="org.btik.espidf.toolwindow.EspIdfToolWindowFactory"/>
         <applicationService serviceInterface="org.btik.espidf.service.IdfSysConfService"
@@ -49,6 +50,9 @@ Enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif
                            implementation="org.btik.espidf.run.config.EspIdfRunConfigType"/>
         <statusBarWidgetFactory
                 implementation="org.btik.espidf.state.EspIdfTargetBarBarWidgetFactory" id="esp_idf_target"/>
+        <editorFloatingToolbarProvider id="org_btik_espidf.env"
+                                       implementation="org.btik.espidf.state.env.EspIdfEnvFloatingToolbarProvider"
+        />
         <postStartupActivity implementation="org.btik.espidf.state.EspIdfProjectManagerListener"/>
         <runLineMarkerContributor language="XML" implementationClass="org.btik.espidf.toolwindow.tasks.line.marker.EspCustomRunLineMarkerContributor"/>
     </extensions>
@@ -58,4 +62,11 @@ Enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif
         <listener class="org.btik.espidf.state.CMakeStateListener"
                   topic="com.jetbrains.cidr.cpp.cmake.CMakeSettingsListener"/>
     </projectListeners>
+    <actions>
+        <group id="reload_idf_env">
+
+            <action id="reload_idf_env.do" class="org.btik.espidf.state.env.LoadEspIdfEnvsAction"/>
+            <action id="reload_idf_env.cancel" class="org.btik.espidf.state.env.LoadEspIdfEnvsCancelAction"/>
+        </group>
+    </actions>
 </idea-plugin>

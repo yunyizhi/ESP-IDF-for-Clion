@@ -14,6 +14,7 @@ import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import org.apache.commons.collections.CollectionUtils;
 import org.btik.espidf.conf.IdfProjectConfig;
+import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.util.EspIdfProjectUtil;
@@ -118,6 +119,8 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     @Override
     public void onProfileChanged() {
         updateIdfProfiles();
+        IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
+        environmentService.checkEnvNeedRebuild();
         profileChangeListeners.forEach( (id, callback) ->
                 ApplicationManager.getApplication().invokeLater(() -> callback.accept(ProfileChangeType.PROFILE_CHANGE))
         );

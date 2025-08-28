@@ -34,7 +34,7 @@ import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriverConfiguration
 import com.jetbrains.cidr.toolchains.OSType;
 import kotlin.Pair;
 import org.btik.espidf.run.config.openocd.IdfOpenOcdGDBDriverConfig;
-import org.btik.espidf.service.IdfEnvironmentService;
+import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.util.EnvironmentVarUtil;
 import org.btik.espidf.util.OsUtil;
 import org.btik.espidf.util.SysConf;
@@ -72,8 +72,7 @@ public class EspIdfLauncher extends CLionLauncher {
     @Override
     public @NotNull ProcessHandler createProcess(@NotNull CommandLineState state) throws ExecutionException {
         Project project = getProject();
-        IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
-        Map<String, String> environments = environmentService.getEnvironments();
+        Map<String, String> environments = EnvironmentVarUtil.getEnvsWithProjectSettings(project);
         PtyCommandLine flash = new PtyCommandLine();
         if (OsUtil.IS_WINDOWS) {
             flash.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
@@ -83,6 +82,7 @@ public class EspIdfLauncher extends CLionLauncher {
                 .withWorkDirectory(project.getBasePath())
                 .withEnvironment(environments)
                 .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
+                .withParameters("-B", project.getService(IdfProjectConfigService.class).getCmakeBuildDir())
                 .withParameters("flash");
 
         return new KillableColoredProcessHandler(flash);

@@ -19,8 +19,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.command.MonitorProcessHandler;
 import org.btik.espidf.command.ProcessEventAdaptor;
-import org.btik.espidf.conf.IdfProjectConfig;
-import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.toolwindow.tasks.model.*;
@@ -30,13 +28,13 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static org.btik.espidf.service.IdfEnvironmentService.*;
 import static org.btik.espidf.service.IdfProjectConfigService.PORT_CONF_AUTO;
 import static org.btik.espidf.util.EnvironmentVarUtil.diffWithSystem;
+import static org.btik.espidf.util.EnvironmentVarUtil.getEnvsWithProjectSettings;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.util.OsUtil.*;
@@ -281,31 +279,5 @@ public class TreeNodeCmdExecutor {
         EspIdfActionMap.exec(actionNode, project);
     }
 
-    public static Map<String, String> getEnvsWithProjectSettings(@NotNull Project project) {
-        IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
-        IdfProjectConfig projectConfig = project.getService(IdfProjectConfigService.class).getProjectConfig();
-        Map<String, String> projectEnvs = buildProjectSettingToEnvs(projectConfig);
-        environmentService.putTo(projectEnvs);
-        return projectEnvs;
-    }
 
-    public static Map<String, String> buildProjectSettingToEnvs(@NotNull IdfProjectConfig projectConfig) {
-        if (projectConfig.isEmpty()) {
-            return new HashMap<>();
-        }
-        Map<String, String> envs = new HashMap<>();
-        String monitorBaud = projectConfig.getMonitorBaud();
-        if (StringUtil.isNotEmpty(monitorBaud) && !monitorBaud.equals(PORT_CONF_AUTO)) {
-            envs.put(IDF_MONITOR_BAUD, monitorBaud);
-        }
-        String uploadBaud = projectConfig.getUploadBaud();
-        if (StringUtil.isNotEmpty(uploadBaud) && !uploadBaud.equals(PORT_CONF_AUTO)) {
-            envs.put(ESP_BAUD, uploadBaud);
-        }
-        String port = projectConfig.getPort();
-        if (StringUtil.isNotEmpty(port)) {
-            envs.put(ESP_PORT, port);
-        }
-        return envs;
-    }
 }
