@@ -11,7 +11,7 @@ public class GdbInitDebugConfigModel {
     private String openOcdArguments;
 
     @Serial
-    private String gdbInit;
+    private String path;
 
     @Serial
     private String gdbExe;
@@ -35,12 +35,12 @@ public class GdbInitDebugConfigModel {
         this.openOcdArguments = openOcdArguments;
     }
 
-    public String getGdbInit() {
-        return gdbInit;
+    public String getPath() {
+        return path;
     }
 
-    public void setGdbInit(String gdbInit) {
-        this.gdbInit = gdbInit;
+    public void setPath(String path) {
+        this.path = path;
     }
 
     public String getGdbExe() {

@@ -45,7 +45,7 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugR
     private final EnvironmentVariablesComponent envComponent;
 
     private final JTextField arguments = new JTextField();
-    private final GdbInitPathBox gdbInitPathBox;
+    private final GdbSymbolsPathBox gdbSymbolsPathBox;
     private final TextFieldFileChooser gdb;
     private final JButton setDefault = new JButton();
     private final Project project;
@@ -70,9 +70,9 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugR
         GridConstraints appElfConstraints = createConstraints(rowIndex, 1);
         appElfConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         appElfConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        gdbInitPathBox = new GdbInitPathBox(project);
-        UIUtils.setWidth(gdbInitPathBox, 120);
-        wrapper.add(gdbInitPathBox, appElfConstraints);
+        gdbSymbolsPathBox = new GdbSymbolsPathBox(project);
+        UIUtils.setWidth(gdbSymbolsPathBox, 120);
+        wrapper.add(gdbSymbolsPathBox, appElfConstraints);
         rowIndex++;
 
         wrapper.add(i18nLabel("esp.idf.debug.gdb"), createConstraints(rowIndex, 0));
@@ -115,9 +115,9 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugR
                 }
             }
         });
-        gdbInitPathBox.addItemListener(e -> {
+        gdbSymbolsPathBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
-                Object selectedItem = gdbInitPathBox.getSelectedItem();
+                Object selectedItem = gdbSymbolsPathBox.getSelectedItem();
                 if (selectedItem instanceof GdbInitProfileInfo gdbInitProfileInfo) {
                     setGdbByTarget(gdbInitProfileInfo.target());
                 }
@@ -151,7 +151,7 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugR
         IdfProjectConfigService idfProjectConfigService = project.getService(IdfProjectConfigService.class);
         IdfProfileInfo selectedIdfProfileInfo = idfProjectConfigService.getSelectedIdfProfileInfo();
         String target = selectedIdfProfileInfo.getTarget();
-        gdbInitPathBox.setCmakeBuildDir(target);
+        gdbSymbolsPathBox.setCmakeBuildDir(selectedIdfProfileInfo.getBuildDir());
         setGdbByTarget(target);
 
     }
@@ -166,7 +166,7 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugR
         envComponent.setEnvData(configDataModel.getEnvData());
         arguments.setText(configDataModel.getOpenOcdArguments());
         gdb.setText(configDataModel.getGdbExe());
-        gdbInitPathBox.setEditorText(configDataModel.getGdbInit());
+        gdbSymbolsPathBox.setEditorText(configDataModel.getPath());
     }
 
     @Override
@@ -174,14 +174,14 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugR
         if (StringUtils.isEmpty(gdb.getText())) {
             throw new ConfigurationException($i18n("esp.idf.debugging.gdb.not.selected"));
         }
-        if (StringUtils.isEmpty(gdbInitPathBox.getEditorText())) {
-            throw new ConfigurationException($i18n("esp.idf.debugging.gdb.init.not.selected"));
+        if (StringUtils.isEmpty(gdbSymbolsPathBox.getEditorText())) {
+            throw new ConfigurationException($i18n("esp.idf.debugging.symbols.not.selected"));
         }
         var configDataModel = debugRunConfig.getConfigDataModel();
         var debugConfigModel = configDataModel == null ? new GdbInitDebugConfigModel() : configDataModel;
         debugRunConfig.setConfigDataModel(debugConfigModel);
         debugConfigModel.setOpenOcdArguments(arguments.getText());
-        debugConfigModel.setGdbInit(gdbInitPathBox.getEditorText());
+        debugConfigModel.setPath(gdbSymbolsPathBox.getEditorText());
         debugConfigModel.setGdbExe(gdb.getText());
         debugConfigModel.setEnvData(envComponent.getEnvData());
         IdfProfileInfo selectedIdfProfileInfo = project.getService(IdfProjectConfigService.class).getSelectedIdfProfileInfo();

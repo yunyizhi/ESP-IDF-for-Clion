@@ -19,14 +19,14 @@ import javax.swing.plaf.basic.BasicComboBoxEditor;
 import java.awt.*;
 import java.util.List;
 
-public class GdbInitPathBox extends ComboBox<GdbInitProfileInfo> {
-    private static final String GDB_INIT_PATH_IN_BUILD = "/gdbinit/gdbinit";
+public class GdbSymbolsPathBox extends ComboBox<GdbInitProfileInfo> {
+    public static final String GDB_INIT_PATH_IN_BUILD = "/gdbinit/symbols";
     private Project project;
 
     private final GdbInitProfileInfoEditor gdbInitProfileInfoEditor;
 
 
-    public GdbInitPathBox(@NotNull Project project) {
+    public GdbSymbolsPathBox(@NotNull Project project) {
         gdbInitProfileInfoEditor = new GdbInitProfileInfoEditor();
         setEditor(gdbInitProfileInfoEditor);
         setEditable(true);

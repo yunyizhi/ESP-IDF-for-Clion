@@ -118,14 +118,14 @@ public class IdfOpenOcdGDBDriverConfig<T> extends CLionGDBDriverConfiguration {
         if (StringUtils.isEmpty(configModel.getGdbExe())) {
             throw new RuntimeException($i18n("esp.idf.debugging.gdb.not.selected"));
         }
-        if (StringUtil.isEmpty(configModel.getGdbInit())) {
-            throw new RuntimeException($i18n("esp.idf.debugging.gdb.init.not.selected"));
+        if (StringUtil.isEmpty(configModel.getPath())) {
+            throw new RuntimeException($i18n("esp.idf.debugging.symbols.not.selected"));
         }
         Map<String, String> envs = new HashMap<>(configModel.getEnvData().getEnvs());
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         idfEnvironmentService.putTo(envs);
         setOpenOcdProcessListener(configModel.getOpenOcdArguments(), envs);
-        return new GeneralCommandLine()
+        GeneralCommandLine generalCommandLine = new GeneralCommandLine()
                 .withExePath(configModel.getGdbExe())
                 .withWorkDirectory(project.getBasePath())
                 .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
@@ -133,7 +133,18 @@ public class IdfOpenOcdGDBDriverConfig<T> extends CLionGDBDriverConfiguration {
                 .withRedirectErrorStream(true)
                 .withParameters("--interpreter=mi2",
                         "-iex", "set mi-async",
-                        "-x", configModel.getGdbInit());
+                        "-x", configModel.getPath());
+        String[] connect = {
+                "set remotetimeout 10",
+                "target remote :3333",
+                "monitor reset halt",
+                "maintenance flush register-cache",
+                "thbreak app_main"
+        };
+        for (String gdbCmd : connect) {
+            generalCommandLine.addParameters("-ex", gdbCmd);
+        }
+        return generalCommandLine;
     }
 
     private @NotNull GeneralCommandLine createCustomDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType, CustomDebugConfigModel configDataModel) {
