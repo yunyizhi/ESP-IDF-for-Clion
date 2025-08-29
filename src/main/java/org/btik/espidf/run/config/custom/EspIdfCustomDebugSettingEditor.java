@@ -1,7 +1,8 @@
-package org.btik.espidf.run.config;
+package org.btik.espidf.run.config.custom;
 
 import com.intellij.execution.configuration.EnvironmentVariablesComponent;
 import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
+
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
@@ -14,12 +15,13 @@ import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.lang3.StringUtils;
-import org.btik.espidf.run.config.model.DebugConfigModel;
-import org.btik.espidf.service.IdfEnvironmentService;
+import org.btik.espidf.run.config.EspIdfDebugRunConfig;
+import org.btik.espidf.run.config.model.CustomDebugConfigModel;
 import org.btik.espidf.service.IdfProjectConfigService;
-import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.ui.componets.TextFieldFileChooser;
+import org.btik.espidf.service.IdfEnvironmentService;
+import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.util.EspIdfProjectUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -38,7 +40,7 @@ import static org.btik.espidf.util.UIUtils.i18nLabel;
  * @author lustre
  * @since 2024/9/2 22:26
  */
-public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfCustomDebugRunConfig> {
+public class EspIdfCustomDebugSettingEditor extends SettingsEditor<EspIdfDebugRunConfig<CustomDebugConfigModel>> {
 
     private final JPanel rootPanel;
 
@@ -52,7 +54,7 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfCustom
     private final JButton setDefault = new JButton();
     private final Project project;
 
-    public EspIdfGdbInitDebugSettingEditor(@NotNull Project project) {
+    public EspIdfCustomDebugSettingEditor(@NotNull Project project) {
         this.project = project;
         rootPanel = new JPanel(new VerticalFlowLayout(0, 2));
         envComponent = new EnvironmentVariablesComponent();
@@ -143,16 +145,16 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfCustom
     }
 
     private void initValue() {
-        DebugConfigModel debugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
-        if (debugConfigModel == null) {
+        CustomDebugConfigModel customDebugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
+        if (customDebugConfigModel == null) {
             return;
         }
-        appElf.setText(debugConfigModel.getAppElf());
+        appElf.setText(customDebugConfigModel.getAppElf());
         appElf.setRootDir(EspIdfProjectUtil.getFileInCurrentBuildDir(project, "/"));
-        bootloaderElf.setText(debugConfigModel.getBootloaderElf());
-        String target = debugConfigModel.getTarget();
+        bootloaderElf.setText(customDebugConfigModel.getBootloaderElf());
+        String target = customDebugConfigModel.getTarget();
 
-        String romElfDir = debugConfigModel.getRomElfDir();
+        String romElfDir = customDebugConfigModel.getRomElfDir();
         String romElfPeFix = target + '_';
         File romElfDirFile = new File(romElfDir);
         String[] list = romElfDirFile.list();
@@ -183,8 +185,8 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfCustom
     }
 
     @Override
-    protected void resetEditorFrom(@NotNull EspIdfCustomDebugRunConfig espIdfCustomDebugRunConfig) {
-        DebugConfigModel configDataModel = espIdfCustomDebugRunConfig.getConfigDataModel();
+    protected void resetEditorFrom(@NotNull EspIdfDebugRunConfig<CustomDebugConfigModel> espIdfDebugRunConfig) {
+        CustomDebugConfigModel configDataModel = espIdfDebugRunConfig.getConfigDataModel();
         if (configDataModel == null) {
             initValue();
             return;
@@ -198,27 +200,27 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfCustom
     }
 
     @Override
-    protected void applyEditorTo(@NotNull EspIdfCustomDebugRunConfig espIdfCustomDebugRunConfig) throws ConfigurationException {
+    protected void applyEditorTo(@NotNull EspIdfDebugRunConfig<CustomDebugConfigModel> espIdfDebugRunConfig) throws ConfigurationException {
         if (StringUtils.isEmpty(gdb.getText())) {
             throw new ConfigurationException($i18n("esp.idf.debugging.gdb.not.selected"));
         }
         if (StringUtils.isEmpty(appElf.getText())) {
             throw new ConfigurationException($i18n("esp.idf.debugging.app.elf.not.selected"));
         }
-        DebugConfigModel configDataModel = espIdfCustomDebugRunConfig.getConfigDataModel();
-        DebugConfigModel debugConfigModel = configDataModel == null ? new DebugConfigModel() : configDataModel;
-        espIdfCustomDebugRunConfig.setConfigDataModel(debugConfigModel);
-        debugConfigModel.setAppElf(appElf.getText());
-        debugConfigModel.setBootloaderElf(bootloaderElf.getText());
-        debugConfigModel.setRomElf(romElf.getText());
-        debugConfigModel.setOpenOcdArguments(arguments.getText());
-        debugConfigModel.setGdbExe(gdb.getText());
-        debugConfigModel.setEnvData(envComponent.getEnvData());
+        CustomDebugConfigModel configDataModel = espIdfDebugRunConfig.getConfigDataModel();
+        CustomDebugConfigModel customDebugConfigModel = configDataModel == null ? new CustomDebugConfigModel() : configDataModel;
+        espIdfDebugRunConfig.setConfigDataModel(customDebugConfigModel);
+        customDebugConfigModel.setAppElf(appElf.getText());
+        customDebugConfigModel.setBootloaderElf(bootloaderElf.getText());
+        customDebugConfigModel.setRomElf(romElf.getText());
+        customDebugConfigModel.setOpenOcdArguments(arguments.getText());
+        customDebugConfigModel.setGdbExe(gdb.getText());
+        customDebugConfigModel.setEnvData(envComponent.getEnvData());
         IdfProfileInfo selectedIdfProfileInfo = project.getService(IdfProjectConfigService.class).getSelectedIdfProfileInfo();
         if (selectedIdfProfileInfo == null) {
             return;
         }
-        debugConfigModel.setTarget(selectedIdfProfileInfo.getTarget());
+        customDebugConfigModel.setTarget(selectedIdfProfileInfo.getTarget());
     }
 
     @Override

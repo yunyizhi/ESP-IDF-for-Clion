@@ -54,10 +54,10 @@ import java.util.Map;
  * @author lustre
  * @since 2024/9/2 23:05
  */
-public class EspIdfLauncher<T extends CLionRunConfiguration<EspIdfBuildConf, EspIdfBuildTarget>> extends CLionLauncher {
-    private final T debugRunConfig;
+public class EspIdfLauncher<T> extends CLionLauncher {
+    private final EspIdfDebugRunConfig<T> debugRunConfig;
 
-    public EspIdfLauncher(@NotNull ExecutionEnvironment executionEnvironment, @NotNull T debugRunConfig) {
+    public EspIdfLauncher(@NotNull ExecutionEnvironment executionEnvironment, @NotNull EspIdfDebugRunConfig<T> debugRunConfig) {
         super(executionEnvironment, debugRunConfig);
         this.debugRunConfig = debugRunConfig;
     }

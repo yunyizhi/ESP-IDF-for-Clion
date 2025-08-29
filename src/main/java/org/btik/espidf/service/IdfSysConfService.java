@@ -31,7 +31,7 @@ public interface IdfSysConfService {
 
     String getGdbExecutable(String target);
 
-    List<ClassMetaUtils.PropOptMeta> getPropOptMetas();
+    List<ClassMetaUtils.PropOptMeta> getPropOptMetas(Class<?> clazz);
 
     CdcAcmVendorInfo getCdcAcmVendorInfo(int vendorId, int productId);
 }

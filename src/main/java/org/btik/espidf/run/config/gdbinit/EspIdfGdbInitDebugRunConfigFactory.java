@@ -1,8 +1,11 @@
-package org.btik.espidf.run.config;
+package org.btik.espidf.run.config.gdbinit;
 
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.project.Project;
+import org.btik.espidf.run.config.EspIdfDebugRunConfig;
+import org.btik.espidf.run.config.EspIdfRunConfigType;
+import org.btik.espidf.run.config.model.GdbInitDebugConfigModel;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -17,7 +20,8 @@ public class EspIdfGdbInitDebugRunConfigFactory extends ConfigurationFactory {
 
     @Override
     public @NotNull RunConfiguration createTemplateConfiguration(@NotNull Project project) {
-        return new EspIdfGdbInitDebugRunConfig(project, this);
+        return new EspIdfDebugRunConfig<>(project, this, GdbInitDebugConfigModel::new,
+                EspIdfGdbInitDebugSettingEditor::new);
     }
 
     @Override

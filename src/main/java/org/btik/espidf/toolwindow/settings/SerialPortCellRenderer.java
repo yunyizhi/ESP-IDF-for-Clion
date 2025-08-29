@@ -1,18 +1,17 @@
 package org.btik.espidf.toolwindow.settings;
-import com.intellij.ui.JBColor;
+
 import com.intellij.ui.SimpleColoredComponent;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.util.ui.JBUI;
 import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.toolwindow.settings.model.SerialPortInfo;
+import static org.btik.espidf.util.ListCellRendererAttr.*;
 
 import javax.swing.*;
 import java.awt.*;
 
 
 public class SerialPortCellRenderer implements ListCellRenderer<SerialPortInfo> {
-
-    public static final SimpleTextAttributes GRAY_ITALIC_SMALL_ATTRIBUTES = new SimpleTextAttributes(SimpleTextAttributes.STYLE_SMALLER | SimpleTextAttributes.STYLE_ITALIC, JBColor.GRAY);
 
     @Override
     public Component getListCellRendererComponent(

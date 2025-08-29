@@ -8,7 +8,7 @@ import com.intellij.execution.configuration.EnvironmentVariablesData;
  * @author lustre
  * @since 2024/9/7 11:37
  */
-public class DebugConfigModel {
+public class CustomDebugConfigModel {
 
     @Serial
     @SerializedName("target")

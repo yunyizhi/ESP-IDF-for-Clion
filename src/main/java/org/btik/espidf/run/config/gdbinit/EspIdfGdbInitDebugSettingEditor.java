@@ -1,31 +1,30 @@
-package org.btik.espidf.run.config;
+package org.btik.espidf.run.config.gdbinit;
 
 import com.intellij.execution.configuration.EnvironmentVariablesComponent;
 import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
-
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
-import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.VerticalFlowLayout;
-import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.lang3.StringUtils;
+import org.btik.espidf.run.config.EspIdfDebugRunConfig;
+import org.btik.espidf.run.config.model.GdbInitDebugConfigModel;
+import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.ui.componets.TextFieldFileChooser;
-import org.btik.espidf.run.config.model.DebugConfigModel;
-import org.btik.espidf.service.IdfEnvironmentService;
-import org.btik.espidf.service.IdfSysConfService;
-import org.btik.espidf.util.EspIdfProjectUtil;
+import org.btik.espidf.util.UIUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ItemEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
@@ -39,21 +38,19 @@ import static org.btik.espidf.util.UIUtils.i18nLabel;
  * @author lustre
  * @since 2024/9/2 22:26
  */
-public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfCustomDebugRunConfig> {
+public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugRunConfig<GdbInitDebugConfigModel>> {
 
     private final JPanel rootPanel;
 
     private final EnvironmentVariablesComponent envComponent;
 
     private final JTextField arguments = new JTextField();
-    private final TextFieldFileChooser appElf;
-    private final TextFieldFileChooser bootloaderElf;
-    private final TextFieldFileChooser romElf;
+    private final GdbInitPathBox gdbInitPathBox;
     private final TextFieldFileChooser gdb;
     private final JButton setDefault = new JButton();
     private final Project project;
 
-    public EspIdfDebugSettingEditor(@NotNull Project project) {
+    public EspIdfGdbInitDebugSettingEditor(@NotNull Project project) {
         this.project = project;
         rootPanel = new JPanel(new VerticalFlowLayout(0, 2));
         envComponent = new EnvironmentVariablesComponent();
@@ -69,31 +66,13 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfCustomDebugRu
         wrapper.add(arguments, openocdArgConstraints);
         rowIndex++;
 
-        wrapper.add(i18nLabel("esp.idf.debug.app_elf"), createConstraints(rowIndex, 0));
+        wrapper.add(i18nLabel("esp.idf.debug.gdb.init"), createConstraints(rowIndex, 0));
         GridConstraints appElfConstraints = createConstraints(rowIndex, 1);
         appElfConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         appElfConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        appElf = new TextFieldFileChooser();
-        appElf.addActionListener(project, newElfFileChooser($i18n("select.elf.path"), $i18n("select.idf.path.for.idf")));
-        wrapper.add(appElf, appElfConstraints);
-        rowIndex++;
-
-        wrapper.add(i18nLabel("esp.idf.debug.bootloader_elf"), createConstraints(rowIndex, 0));
-        GridConstraints bootLoaderConstraints = createConstraints(rowIndex, 1);
-        bootLoaderConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
-        bootLoaderConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        bootloaderElf = new TextFieldFileChooser();
-        bootloaderElf.addActionListener(project, newElfFileChooser($i18n("select.elf.path"), $i18n("esp.idf.debug.bootloader_elf.select")));
-        wrapper.add(bootloaderElf, bootLoaderConstraints);
-        rowIndex++;
-
-        wrapper.add(i18nLabel("esp.idf.debug.rom_elf"), createConstraints(rowIndex, 0));
-        GridConstraints romElfConstraints = createConstraints(rowIndex, 1);
-        romElfConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
-        romElfConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        romElf = new TextFieldFileChooser();
-        romElf.addActionListener(project, newElfFileChooser($i18n("select.elf.path"), $i18n("esp.idf.debug.rom_elf.select")));
-        wrapper.add(romElf, romElfConstraints);
+        gdbInitPathBox = new GdbInitPathBox(project);
+        UIUtils.setWidth(gdbInitPathBox, 120);
+        wrapper.add(gdbInitPathBox, appElfConstraints);
         rowIndex++;
 
         wrapper.add(i18nLabel("esp.idf.debug.gdb"), createConstraints(rowIndex, 0));
@@ -136,34 +115,20 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfCustomDebugRu
                 }
             }
         });
-        installWatcher(arguments);
-        installWatcher(appElf);
-        installWatcher(bootloaderElf);
-        installWatcher(romElf);
-        installWatcher(gdb);
-    }
-
-    private void initValue() {
-        DebugConfigModel debugConfigModel = EspIdfProjectUtil.syncProjectDesc(project);
-        if (debugConfigModel == null) {
-            return;
-        }
-        appElf.setText(debugConfigModel.getAppElf());
-        appElf.setRootDir(EspIdfProjectUtil.getFileInCurrentBuildDir(project, "/"));
-        bootloaderElf.setText(debugConfigModel.getBootloaderElf());
-        String target = debugConfigModel.getTarget();
-
-        String romElfDir = debugConfigModel.getRomElfDir();
-        String romElfPeFix = target + '_';
-        File romElfDirFile = new File(romElfDir);
-        String[] list = romElfDirFile.list();
-        if (list != null) {
-            for (String elfFiles : list) {
-                if (elfFiles.startsWith(romElfPeFix)) {
-                    romElf.setText(elfFiles);
+        gdbInitPathBox.addItemListener(e -> {
+            if (e.getStateChange() == ItemEvent.SELECTED) {
+                Object selectedItem = gdbInitPathBox.getSelectedItem();
+                if (selectedItem instanceof GdbInitProfileInfo gdbInitProfileInfo) {
+                    setGdbByTarget(gdbInitProfileInfo.target());
                 }
             }
-            romElf.setRootDir(romElfDirFile);
+        });
+
+    }
+
+    private void setGdbByTarget(String target) {
+        if (StringUtils.isEmpty(target)) {
+            return;
         }
         IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         String gdbExecutable = service.getGdbExecutable(target);
@@ -180,39 +145,43 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfCustomDebugRu
         if (gdbFile != null) {
             gdb.setRootDir(gdbFile.getParentFile());
         }
+    }
+
+    private void initValue() {
+        IdfProjectConfigService idfProjectConfigService = project.getService(IdfProjectConfigService.class);
+        IdfProfileInfo selectedIdfProfileInfo = idfProjectConfigService.getSelectedIdfProfileInfo();
+        String target = selectedIdfProfileInfo.getTarget();
+        gdbInitPathBox.setCmakeBuildDir(target);
+        setGdbByTarget(target);
 
     }
 
     @Override
-    protected void resetEditorFrom(@NotNull EspIdfCustomDebugRunConfig espIdfCustomDebugRunConfig) {
-        DebugConfigModel configDataModel = espIdfCustomDebugRunConfig.getConfigDataModel();
+    protected void resetEditorFrom(@NotNull EspIdfDebugRunConfig<GdbInitDebugConfigModel> debugRunConfig) {
+        var configDataModel = debugRunConfig.getConfigDataModel();
         if (configDataModel == null) {
             initValue();
             return;
         }
         envComponent.setEnvData(configDataModel.getEnvData());
         arguments.setText(configDataModel.getOpenOcdArguments());
-        appElf.setText(configDataModel.getAppElf());
-        romElf.setText(configDataModel.getRomElf());
-        bootloaderElf.setText(configDataModel.getBootloaderElf());
         gdb.setText(configDataModel.getGdbExe());
+        gdbInitPathBox.setEditorText(configDataModel.getGdbInit());
     }
 
     @Override
-    protected void applyEditorTo(@NotNull EspIdfCustomDebugRunConfig espIdfCustomDebugRunConfig) throws ConfigurationException {
+    protected void applyEditorTo(@NotNull EspIdfDebugRunConfig<GdbInitDebugConfigModel> debugRunConfig) throws ConfigurationException {
         if (StringUtils.isEmpty(gdb.getText())) {
             throw new ConfigurationException($i18n("esp.idf.debugging.gdb.not.selected"));
         }
-        if (StringUtils.isEmpty(appElf.getText())) {
-            throw new ConfigurationException($i18n("esp.idf.debugging.app.elf.not.selected"));
+        if (StringUtils.isEmpty(gdbInitPathBox.getEditorText())) {
+            throw new ConfigurationException($i18n("esp.idf.debugging.gdb.init.not.selected"));
         }
-        DebugConfigModel configDataModel = espIdfCustomDebugRunConfig.getConfigDataModel();
-        DebugConfigModel debugConfigModel = configDataModel == null ? new DebugConfigModel() : configDataModel;
-        espIdfCustomDebugRunConfig.setConfigDataModel(debugConfigModel);
-        debugConfigModel.setAppElf(appElf.getText());
-        debugConfigModel.setBootloaderElf(bootloaderElf.getText());
-        debugConfigModel.setRomElf(romElf.getText());
+        var configDataModel = debugRunConfig.getConfigDataModel();
+        var debugConfigModel = configDataModel == null ? new GdbInitDebugConfigModel() : configDataModel;
+        debugRunConfig.setConfigDataModel(debugConfigModel);
         debugConfigModel.setOpenOcdArguments(arguments.getText());
+        debugConfigModel.setGdbInit(gdbInitPathBox.getEditorText());
         debugConfigModel.setGdbExe(gdb.getText());
         debugConfigModel.setEnvData(envComponent.getEnvData());
         IdfProfileInfo selectedIdfProfileInfo = project.getService(IdfProjectConfigService.class).getSelectedIdfProfileInfo();
@@ -225,17 +194,6 @@ public class EspIdfDebugSettingEditor extends SettingsEditor<EspIdfCustomDebugRu
     @Override
     protected @NotNull JComponent createEditor() {
         return rootPanel;
-    }
-
-    private FileChooserDescriptor newElfFileChooser(String title, String description) {
-        FileChooserDescriptor elf = FileChooserDescriptorFactory.createSingleFileDescriptor("elf");
-        if (StringUtil.isNotEmpty(description)) {
-            elf.setDescription(description);
-        }
-        if (StringUtil.isNotEmpty(title)) {
-            elf.setTitle(title);
-        }
-        return elf;
     }
 
 }

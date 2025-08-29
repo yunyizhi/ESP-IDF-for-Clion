@@ -23,9 +23,9 @@ import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.icon.EspIdfIcon;
-import org.btik.espidf.run.config.EspIdfCustomDebugRunConfig;
+import org.btik.espidf.run.config.EspIdfDebugRunConfig;
 import org.btik.espidf.run.config.EspIdfRunConfigType;
-import org.btik.espidf.run.config.model.DebugConfigModel;
+import org.btik.espidf.run.config.model.CustomDebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.service.IdfSysConfService;
@@ -148,16 +148,16 @@ public abstract class SubGenerator<T> {
         RunManager instance = RunManager.getInstance(project);
         RunnerAndConfigurationSettings idfDebug = instance.createConfiguration($i18n("esp.idf.debug.type"), EspIdfRunConfigType.class);
         RunConfiguration configuration = idfDebug.getConfiguration();
-        if (!(configuration instanceof EspIdfCustomDebugRunConfig espIdfCustomDebugRunConfig)) {
+        if (!(configuration instanceof EspIdfDebugRunConfig espIdfDebugRunConfig)) {
             return;
         }
-        DebugConfigModel debugConfigModel = new DebugConfigModel();
-        espIdfCustomDebugRunConfig.setConfigDataModel(debugConfigModel);
-        debugConfigModel.setTarget(idfTarget);
+        CustomDebugConfigModel customDebugConfigModel = new CustomDebugConfigModel();
+        espIdfDebugRunConfig.setConfigDataModel(customDebugConfigModel);
+        customDebugConfigModel.setTarget(idfTarget);
         IdfSysConfService idfSysConfService = ApplicationManager.getApplication().getService(IdfSysConfService.class);
-        debugConfigModel.setGdbExe(idfSysConfService.getGdbExecutable(idfTarget));
+        customDebugConfigModel.setGdbExe(idfSysConfService.getGdbExecutable(idfTarget));
         Path baseDirPath = baseDir.toNioPath();
-        debugConfigModel.setBootloaderElf(baseDirPath
+        customDebugConfigModel.setBootloaderElf(baseDirPath
                 .resolve($sys("esp.idf.build.project.build.dir"))
                 .resolve($sys("esp.idf.debug.default.bootloader.dir"))
                 .resolve($sys("esp.idf.debug.default.bootloader.name"))
@@ -172,12 +172,12 @@ public abstract class SubGenerator<T> {
         if (list != null) {
             for (String elfFile : list) {
                 if (elfFile.startsWith(romElfPeFix)) {
-                    debugConfigModel.setRomElf(elfFile);
+                    customDebugConfigModel.setRomElf(elfFile);
                     break;
                 }
             }
         }
-        debugConfigModel.setAppElf(baseDir.getName() + ".elf");
+        customDebugConfigModel.setAppElf(baseDir.getName() + ".elf");
         instance.addConfiguration(idfDebug);
         instance.setSelectedConfiguration(idfDebug);
     }

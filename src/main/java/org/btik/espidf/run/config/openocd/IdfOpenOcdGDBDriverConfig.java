@@ -12,7 +12,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.jetbrains.cidr.ArchitectureType;
-import com.jetbrains.cidr.cpp.execution.CLionRunConfiguration;
 import com.jetbrains.cidr.cpp.execution.debugger.backend.CLionGDBDriverConfiguration;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
@@ -20,10 +19,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.command.IdfConsoleRunProfile;
 import org.btik.espidf.command.ProcessEventAdaptor;
 import org.btik.espidf.icon.EspIdfIcon;
-import org.btik.espidf.run.config.EspIdfCustomDebugRunConfig;
-import org.btik.espidf.run.config.EspIdfGdbInitDebugRunConfig;
-import org.btik.espidf.run.config.build.EspIdfBuildConf;
-import org.btik.espidf.run.config.build.EspIdfBuildTarget;
+import org.btik.espidf.run.config.EspIdfDebugRunConfig;
+import org.btik.espidf.run.config.model.CustomDebugConfigModel;
+import org.btik.espidf.run.config.model.GdbInitDebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
@@ -44,8 +42,8 @@ import static org.btik.espidf.service.IdfEnvironmentService.OPENOCD_COMMANDS;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.I18nMessage.$i18nF;
 
-public class IdfOpenOcdGDBDriverConfig<T extends CLionRunConfiguration<EspIdfBuildConf, EspIdfBuildTarget>> extends CLionGDBDriverConfiguration {
-    private final T debugRunConfig;
+public class IdfOpenOcdGDBDriverConfig<T> extends CLionGDBDriverConfiguration {
+    private final EspIdfDebugRunConfig<T> debugRunConfig;
 
     private final Project project;
 
@@ -53,7 +51,7 @@ public class IdfOpenOcdGDBDriverConfig<T extends CLionRunConfiguration<EspIdfBui
 
     private final IdfOpenOcdProcessListener openOcdProcessListener = new IdfOpenOcdProcessListener();
 
-    public IdfOpenOcdGDBDriverConfig(@NotNull Project project, @Nullable CPPToolchains.Toolchain toolchain, T debugRunConfig) {
+    public IdfOpenOcdGDBDriverConfig(@NotNull Project project, @Nullable CPPToolchains.Toolchain toolchain, EspIdfDebugRunConfig<T> debugRunConfig) {
         super(project, toolchain);
         this.project = project;
         this.debugRunConfig = debugRunConfig;
@@ -78,24 +76,67 @@ public class IdfOpenOcdGDBDriverConfig<T extends CLionRunConfiguration<EspIdfBui
         processHandler.addProcessListener(new ProcessEventAdaptor().withProcessTerminatedCb((event) -> openOcdProcessListener.destroy()));
         return processHandler;
     }
+
     @Override
     public @NotNull GeneralCommandLine createDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType) {
-        if(debugRunConfig instanceof EspIdfCustomDebugRunConfig espIdfRunConfig){
-            return createCustomDriverCommandLine(driver, architectureType, espIdfRunConfig);
+        T configDataModel = debugRunConfig.getConfigDataModel();
+        if (configDataModel instanceof CustomDebugConfigModel configModel) {
+            return createCustomDriverCommandLine(driver, architectureType, configModel);
         }
-        if (debugRunConfig instanceof EspIdfGdbInitDebugRunConfig espIdfGdbInitDebugRunConfig) {
-            return createGdbInitRunConfig(driver, architectureType, espIdfGdbInitDebugRunConfig);
+        if (configDataModel instanceof GdbInitDebugConfigModel configModel) {
+            return createGdbInitRunConfig(driver, architectureType, configModel);
         }
 
         throw new RuntimeException("not supported debugConfig[" + debugRunConfig + "]");
     }
 
-    private @NotNull GeneralCommandLine createGdbInitRunConfig(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType, EspIdfGdbInitDebugRunConfig espIdfGdbInitDebugRunConfig) {
-        throw new RuntimeException("not supported debugConfig[" + debugRunConfig + "]");
+    private void setOpenOcdProcessListener(String openOcdArguments, Map<String, String> envs) {
+        if (OsUtil.IS_WINDOWS) {
+            openOcdCli.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
+        }
+        openOcdCli.setExePath(EnvironmentVarUtil.findIdfFullPath(envs));
+        openOcdCli.withConsoleMode(true);
+        openOcdCli.setWorkDirectory(project.getBasePath());
+
+        openOcdCli.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
+        openOcdCli.addParameters("openocd");
+        if (StringUtil.isNotEmpty(openOcdArguments)) {
+            envs.put(OPENOCD_COMMANDS, openOcdArguments);
+        }
+        openOcdCli.withEnvironment(envs);
     }
 
-    private @NotNull GeneralCommandLine createCustomDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType, EspIdfCustomDebugRunConfig espIdfRunConfig) {
-        var configDataModel = espIdfRunConfig.getConfigDataModel();
+    private @NotNull GeneralCommandLine createGdbInitRunConfig(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType, GdbInitDebugConfigModel configModel) {
+        IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
+        IdfProfileInfo selectedIdfProfileInfo = projectConfigService.getSelectedIdfProfileInfo();
+        if ((selectedIdfProfileInfo != null) && (!Objects.equals(configModel.getTarget(), selectedIdfProfileInfo.getTarget()))) {
+            ApplicationManager.getApplication().invokeLater(
+                    () -> I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("esp.idf.debug.target.miss.match"),
+                            $i18nF("esp.idf.debug.target.miss.match.info", configModel.getTarget(), selectedIdfProfileInfo.getTarget()),
+                            NotificationType.WARNING).notify(project));
+        }
+        if (StringUtils.isEmpty(configModel.getGdbExe())) {
+            throw new RuntimeException($i18n("esp.idf.debugging.gdb.not.selected"));
+        }
+        if (StringUtil.isEmpty(configModel.getGdbInit())) {
+            throw new RuntimeException($i18n("esp.idf.debugging.gdb.init.not.selected"));
+        }
+        Map<String, String> envs = new HashMap<>(configModel.getEnvData().getEnvs());
+        IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
+        idfEnvironmentService.putTo(envs);
+        setOpenOcdProcessListener(configModel.getOpenOcdArguments(), envs);
+        return new GeneralCommandLine()
+                .withExePath(configModel.getGdbExe())
+                .withWorkDirectory(project.getBasePath())
+                .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
+                .withEnvironment(envs)
+                .withRedirectErrorStream(true)
+                .withParameters("--interpreter=mi2",
+                        "-iex", "set mi-async",
+                        "-x", configModel.getGdbInit());
+    }
+
+    private @NotNull GeneralCommandLine createCustomDriverCommandLine(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType, CustomDebugConfigModel configDataModel) {
         IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
         IdfProfileInfo selectedIdfProfileInfo = projectConfigService.getSelectedIdfProfileInfo();
         if ((selectedIdfProfileInfo != null) && (!Objects.equals(configDataModel.getTarget(), selectedIdfProfileInfo.getTarget()))) {
@@ -113,20 +154,7 @@ public class IdfOpenOcdGDBDriverConfig<T extends CLionRunConfiguration<EspIdfBui
         Map<String, String> envs = new HashMap<>(configDataModel.getEnvData().getEnvs());
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         idfEnvironmentService.putTo(envs);
-        if (OsUtil.IS_WINDOWS) {
-            openOcdCli.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
-        }
-        openOcdCli.setExePath(EnvironmentVarUtil.findIdfFullPath(envs));
-        openOcdCli.withConsoleMode(true);
-        openOcdCli.setWorkDirectory(project.getBasePath());
-
-        openOcdCli.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-        openOcdCli.addParameters("openocd");
-        String openOcdArguments = configDataModel.getOpenOcdArguments();
-        if (StringUtil.isNotEmpty(openOcdArguments)) {
-            envs.put(OPENOCD_COMMANDS, openOcdArguments);
-        }
-        openOcdCli.withEnvironment(envs);
+        setOpenOcdProcessListener(configDataModel.getOpenOcdArguments(), envs);
         GeneralCommandLine commandLine = new GeneralCommandLine()
                 .withExePath(configDataModel.getGdbExe())
                 .withWorkDirectory(project.getBasePath())

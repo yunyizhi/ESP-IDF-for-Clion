@@ -3,6 +3,8 @@ package org.btik.espidf.run.config;
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.ConfigurationType;
 import org.btik.espidf.icon.EspIdfIcon;
+import org.btik.espidf.run.config.custom.EspIdfCustomDebugRunConfigFactory;
+import org.btik.espidf.run.config.gdbinit.EspIdfGdbInitDebugRunConfigFactory;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -29,7 +31,7 @@ public class EspIdfRunConfigType implements ConfigurationType {
 
     @Override
     public Icon getIcon() {
-        return EspIdfIcon.IDF_16_16;
+        return EspIdfIcon.IDF_DEBUG;
     }
 
     @Override
@@ -40,8 +42,8 @@ public class EspIdfRunConfigType implements ConfigurationType {
     @Override
     public ConfigurationFactory[] getConfigurationFactories() {
         return new ConfigurationFactory[]{
-                new EspIdfCustomDebugRunConfigFactory(this),
                 new EspIdfGdbInitDebugRunConfigFactory(this),
+                new EspIdfCustomDebugRunConfigFactory(this)
         };
     }
 

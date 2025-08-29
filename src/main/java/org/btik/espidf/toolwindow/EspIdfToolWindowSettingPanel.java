@@ -158,8 +158,7 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
 
         IdfProjectConfig projectConfig = idfProjectConfigService.getProjectConfig();
         if (projectConfig != null && !projectConfig.isEmpty()) {
-            ComboBoxEditor editor = portField.getEditor();
-            editor.setItem(projectConfig.getPort());
+            portField.setPortToEditor(projectConfig.getPort());
             monitorBaud.setSelectedItem(projectConfig.getMonitorBaud());
             uploadBaud.setSelectedItem(projectConfig.getUploadBaud());
             return;
@@ -173,10 +172,7 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
             String port = environments.get(ESP_PORT);
 
             if (!StringUtil.isEmpty(port)) {
-                Component editorComponent = portField.getEditor().getEditorComponent();
-                if (editorComponent instanceof JTextField textField) {
-                    textField.setText(port);
-                }
+                portField.setPortToEditor(port);
             }
             String monitorBaudValue = environments.get(MONITOR_BAUD);
             if (StringUtil.isEmpty(monitorBaudValue)) {
@@ -191,20 +187,16 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
             }
         });
 
-
     }
 
     private void bindAction() {
-        ComboBoxEditor editor = portField.getEditor();
         saveButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 saveButton.setEnabled(false);
-                Object selectedItem = editor.getItem();
-                if (selectedItem instanceof SerialPortInfo serialPortInfo) {
-                    projectConfigModel.setPort(serialPortInfo.getComPort());
-                } else if (selectedItem instanceof String serialPortName) {
-                    projectConfigModel.setPort(serialPortName);
+                String port = portField.getPort();
+                if (!StringUtil.isEmpty(port)) {
+                    projectConfigModel.setPort(port);
                 }
                 setBaudStrFormObj(monitorBaud.getSelectedItem(), projectConfigModel::setMonitorBaud);
                 setBaudStrFormObj(uploadBaud.getSelectedItem(), projectConfigModel::setUploadBaud);
@@ -221,16 +213,13 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
                 saveButton.setEnabled(idfProjectConfigService.hasValueChange(projectConfigModel));
             }
         });
-        Component editorComponent = editor.getEditorComponent();
-        if (editorComponent instanceof JTextField textField) {
-            textField.getDocument().addDocumentListener(new DocumentAdapter() {
-                @Override
-                protected void textChanged(@NotNull DocumentEvent e) {
-                    projectConfigModel.setPort(textField.getText());
-                    saveButton.setEnabled(idfProjectConfigService.hasValueChange(projectConfigModel));
-                }
-            });
-        }
+        portField.addDocumentListener(new DocumentAdapter() {
+            @Override
+            protected void textChanged(@NotNull DocumentEvent e) {
+                projectConfigModel.setPort(portField.getEditorText());
+                saveButton.setEnabled(idfProjectConfigService.hasValueChange(projectConfigModel));
+            }
+        });
         monitorBaud.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 projectConfigModel.setMonitorBaud((String) monitorBaud.getSelectedItem());

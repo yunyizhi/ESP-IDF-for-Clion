@@ -10,7 +10,7 @@ import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import org.apache.commons.lang3.StringUtils;
-import org.btik.espidf.run.config.model.DebugConfigModel;
+import org.btik.espidf.run.config.model.CustomDebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
@@ -34,7 +34,7 @@ public class EspIdfProjectUtil {
     private static final String IDF_PATH = "idf_path";
     private static final String TARGET = "target";
 
-    private static DebugConfigModel parseDesc(File descFile) {
+    private static CustomDebugConfigModel parseDesc(File descFile) {
         Gson gson = new Gson();
         String json;
         try {
@@ -43,7 +43,7 @@ public class EspIdfProjectUtil {
             log.error(e);
             return null;
         }
-        return gson.fromJson(json, DebugConfigModel.class);
+        return gson.fromJson(json, CustomDebugConfigModel.class);
     }
 
     public static String getBuildOutDir(Project project, CMakeSettings.Profile profile) {
@@ -90,21 +90,21 @@ public class EspIdfProjectUtil {
 
     }
 
-    public static DebugConfigModel syncProjectDesc(Project project) {
+    public static CustomDebugConfigModel syncProjectDesc(Project project) {
         String projectDescFileName = $sys("esp.idf.build.project.description");
         File projectDescFile = getFileInCurrentBuildDir(project, projectDescFileName);
         if (projectDescFile == null) {
             return null;
         }
-        DebugConfigModel debugConfigModel = parseDesc(projectDescFile);
-        if (debugConfigModel == null) {
+        CustomDebugConfigModel customDebugConfigModel = parseDesc(projectDescFile);
+        if (customDebugConfigModel == null) {
             return null;
         }
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         Map<String, String> environments = idfEnvironmentService.getEnvironments();
         String romElfDir = environments.get(ESP_ROM_ELF_DIR);
-        debugConfigModel.setRomElfDir(romElfDir);
-        return debugConfigModel;
+        customDebugConfigModel.setRomElfDir(romElfDir);
+        return customDebugConfigModel;
     }
 
     public static List<IdfProfileInfo> getIdfProfiles(Project project) {

@@ -1,8 +1,11 @@
-package org.btik.espidf.run.config;
+package org.btik.espidf.run.config.custom;
 
 import com.intellij.execution.configurations.ConfigurationFactory;
 import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.project.Project;
+import org.btik.espidf.run.config.EspIdfDebugRunConfig;
+import org.btik.espidf.run.config.EspIdfRunConfigType;
+import org.btik.espidf.run.config.model.CustomDebugConfigModel;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -21,7 +24,8 @@ public class EspIdfCustomDebugRunConfigFactory extends ConfigurationFactory {
 
     @Override
     public @NotNull RunConfiguration createTemplateConfiguration(@NotNull Project project) {
-        return new EspIdfCustomDebugRunConfig(project, this);
+        return new EspIdfDebugRunConfig<>(project, this, CustomDebugConfigModel::new,
+                EspIdfCustomDebugSettingEditor::new);
     }
 
     @Override

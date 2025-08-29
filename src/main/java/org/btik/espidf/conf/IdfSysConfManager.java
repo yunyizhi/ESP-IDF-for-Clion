@@ -14,7 +14,8 @@ import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
-import org.btik.espidf.run.config.model.DebugConfigModel;
+import org.btik.espidf.run.config.model.CustomDebugConfigModel;
+import org.btik.espidf.run.config.model.GdbInitDebugConfigModel;
 import org.btik.espidf.run.config.model.Serial;
 import org.btik.espidf.service.IdfSysConfService;
 import com.intellij.openapi.diagnostic.Logger;
@@ -62,7 +63,7 @@ public class IdfSysConfManager implements IdfSysConfService {
     }.getType();
 
 
-    private List<ClassMetaUtils.PropOptMeta> propOptMetas;
+    private final Map<Class<?>, List<ClassMetaUtils.PropOptMeta>> propOptMetas = new HashMap<>();
 
     private final Map<Integer, Map<Integer, CdcAcmVendorInfo>> vendorInfoMap;
 
@@ -85,15 +86,20 @@ public class IdfSysConfManager implements IdfSysConfService {
     }
 
     private void parseDebugModelSerialMeta() {
-        propOptMetas = ClassMetaUtils.parseFieldsByAnnotation(DebugConfigModel.class, Serial.class);
-        for (ClassMetaUtils.PropOptMeta propOptMeta : propOptMetas) {
-            Method getter = propOptMeta.getter();
-            Method setter = propOptMeta.setter();
-            if (getter == null || !isMod(getter, Modifier.PUBLIC)
-                    || setter == null || !isMod(setter, Modifier.PUBLIC)) {
-                propOptMeta.field().setAccessible(true);
+        Class<?>[] modelClassArr= new Class[] {CustomDebugConfigModel.class , GdbInitDebugConfigModel.class};
+        for (Class<?> modelClass : modelClassArr) {
+            var propOptMetaList = ClassMetaUtils.parseFieldsByAnnotation(modelClass, Serial.class);
+            for (ClassMetaUtils.PropOptMeta propOptMeta : propOptMetaList) {
+                Method getter = propOptMeta.getter();
+                Method setter = propOptMeta.setter();
+                if (getter == null || !isMod(getter, Modifier.PUBLIC)
+                        || setter == null || !isMod(setter, Modifier.PUBLIC)) {
+                    propOptMeta.field().setAccessible(true);
+                }
             }
+            propOptMetas.put(modelClass, propOptMetaList);
         }
+
     }
 
     private void parseGdbConf() {
@@ -218,8 +224,12 @@ public class IdfSysConfManager implements IdfSysConfService {
     }
 
     @Override
-    public List<ClassMetaUtils.PropOptMeta> getPropOptMetas() {
-        return propOptMetas == null ? List.of() : propOptMetas;
+    public List<ClassMetaUtils.PropOptMeta> getPropOptMetas(Class<?> clazz) {
+        List<ClassMetaUtils.PropOptMeta> propOptMetaList = propOptMetas.get(clazz);
+        if (propOptMetaList == null) {
+            return Collections.emptyList();
+        }
+        return propOptMetaList;
     }
 
     @Override
