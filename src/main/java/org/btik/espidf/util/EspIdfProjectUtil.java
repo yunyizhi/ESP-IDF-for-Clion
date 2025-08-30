@@ -4,26 +4,34 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.stream.JsonReader;
+import com.intellij.execution.ExecutionTarget;
+import com.intellij.execution.ExecutionTargetManager;
+import com.intellij.execution.RunManager;
+import com.intellij.execution.RunnerAndConfigurationSettings;
+import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
+import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
+import com.jetbrains.cidr.cpp.execution.CMakeBuildProfileExecutionTarget;
 import org.apache.commons.lang3.StringUtils;
+import org.btik.espidf.run.config.EspIdfDebugRunConfig;
+import org.btik.espidf.run.config.build.EspIdfExecTarget;
 import org.btik.espidf.run.config.model.CustomDebugConfigModel;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Predicate;
 
 import static org.btik.espidf.service.IdfEnvironmentService.ESP_ROM_ELF_DIR;
 import static org.btik.espidf.util.SysConf.$sys;
@@ -33,6 +41,40 @@ public class EspIdfProjectUtil {
     private static final String PROJECT_DESC_FILE_NAME = $sys("esp.idf.build.project.description");
     private static final String IDF_PATH = "idf_path";
     private static final String TARGET = "target";
+
+    public static void switchProfileTarget(@NotNull Project project, @NotNull String profileName) {
+        RunManager runManager = RunManager.getInstance(project);
+        RunnerAndConfigurationSettings selectedConfiguration = runManager.getSelectedConfiguration();
+        if (selectedConfiguration == null) {
+            return;
+        }
+
+        RunConfiguration configuration = selectedConfiguration.getConfiguration();
+
+        if (configuration instanceof EspIdfDebugRunConfig<?>) {
+            activeTarget(project, configuration,
+                    (executionTarget ->
+                            executionTarget instanceof EspIdfExecTarget espIdfExecTarget
+                                    && Objects.equals(espIdfExecTarget.getDisplayName(), profileName)));
+        } else if (configuration instanceof CMakeAppRunConfiguration) {
+            activeTarget(project, configuration,
+                    (executionTarget ->
+                            executionTarget instanceof CMakeBuildProfileExecutionTarget profileExecutionTarget
+                                    && Objects.equals(profileExecutionTarget.getProfileName(), profileName)));
+        }
+
+    }
+
+    private static void activeTarget(@NotNull Project project, RunConfiguration configuration, Predicate<ExecutionTarget> filter) {
+        ExecutionTargetManager executionTargetManager = ExecutionTargetManager.getInstance(project);
+        List<ExecutionTarget> targetsFor = executionTargetManager.getTargetsFor(configuration);
+        for (ExecutionTarget executionTarget : targetsFor) {
+            if (filter.test(executionTarget)) {
+                executionTargetManager.setActiveTarget(executionTarget);
+                break;
+            }
+        }
+    }
 
     private static CustomDebugConfigModel parseDesc(File descFile) {
         Gson gson = new Gson();
@@ -142,7 +184,7 @@ public class EspIdfProjectUtil {
                     }
                     String target = asJsonObject.get(TARGET).getAsString();
                     if (oldIdfProfileIsNull) {
-                        idfProfileInfo =  new IdfProfileInfo();
+                        idfProfileInfo = new IdfProfileInfo();
                     }
                     idfProfileInfo.setBuildDir(buildOutDir);
                     idfProfileInfo.setTarget(target);

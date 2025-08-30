@@ -1,5 +1,7 @@
 package org.btik.espidf.toolwindow;
 
+import com.intellij.execution.*;
+import com.intellij.execution.configurations.RunConfiguration;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.ComboBox;
@@ -11,12 +13,17 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.Consumer;
 import com.intellij.util.ui.JBUI;
 
+import com.jetbrains.cidr.cpp.execution.CMakeAppRunConfiguration;
+import com.jetbrains.cidr.cpp.execution.CMakeBuildProfileExecutionTarget;
 import org.btik.espidf.conf.IdfProjectConfig;
+import org.btik.espidf.run.config.EspIdfDebugRunConfig;
+import org.btik.espidf.run.config.build.EspIdfExecTarget;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.toolwindow.settings.SerialPortBox;
 import org.btik.espidf.toolwindow.settings.model.SerialPortInfo;
+import org.btik.espidf.util.EspIdfProjectUtil;
 import org.btik.espidf.util.UIUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -190,6 +197,8 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
     }
 
     private void bindAction() {
+        ExecutionTargetManager executionTargetManager = ExecutionTargetManager.getInstance(project);
+
         saveButton.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -201,6 +210,8 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
                 setBaudStrFormObj(monitorBaud.getSelectedItem(), projectConfigModel::setMonitorBaud);
                 setBaudStrFormObj(uploadBaud.getSelectedItem(), projectConfigModel::setUploadBaud);
                 idfProjectConfigService.updateProjectConfig(projectConfigModel);
+                EspIdfProjectUtil.switchProfileTarget(project, projectConfigModel.getCmakeProfile());
+
             }
         });
 

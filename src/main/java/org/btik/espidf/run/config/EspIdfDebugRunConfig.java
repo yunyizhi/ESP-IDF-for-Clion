@@ -7,14 +7,13 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.openapi.options.SettingsEditor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.InvalidDataException;
-import com.jetbrains.cidr.cpp.execution.CLionRunConfiguration;
-import com.jetbrains.cidr.execution.CidrBuildConfigurationHelper;
+import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
+import com.jetbrains.cidr.cpp.execution.*;
+import com.jetbrains.cidr.cpp.execution.compound.CidrCompoundRunConfiguration;
 import com.jetbrains.cidr.execution.CidrCommandLineState;
 import com.jetbrains.cidr.execution.ExecutableData;
 import com.jetbrains.cidr.lang.workspace.OCResolveConfiguration;
-import org.btik.espidf.run.config.build.EspIdfBuildConf;
-import org.btik.espidf.run.config.build.EspIdfBuildConfHelper;
-import org.btik.espidf.run.config.build.EspIdfBuildTarget;
+import org.btik.espidf.run.config.build.EspIdfExecTarget;
 import org.btik.espidf.util.RunConfigDataUtil;
 import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +26,7 @@ import java.util.function.Supplier;
  * @author lustre
  * @since 2024/9/2 21:17
  */
-public class EspIdfDebugRunConfig<T> extends CLionRunConfiguration<EspIdfBuildConf, EspIdfBuildTarget> {
+public class EspIdfDebugRunConfig<T> extends CidrCompoundRunConfiguration {
 
     private ExecutableData executableData;
     private T configDataModel;
@@ -66,14 +65,14 @@ public class EspIdfDebugRunConfig<T> extends CLionRunConfiguration<EspIdfBuildCo
     }
 
     @Override
-    public @NotNull CidrBuildConfigurationHelper<EspIdfBuildConf, EspIdfBuildTarget> getHelper() {
-        return new EspIdfBuildConfHelper(getProject());
+    public @Nullable OCResolveConfiguration getResolveConfiguration(@NotNull ExecutionTarget executionTarget) {
+        if (!(executionTarget instanceof EspIdfExecTarget espIdfExecTarget)) {
+            return null;
+        }
+        var configurations = CMakeRunConfigurationUtil.getBuildAndRunConfigurations(this, espIdfExecTarget.getDisplayName(), null, false);
+        return configurations == null ? null : CMakeWorkspace.getInstance(getProject()).getResolveConfigurationFor(configurations.buildConfiguration);
     }
 
-    @Override
-    public @Nullable OCResolveConfiguration getResolveConfiguration(@NotNull ExecutionTarget executionTarget) {
-        return null;
-    }
 
     @Override
     public @Nullable ExecutableData getExecutableData() {
@@ -91,6 +90,15 @@ public class EspIdfDebugRunConfig<T> extends CLionRunConfiguration<EspIdfBuildCo
         return new CidrCommandLineState(executionEnvironment, espIdfLauncher);
     }
 
+    @Override
+    public @Nullable String getExplicitBuildTargetName() {
+        return "flash";
+    }
+
+    @Override
+    public boolean canRunOn(@NotNull ExecutionTarget target) {
+        return target instanceof EspIdfExecTarget;
+    }
 
     public T getConfigDataModel() {
         return configDataModel;

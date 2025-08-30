@@ -46,6 +46,7 @@ Enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif
                         serviceInterface="org.btik.espidf.service.IdfEnvironmentService"/>
         <projectService serviceImplementation="org.btik.espidf.state.IdfProjectConfigComponent"
                         serviceInterface="org.btik.espidf.service.IdfProjectConfigService"/>
+        <executionTargetProvider implementation="org.btik.espidf.run.config.EspIdfExecutionTargetProvider" />
         <configurationType order="last" id="esp_idf"
                            implementation="org.btik.espidf.run.config.EspIdfRunConfigType"/>
         <statusBarWidgetFactory

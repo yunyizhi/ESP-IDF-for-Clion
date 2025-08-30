@@ -2,9 +2,8 @@ package org.btik.espidf.service;
 
 
 import org.btik.espidf.conf.IdfToolConf;
-import org.btik.espidf.run.config.build.EspIdfBuildTarget;
 
-import java.util.List;
+
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -36,8 +35,6 @@ public interface IdfEnvironmentService {
     IdfToolConf getWinToolConf(String idfToolPath, String idfId);
 
     IdfToolConf getSourceToolConf(String idfFrameworkPath);
-
-    List<EspIdfBuildTarget> getBuildTargets();
 
     /**
      * 构建环境遍历缓存，在初始化或者Toolchain发生变化后调用，会覆盖已有缓存
