@@ -6,6 +6,7 @@ import com.intellij.ui.JBColor;
 import com.intellij.ui.SimpleTextAttributes;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
+import org.btik.espidf.util.ListCellRendererAttr;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
@@ -23,7 +24,7 @@ public class SearchResultCellRenderer extends ColoredListCellRenderer<ConfModel>
         KconfigType redefinedType = value.getRedefinedType();
         boolean isConfig = asMenuPanelItem || redefinedType == KconfigType.CHOICE_ITEM;
         setIcon(isConfig ? AllIcons.FileTypes.Config : AllIcons.Nodes.Folder);
-        append(value.toString(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
+        append(value.toString(),value.isVisible() ? SimpleTextAttributes.REGULAR_ATTRIBUTES : ListCellRendererAttr.RED_ATTRIBUTES);
         if (!isConfig || redefinedType == KconfigType.ENABLE_SWITCH || redefinedType == KconfigType.CHOICE) {
             return;
         }

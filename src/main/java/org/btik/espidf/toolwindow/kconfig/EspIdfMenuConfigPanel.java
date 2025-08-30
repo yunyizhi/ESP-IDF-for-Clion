@@ -164,7 +164,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
         for (ConfModel confModel : confModels) {
             TreeUtils.treeEach(confModel, (item) -> {
                 confModelMap.put(item.getId(), item);
-                if (item.getType() == KconfigType.BOOL && CollectionUtils.isNotEmpty(item.getChildren())) {
+                if (item.isMenuconfig() || (item.getType() == KconfigType.BOOL && CollectionUtils.isNotEmpty(item.getChildren()))) {
                     item.setRedefinedType(KconfigType.ENABLE_SWITCH);
                 }
             });

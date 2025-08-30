@@ -101,9 +101,6 @@ public class SearchTextBox extends SearchTextField {
 
     private boolean isMatch(ConfModel model, String keyword) {
         if (keyword == null || keyword.isEmpty()) return false;
-        if (!model.isVisible()) {
-            return false;
-        }
         return (model.getId() != null && model.getId().toLowerCase().contains(keyword)) ||
                 (model.getName() != null && model.getName().toLowerCase().contains(keyword)) ||
                 (model.getTitle() != null && model.getTitle().toLowerCase().contains(keyword));

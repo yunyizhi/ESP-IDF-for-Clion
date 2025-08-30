@@ -195,6 +195,12 @@ public class KconfigTreePanel extends JScrollPane {
         if (target == null) {
             return null;
         }
+        while (!target.isVisible()) {
+            target = target.getParent();
+            if (target == null) {
+                return null;
+            }
+        }
         if (target.getRedefinedType() == KconfigType.CHOICE_ITEM) {
             target = target.getParent();
         }

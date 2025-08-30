@@ -107,12 +107,11 @@ public class EspIdfProjectUtil {
         return customDebugConfigModel;
     }
 
-    public static List<IdfProfileInfo> getIdfProfiles(Project project) {
+    public static List<IdfProfileInfo> getIdfProfiles(Project project, IdfProjectConfigService projectConfigService) {
         String basePath = project.getBasePath();
         if (basePath == null) {
             return null;
         }
-        IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
         Path baseDir = Path.of(basePath);
         List<CMakeSettings.Profile> activeProfiles = CMakeSettings.getInstance(project).getActiveProfiles();
         List<IdfProfileInfo> result = new ArrayList<>();

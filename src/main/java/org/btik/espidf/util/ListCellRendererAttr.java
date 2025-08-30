@@ -5,4 +5,5 @@ import com.intellij.ui.SimpleTextAttributes;
 
 public interface ListCellRendererAttr {
     SimpleTextAttributes GRAY_ITALIC_SMALL_ATTRIBUTES = new SimpleTextAttributes(SimpleTextAttributes.STYLE_SMALLER | SimpleTextAttributes.STYLE_ITALIC, JBColor.GRAY);
+    SimpleTextAttributes RED_ATTRIBUTES = new SimpleTextAttributes(SimpleTextAttributes.STYLE_PLAIN, JBColor.RED);
 }

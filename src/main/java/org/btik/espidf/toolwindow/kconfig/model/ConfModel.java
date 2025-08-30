@@ -136,9 +136,6 @@ public class ConfModel implements TreeBean<ConfModel> {
     }
 
     public boolean isPanelItem(){
-        if (isMenuconfig){
-            return true;
-        }
         return switch (getRedefinedType()) {
             case BOOL, CHOICE, STRING, INT, HEX -> true;
             default -> false;

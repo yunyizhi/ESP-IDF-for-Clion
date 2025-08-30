@@ -155,7 +155,7 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     }
 
     private void updateIdfProfiles() {
-        currentInfo = EspIdfProjectUtil.getIdfProfiles(project);
+        currentInfo = EspIdfProjectUtil.getIdfProfiles(project, this);
         idfProfileInfoMap.clear();
         if (CollectionUtils.isEmpty(currentInfo)) {
             return;

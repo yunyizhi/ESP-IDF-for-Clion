@@ -15,6 +15,9 @@ public enum KconfigType {
     @SerializedName("string") STRING,
     // bool类型做CHOICE子项时其实是下拉菜单
     CHOICE_ITEM,
-    // bool类型含子项时本身需要在树上也面板同时展示
+    /*
+    * bool类型含子项时 其值会使能其子项
+    * 或者menu isMenuconfig 为true的情况也属于使能开关的场景
+    * */
     ENABLE_SWITCH,
 }
