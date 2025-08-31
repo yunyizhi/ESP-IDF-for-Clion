@@ -14,7 +14,7 @@ public class EspIdfProjectActivity implements ProjectActivity {
     public @Nullable Object execute(@NotNull Project project, @NotNull Continuation<? super Unit> continuation) {
         ApplicationManager.getApplication().invokeLater(() -> {
             IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
-            environmentService.buildEnvironmentsCache();
+            environmentService.fixEnvironmentsCache();
             environmentService.checkEnvNeedRebuild();
         });
         return null;
