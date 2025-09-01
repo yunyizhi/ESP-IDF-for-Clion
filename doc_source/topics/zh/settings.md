@@ -2,7 +2,7 @@
 
 单项目设置。切换到Settings这个tab页。
 
-![settings_panel.png](settings_panel.png)
+![settings_panel](settings_panel.png)
 
 会使用clion自带持久化能力，保存设置参数。
 
@@ -10,6 +10,16 @@
 
 ## 串口设置
 * Port 端口号
+
+自0.7版本(对应clion 252版本可安装)开始，端口号输入框改为可下拉可编辑输入框
+
+![port](port_list.png)
+
+* 下拉列表会展示当前系统的串口列表
+* 会获取其usb供应商id和产品id显示其型号。
+* 将含usb供应商id的端口设置为usb图标，而不含的供应商id的设置为串口图标
+* 将优先排序usb类型的端口号
+
 
 保存后会在执行命令时候 导出环境变量 `ESPPORT`。
 使用idf.py flash或者monitor时 传给esptool.py和idf_monitor.py的端口号会使用当前变量。
@@ -29,7 +39,7 @@ idf.py会把会把波特率传给esptool.py。
 >通过环境变量设置，不会影响`IDF Export Console`生成的当前终端会话环境变量。
 
 ## CMake Profile
-可以指定任务树使用的CMake Profile用于执行任务时指定cmake build目录。
+可以指定任务树使用的CMake Profile用于执行任务时指定cmake build目录以及影响clion当前代码索引。
 可以参考 [Profiles](profiles.md)
 
 
