@@ -19,6 +19,7 @@ import org.jdom.Element;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -39,6 +40,11 @@ public class EspIdfDebugRunConfig<T> extends CidrCompoundRunConfiguration {
         super(project, factory, factory.getName());
         this.configDataModelNew = configDataModelNew;
         this.settingsEditorNew = settingsEditorNew;
+    }
+
+
+    @Override
+    public void setBeforeRunTasks(@NotNull List value) {
     }
 
     @Override
