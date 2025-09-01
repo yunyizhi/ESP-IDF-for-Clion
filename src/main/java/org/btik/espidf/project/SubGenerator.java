@@ -72,9 +72,13 @@ public abstract class SubGenerator<T> {
     }
 
     protected void generateProject(Map<String, String> envs, String toolChainName) throws ExecutionException {
+        String idfFullPath = EnvironmentVarUtil.findIdfFullPath(envs);
+        if (EnvironmentVarUtil.checkIdfPyNotFound(idfFullPath, project)) {
+            return;
+        }
         Path idfGenerateTmpDir = baseDir.toNioPath().resolve(".tmp");
         GeneralCommandLine generate = new GeneralCommandLine();
-        generate.setExePath(EnvironmentVarUtil.findIdfFullPath(envs));
+        generate.setExePath(idfFullPath);
         generate.setWorkDirectory(baseDir.getPath());
         generate.withEnvironment(envs);
         generate.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
@@ -92,8 +96,12 @@ public abstract class SubGenerator<T> {
     }
 
     protected void setTargetTask(Map<String, String> envs, Runnable nextTask) {
+        String idfFullPath = EnvironmentVarUtil.findIdfFullPath(envs);
+        if (EnvironmentVarUtil.checkIdfPyNotFound(idfFullPath, project)) {
+            return;
+        }
         GeneralCommandLine generate = new GeneralCommandLine();
-        generate.setExePath(EnvironmentVarUtil.findIdfFullPath(envs));
+        generate.setExePath(idfFullPath);
         generate.setWorkDirectory(baseDir.getPath());
         generate.withEnvironment(envs);
         generate.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));

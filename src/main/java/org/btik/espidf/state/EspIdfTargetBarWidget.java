@@ -99,11 +99,16 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         if (espIdfTargetBarBarWidgetFactory != null && (!espIdfTargetBarBarWidgetFactory.isAvailable(project))) {
             return;
         }
+
         GeneralCommandLine listTarget = new GeneralCommandLine();
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         Map<String, String> environments = idfEnvironmentService.getEnvironments();
+        String idfFullPath = EnvironmentVarUtil.findIdfFullPath(environments);
+        if (EnvironmentVarUtil.checkIdfPyNotFound(idfFullPath, project)) {
+            return;
+        }
         listTarget.withEnvironment(environments);
-        listTarget.setExePath(EnvironmentVarUtil.findIdfFullPath(environments));
+        listTarget.setExePath(idfFullPath);
 
         listTarget.addParameters("--list-targets");
         boolean previewSelected = preview.isSelected();

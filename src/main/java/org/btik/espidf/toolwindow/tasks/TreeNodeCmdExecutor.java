@@ -53,6 +53,10 @@ public class TreeNodeCmdExecutor {
         if (port == null) {
             port = PORT_CONF_AUTO;
         }
+        String idfFullPath = EnvironmentVarUtil.findIdfFullPath(envsWithProjectSettings);
+        if (EnvironmentVarUtil.checkIdfPyNotFound(idfFullPath, project)) {
+            return;
+        }
         PtyCommandLine commandLine = new PtyCommandLine();
         commandLine.setExePath(EnvironmentVarUtil.findIdfFullPath(envsWithProjectSettings));
         commandLine.setWorkDirectory(project.getBasePath());

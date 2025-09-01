@@ -54,14 +54,18 @@ public class KConfServer implements ProcessListener {
         this.onMsg = onMsg;
     }
 
-    public void start() {
+    public boolean start() {
         IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
         String cmakeBuildDir = projectConfigService.getCmakeBuildDir();
         IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
         Map<String, String> environments = environmentService.getEnvironments();
+        String idfFullPath = EnvironmentVarUtil.findIdfFullPath(environments);
+        if (EnvironmentVarUtil.checkIdfPyNotFound(idfFullPath, project)) {
+            return false;
+        }
         GeneralCommandLine commandLine = new GeneralCommandLine()
                 .withEnvironment(environments)
-                .withExePath(EnvironmentVarUtil.findIdfFullPath(environments))
+                .withExePath(idfFullPath)
                 .withWorkDirectory(project.getBasePath())
                 .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
                 .withParameters("-B", cmakeBuildDir, "confserver");
@@ -83,7 +87,9 @@ public class KConfServer implements ProcessListener {
             });
         } catch (ExecutionException e) {
             LOG.error("start KConfServer failed", e);
+            return false;
         }
+        return true;
     }
 
     @Override
@@ -168,11 +174,12 @@ public class KConfServer implements ProcessListener {
         }
     }
 
-    public void stop() {
+    public boolean stop() {
         if (processHandler == null) {
-            return;
+            return false;
         }
         processHandler.destroyProcess();
         runProfile.println("Conf Server stoped", ConsoleViewContentType.NORMAL_OUTPUT);
+        return true;
     }
 }

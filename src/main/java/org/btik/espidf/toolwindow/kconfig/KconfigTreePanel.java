@@ -83,8 +83,10 @@ public class KconfigTreePanel extends JScrollPane {
     }
 
     public void clear() {
-        rootNode.removeAllChildren();
-        rootNode = null;
+        if (rootNode != null) {
+            rootNode.removeAllChildren();
+            rootNode = null;
+        }
         tree.updateUI();
         tree.setVisible(false);
     }

@@ -77,18 +77,20 @@ public class EspIdfMenuConfigPanel extends JPanel {
         kConfRunStatusListener.add(kconfServerAction::setStatus);
         kConfRunStatusListener.add(loadAction::setStatus);
         kConfRunStatusListener.add(saveAction::setStatus);
-        kconfServer.setOnStopCallback(() -> {
-            initOk = false;
-            ApplicationManager.getApplication().invokeLater(() -> {
-                kConfRunStatusListener.forEach(l -> l.accept(false));
-                contentPanel.clear();
-                kconfigTreePanel.clear();
-                treeRootModel.cutChain();
-                contentPanel.updateUI();
-            });
-        });
+        kconfServer.setOnStopCallback(this::clear);
         searchInputBox = new SearchTextBox(project);
         initToolBar();
+    }
+
+    private void clear(){
+        initOk = false;
+        ApplicationManager.getApplication().invokeLater(() -> {
+            kConfRunStatusListener.forEach(l -> l.accept(false));
+            contentPanel.clear();
+            kconfigTreePanel.clear();
+            treeRootModel.cutChain();
+            contentPanel.updateUI();
+        });
     }
 
     private void sendCmd(KconfigSetCommand kconfigSetCommand) {
@@ -132,7 +134,10 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 kConfRunStatusListener.forEach(l -> l.accept(true));
                 loadPage();
             } else {
-                kconfServer.stop();
+                if (!kconfServer.stop()){
+                    clear();
+                    kConfRunStatusListener.forEach(l -> l.accept(false));
+                }
             }
         });
         ActionGroup actionGroup = new DefaultActionGroup(kconfServerAction);
@@ -178,7 +183,9 @@ public class EspIdfMenuConfigPanel extends JPanel {
                 }
             });
         }
-        kconfServer.start();
+        if (!kconfServer.start()){
+            clear();
+        }
     }
 
     private void onKConfMsg(KconfigStatus status) {

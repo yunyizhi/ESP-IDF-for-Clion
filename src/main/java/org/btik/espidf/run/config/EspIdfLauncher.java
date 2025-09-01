@@ -73,12 +73,16 @@ public class EspIdfLauncher<T> extends CLionLauncher {
     public @NotNull ProcessHandler createProcess(@NotNull CommandLineState state) throws ExecutionException {
         Project project = getProject();
         Map<String, String> environments = EnvironmentVarUtil.getEnvsWithProjectSettings(project);
+        String idfFullPath = EnvironmentVarUtil.findIdfFullPath(environments);
+        if (EnvironmentVarUtil.checkIdfPyNotFound(idfFullPath, project)) {
+            throw new ExecutionException("Idf py not found, PATH:" + environments.get("PATH") + ",Path:" + environments.get("PATH"));
+        }
         PtyCommandLine flash = new PtyCommandLine();
         if (OsUtil.IS_WINDOWS) {
             flash.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
         }
         flash.withConsoleMode(true)
-                .withExePath(EnvironmentVarUtil.findIdfFullPath(environments))
+                .withExePath(idfFullPath)
                 .withWorkDirectory(project.getBasePath())
                 .withEnvironment(environments)
                 .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))

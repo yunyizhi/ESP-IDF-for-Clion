@@ -91,10 +91,14 @@ public class IdfOpenOcdGDBDriverConfig<T> extends CLionGDBDriverConfiguration {
     }
 
     private void setOpenOcdProcessListener(String openOcdArguments, Map<String, String> envs) {
+        String idfFullPath = EnvironmentVarUtil.findIdfFullPath(envs);
+        if (EnvironmentVarUtil.checkIdfPyNotFound(idfFullPath, project)) {
+            return;
+        }
         if (OsUtil.IS_WINDOWS) {
             openOcdCli.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
         }
-        openOcdCli.setExePath(EnvironmentVarUtil.findIdfFullPath(envs));
+        openOcdCli.setExePath(idfFullPath);
         openOcdCli.withConsoleMode(true);
         openOcdCli.setWorkDirectory(project.getBasePath());
 

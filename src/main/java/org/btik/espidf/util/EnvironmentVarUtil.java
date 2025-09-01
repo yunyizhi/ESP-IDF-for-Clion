@@ -1,6 +1,7 @@
 package org.btik.espidf.util;
 
 import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
+import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import org.btik.espidf.conf.IdfProjectConfig;
@@ -15,6 +16,7 @@ import java.util.Objects;
 
 import static org.btik.espidf.service.IdfEnvironmentService.*;
 import static org.btik.espidf.service.IdfProjectConfigService.PORT_CONF_AUTO;
+import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.StringTools.safe2String;
 
 /**
@@ -47,6 +49,16 @@ public class EnvironmentVarUtil {
             }
         });
         return resultEnv;
+    }
+
+    public static boolean checkIdfPyNotFound(String idfPyPath , Project project) {
+        if (StringUtil.isNotEmpty(idfPyPath)) {
+            return false;
+        }
+        I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.py.not.found"),
+                $i18n("idf.py.not.found.info"), NotificationType.ERROR).notify(project);
+        return true;
+
     }
     public static String findIdfFullPath(Map<String, String> env) {
         String path = env.get("PATH");

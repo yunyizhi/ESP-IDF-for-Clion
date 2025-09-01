@@ -58,8 +58,12 @@ public class CheckBuildTypeAction extends AnAction implements DumbAware {
             return;
         }
         Map<String, String> envs = project.getService(IdfEnvironmentService.class).getEnvironments();
+        String idfFullPath = EnvironmentVarUtil.findIdfFullPath(envs);
+        if (EnvironmentVarUtil.checkIdfPyNotFound(idfFullPath, project)) {
+            return;
+        }
         PtyCommandLine commandLine = new PtyCommandLine();
-        commandLine.setExePath(EnvironmentVarUtil.findIdfFullPath(envs));
+        commandLine.setExePath(idfFullPath);
         commandLine.setWorkDirectory(project.getBasePath());
         commandLine.withEnvironment(envs);
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
