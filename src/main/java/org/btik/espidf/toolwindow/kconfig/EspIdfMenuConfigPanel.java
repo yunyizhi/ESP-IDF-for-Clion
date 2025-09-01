@@ -117,7 +117,7 @@ public class EspIdfMenuConfigPanel extends JPanel {
     private @NotNull ActionToolbar getActionToolbar(JPanel toolBar) {
         var actionManager = ActionManager.getInstance();
 
-        ActionGroup actionGroup = new DefaultActionGroup(loadAction, saveAction);
+        ActionGroup actionGroup = new DefaultActionGroup(loadAction, saveAction, searchInputBox.getShowHideResultAction());
         ActionToolbar actionToolbar = actionManager.createActionToolbar(ActionPlaces.TOOLBAR, actionGroup, true);
         actionToolbar.setTargetComponent(toolBar);
         return actionToolbar;

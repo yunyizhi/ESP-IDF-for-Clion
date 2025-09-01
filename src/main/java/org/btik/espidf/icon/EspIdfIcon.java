@@ -21,6 +21,10 @@ public class EspIdfIcon {
 
     public static final @NotNull Icon IDF_DEBUG = load("/org-btik-esp-idf/image/idf_debug.svg");
 
+    public static final @NotNull Icon SHOW = load("/org-btik-esp-idf/image/show.svg");
+
+    public static final @NotNull Icon HIDE = load("/org-btik-esp-idf/image/hide.svg");
+
     public static final @NotNull Icon USB = load("/org-btik-esp-idf/image/usb.svg");
 
     public static final @NotNull Icon SERIAL_PORT = load("/org-btik-esp-idf/image/serial_port.svg");
