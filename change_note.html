@@ -5,6 +5,38 @@
     <title>ESP-IDF for CLion Change Note</title>
 </head>
 <body>
+<h3>0.7</h3>
+en:
+<ul>
+    <li>Added a serial port settings dropdown list, which can list serial ports and display some USB serial port
+        models.
+    </li>
+    <li>Added custom task configuration for the task tree, allowing custom addition of idf.py commands or local
+        commands.
+    </li>
+    <li>Added Toolchain environment variable cache isolation for more comprehensive multi-Profile support: supports
+        configuring multiple different versions of idf Toolchain to the same project for compilation without
+        interference.
+    </li>
+    <li>Added new debug types to facilitate configuring multiple different debug tasks in multi-Profile scenarios.</li>
+    <li>Fixed the issue where child elements of menu type with the is_menuconfig attribute set to true could not be
+        displayed on the Menu-config UI.
+    </li>
+    <li>The Menu-config UI added a button to enable displaying hidden items in search results, allowing search results
+        to show invisible items.
+    </li>
+</ul>
+中文:
+<ul>
+    <li>添加串口设置下拉列表，可列出串口并展示部分usb串口型号</li>
+    <li>添加了任务树自定义任务配置，可使用自定义添加idf.py命令或者本地命令</li>
+    <li>添加了Toolchain环境变量缓存隔离，对多Profile支持更加全面:支持以多个不同的版本的idf
+        Toolchain同时配置到同一项目进行编译，互不干扰
+    </li>
+    <li>添加了新的调试类型，便于多Profile场景配置多个不同的调试任务</li>
+    <li>修复了Menu-config UI上is_menuconfig属性为true,的menu类型子元素无法展示的问题</li>
+    <li>Menu-config UI增加了在搜索结果中使能展示隐藏项目的按钮，允许搜索结果展示不可见项</li>
+</ul>
 <h3>0.6</h3>
 en:
 <ul>
