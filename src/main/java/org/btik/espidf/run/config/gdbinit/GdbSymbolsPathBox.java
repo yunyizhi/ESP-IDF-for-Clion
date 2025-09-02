@@ -25,6 +25,8 @@ public class GdbSymbolsPathBox extends ComboBox<GdbInitProfileInfo> {
 
     private final GdbInitProfileInfoEditor gdbInitProfileInfoEditor;
 
+    private String buildDir;
+
 
     public GdbSymbolsPathBox(@NotNull Project project) {
         gdbInitProfileInfoEditor = new GdbInitProfileInfoEditor();
@@ -50,7 +52,7 @@ public class GdbSymbolsPathBox extends ComboBox<GdbInitProfileInfo> {
                 for (IdfProfileInfo idfProfileInfo : idfProfileInfoList) {
                     addItem(new GdbInitProfileInfo(
                             idfProfileInfo.getBuildDir() + GDB_INIT_PATH_IN_BUILD,
-                            idfProfileInfo.getTarget(), idfProfileInfo.getDisplayName()));
+                            idfProfileInfo.getTarget(), idfProfileInfo.getBuildDir(), idfProfileInfo.getDisplayName()));
                 }
             }
 
@@ -111,8 +113,12 @@ public class GdbSymbolsPathBox extends ComboBox<GdbInitProfileInfo> {
         }
     }
 
-    public void setCmakeBuildDir(String text) {
-        gdbInitProfileInfoEditor.getTextField().setText(text + GDB_INIT_PATH_IN_BUILD);
+    public void setCmakeBuildDir(String text, boolean updateText) {
+        this.buildDir = text;
+        if (updateText) {
+            gdbInitProfileInfoEditor.getTextField().setText(text + GDB_INIT_PATH_IN_BUILD);
+        }
+
     }
 
     public void setEditorText(String text) {
@@ -123,4 +129,7 @@ public class GdbSymbolsPathBox extends ComboBox<GdbInitProfileInfo> {
         return gdbInitProfileInfoEditor.getTextField().getText();
     }
 
+    public String getBuildDir() {
+        return buildDir;
+    }
 }

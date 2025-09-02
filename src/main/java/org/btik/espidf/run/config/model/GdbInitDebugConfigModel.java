@@ -4,8 +4,6 @@ package org.btik.espidf.run.config.model;
 import com.intellij.execution.configuration.EnvironmentVariablesData;
 
 public class GdbInitDebugConfigModel {
-    @Serial
-    private String target;
 
     @Serial
     private String openOcdArguments;
@@ -14,18 +12,13 @@ public class GdbInitDebugConfigModel {
     private String path;
 
     @Serial
+    private String buildDir;
+
+    @Serial
     private String gdbExe;
 
     @Serial
     private EnvironmentVariablesData envData = EnvironmentVariablesData.DEFAULT;
-
-    public String getTarget() {
-        return target;
-    }
-
-    public void setTarget(String target) {
-        this.target = target;
-    }
 
     public String getOpenOcdArguments() {
         return openOcdArguments;
@@ -57,5 +50,13 @@ public class GdbInitDebugConfigModel {
 
     public void setEnvData(EnvironmentVariablesData envData) {
         this.envData = envData;
+    }
+
+    public String getBuildDir() {
+        return buildDir;
+    }
+
+    public void setBuildDir(String buildDir) {
+        this.buildDir = buildDir;
     }
 }

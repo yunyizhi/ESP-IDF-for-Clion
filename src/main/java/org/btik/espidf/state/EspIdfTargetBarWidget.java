@@ -96,7 +96,7 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
 
 
     private void showSelectBuildTypePopup() {
-        if (espIdfTargetBarBarWidgetFactory != null && (!espIdfTargetBarBarWidgetFactory.isAvailable(project))) {
+        if (espIdfTargetBarBarWidgetFactory != null && (!getComponent().isVisible())) {
             return;
         }
 
@@ -146,17 +146,6 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         return toolBar;
     }
 
-    private void disableStatusBar() {
-        if ((!espIdfTargetBarBarWidgetFactory.isAvailable(project)) && (!getComponent().isVisible())) {
-            return;
-        }
-        if (project.getBasePath() != null) {
-            espIdfTargetBarBarWidgetFactory.setAvailable(project.getBasePath(), false);
-        }
-        getComponent().setVisible(false);
-        project.getService(StatusBarWidgetsManager.class).updateWidget(espIdfTargetBarBarWidgetFactory);
-    }
-
     private void onProfileChanged(IdfProjectConfigService.ProfileChangeType profileChangeType) {
         update();
     }
@@ -165,16 +154,12 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         IdfProjectConfigService idfProjectConfigService = project.getService(IdfProjectConfigService.class);
         IdfProfileInfo currentProfileInfo = idfProjectConfigService.getSelectedIdfProfileInfo();
         if (currentProfileInfo == null) {
-            disableStatusBar();
+            getComponent().setVisible(false);
             return;
         }
         targetPanel.setText(currentProfileInfo.getTarget());
         if (!getComponent().isVisible()) {
             getComponent().setVisible(true);
-        }
-
-        if (!espIdfTargetBarBarWidgetFactory.isAvailable(project)) {
-            espIdfTargetBarBarWidgetFactory.setAvailable(project.getBasePath(), true);
         }
     }
 }

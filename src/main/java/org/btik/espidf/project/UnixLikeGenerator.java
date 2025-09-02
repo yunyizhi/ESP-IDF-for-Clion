@@ -6,20 +6,16 @@ import com.intellij.facet.ui.ValidationResult;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.platform.ide.progress.TasksKt;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.util.I18nMessage;
 
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
-import static org.btik.espidf.adapter.Adapter.readEnvironment;
 import static org.btik.espidf.util.I18nMessage.$i18n;
-import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.util.SysConf.$sys;
 
 /**
@@ -55,17 +51,9 @@ public class UnixLikeGenerator<T> extends SubGenerator<T> {
             try {
                 IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
                 IdfToolConf idfToolConf = environmentService.getSourceToolConf(idfFrameworkPath);
-                Map<String, String> readEnvironment = TasksKt.runWithModalProgressBlocking(project,
-                        $i18nF("esp.idf.read.envs", idfToolConf.getToolchain().getName()),
-                        (scope, continuation) -> {
-                            try {
-                                return readEnvironment(idfToolConf);
-                            } catch (IOException | ExecutionException e) {
-                                throw new RuntimeException(e);
-                            }
-                        });
+                Map<String, String> envOfToolChain = environmentService.getEnvOfToolChain(idfToolConf.getToolchain());
                 String toolChainName = idfToolConf.getToolchain().getName();
-                generateProject(readEnvironment, toolChainName);
+                generateProject(envOfToolChain, toolChainName);
             } catch (RuntimeException | ExecutionException e) {
                 I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.cmd.init.project.failed"), e.getMessage(), NotificationType.ERROR).notify(project);
             }
