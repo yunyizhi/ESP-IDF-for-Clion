@@ -2,7 +2,7 @@
 
 这是一个非官方的ESP-IDF CLion插件。
 
-当前文档对应插件版本:0.6。
+当前文档对应插件版本:0.7。对应clion为252版本。
 
 若无法升级搭配当前版本，可以升级clion版本再尝试。
 
@@ -34,10 +34,9 @@ release仓会出现预览版，插件市场一般需要两个工作日审核，�
 
 ![newProject.png](newProject.png)
 
-允许多个esp-idf共存(但手动切换多个idf toolchain情况，可能导致环境变量冲突，可以关闭clion重新打开。)
+允许多个esp-idf共存
 
 > 多个ESP-IDF共存的前提是多个ESP-IDF本身不会冲突，请保证每个ESP-IDF的命令行可用，才被能选择用于新建项目。
-> （当前发现使用windows下IDF5.3离线版本会与同期的其他版本冲突。）
 
 ### 调试
 0.4 新增调试功能 可以断点调试 查看线程、变量，集成gdb控制台，内存视图，和外设寄存器查看。
@@ -58,6 +57,7 @@ release仓会出现预览版，插件市场一般需要两个工作日审核，�
 
 ## Menuconfig GUI
 
+0.6新增
 对Menuconfig做了图形封装
 
 ![kconf_ui_base.png](kconf_ui_base.png)

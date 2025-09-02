@@ -17,16 +17,25 @@
 >注意esp32p4自身含两个usb 一个连接jtag 一个连接otg,需要满足芯片版本为eco2及以后，我们需要将24/25号引脚作为usb引脚连接到pc才能debug。
 > 若开发板未引出，可以购买usb转4pin的杜邦头的线，连接gnd 24/25 5v,24/25接反会导致未识别接口，连接成功jtag cdc也会产生一个串口设备。
 
+![debug_default_conf.png](debug_default_conf.png)
+
 ### 手动新建配置
-新建运行配置选择ESP-IDF,会默认基于build目录下的`project_description.json`填充一些默认参数。
 
-elf文件可以加载调试需要符号。rom一般是固定的，部分芯片rom存在不同版本，默认配置可能不是硬件对应的版本，需要手动选择。
+![new_debug_conf.png](new_debug_conf.png)
 
-gdb一般会自动选择,可根据需要重新选择。
+* Simple Debug
+  会默认使用idf生成的gdbinit下的符号加载脚本，多个Profile情况下，切换具体build目录的符号加载脚本，会自动重新设置gdb。
+  更方便于多个Profile情况下配置。
+* Custom Debug
+  会默认基于build目录下的`project_description.json`填充一些默认参数。 
+  需要设置各个elf文件，芯片rom的elf版本可能存在多个，自动选中的可能不符合当前调试的芯片版本。 
+  App的elf文件必选。
+
+运行项前方带Profile选择功能，仅供切换clion代码编辑器在不同Profile下的代码解析/索引。如果需要分别对多个Profile调试可以建立多个调试配置。
 
 
 ### Auto功能
-Auto按钮可以自动填充调试配置项，但仅仅只对第一个CMake Profile生成。需要调试其他选项，可以手动选择对应的elf和gdb文件。
+Auto按钮可以自动填充调试配置项，0.7之前只对第一个CMake Profile生成。而0.7版本开始按选中的Profile生成。
 
 ### 调试方法
 ![debug_run.png](debug_run.png)

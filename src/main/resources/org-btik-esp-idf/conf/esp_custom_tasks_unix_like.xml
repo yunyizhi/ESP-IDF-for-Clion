@@ -46,7 +46,7 @@
 <!--comment test -->
 echo Hello
 echo "Hello"
-echo "Hello<noCDATA comment="nothing"/>"
+echo "&lt;tagTest/&gt;"
 ls
         </args>
     </exec>

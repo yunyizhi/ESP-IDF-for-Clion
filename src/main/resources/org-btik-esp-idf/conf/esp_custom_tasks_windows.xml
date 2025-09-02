@@ -44,7 +44,7 @@
 <!--comment test -->
 echo Hello
 echo "Hello"
-echo "Hello<noCDATA comment="nothing"/>"
+echo "&lt;tagTest/&gt;"
 dir
         </args>
     </exec>
