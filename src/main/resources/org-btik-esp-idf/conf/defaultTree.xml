@@ -28,7 +28,7 @@
         <folder name="Help">
             <command name="ESP-IDF Docs" value="docs" icon="ij:AllIcons.General.Web"/>
         </folder>
-        <folder name="Custom Tasks" id="custom.tasks.folder" toolTip="esp.idf.task.tree.custom.tasks">
+        <folder name="Custom Tasks" id="custom.tasks.folder" toolTip="${esp.idf.task.tree.custom.tasks}">
             <action name="Load Custom Tasks" id="idf.custom.tasks.load" icon="ij:AllIcons.Actions.Refresh"
                     toolTip="${esp.idf.task.custom.tasks.load.from.xml}"/>
         </folder>
