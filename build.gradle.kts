@@ -89,3 +89,37 @@ tasks {
         gradleVersion = providers.gradleProperty("gradleVersion").get()
     }
 }
+
+tasks.register<Delete>("unzipWebHelpAndPreserveXsd") {
+    val docsDir = file("./docs")
+    delete(fileTree(docsDir) {
+        include("**/*")
+        exclude("**/*.xsd")
+    })
+
+    finalizedBy("actuallyUnzipWebHelp")
+}
+
+tasks.register<Copy>("actuallyUnzipWebHelp") {
+    mustRunAfter("unzipWebHelpAndPreserveXsd")
+
+    val zipFile = file("./doc_source/webHelpESPIDF2-all.zip")
+    val docsDir = file("./docs")
+
+    from(zipTree(zipFile))
+    into(docsDir)
+    inputs.file(zipFile)
+    outputs.dir(docsDir)
+
+    doFirst {
+        logger.lifecycle("Unzipping ${zipFile.name} into ${docsDir.absolutePath}")
+    }
+}
+
+
+tasks.register("updateDocs") {
+    group = "custom"
+    description = "Cleans docs dir (preserving XSDs) and then unpacks the latest web help zip"
+
+    dependsOn("unzipWebHelpAndPreserveXsd", "actuallyUnzipWebHelp")
+}
