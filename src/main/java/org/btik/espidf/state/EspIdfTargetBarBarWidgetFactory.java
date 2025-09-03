@@ -7,15 +7,11 @@ import com.intellij.openapi.wm.StatusBarWidgetFactory;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.concurrent.ConcurrentHashMap;
-
 /**
  * @author lustre
  * @since 2025/7/22 0:21
  */
 public class EspIdfTargetBarBarWidgetFactory implements StatusBarWidgetFactory {
-
-    private final ConcurrentHashMap<String,Boolean> availableMap = new ConcurrentHashMap<>();
 
     @Override
     public @NotNull @NonNls String getId() {
@@ -30,23 +26,5 @@ public class EspIdfTargetBarBarWidgetFactory implements StatusBarWidgetFactory {
     @Override
     public @NotNull StatusBarWidget createWidget(@NotNull Project project) {
         return new EspIdfTargetBarWidget(project, this);
-    }
-
-    public void setAvailable(String id, boolean isEspIdfProject) {
-        this.availableMap.put(id, isEspIdfProject);
-    }
-
-    @Override
-    public boolean isAvailable(@NotNull Project project) {
-        String basePath = project.getBasePath();
-        if (basePath == null) {
-            return false;
-        }
-        Boolean b = availableMap.get(basePath);
-        if (b == null) {
-            availableMap.put(basePath, true);
-            return true;
-        }
-        return b;
     }
 }

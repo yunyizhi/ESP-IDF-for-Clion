@@ -25,10 +25,10 @@
 
 * Simple Debug
   会默认使用idf生成的gdbinit下的符号加载脚本，多个Profile情况下，切换具体build目录的符号加载脚本，会自动重新设置gdb。
-  更方便于多个Profile情况下配置。
+  openocd会根据选择的符号脚本目录，切换build目录，可以在不要切换profile情况下调试。更方便于多个Profile情况下配置。
 * Custom Debug
   会默认基于build目录下的`project_description.json`填充一些默认参数。 
-  需要设置各个elf文件，芯片rom的elf版本可能存在多个，自动选中的可能不符合当前调试的芯片版本。 
+  需要设置各个elf文件，芯片rom的elf版本可能存在多个，自动选中的可能不符合当前调试的芯片版本。 openocd会指定当前选中的profile。
   App的elf文件必选。
 
 运行项前方带Profile选择功能，仅供切换clion代码编辑器在不同Profile下的代码解析/索引。如果需要分别对多个Profile调试可以建立多个调试配置。

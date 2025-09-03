@@ -9,6 +9,7 @@ import com.intellij.facet.ui.ValidationResult;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VfsUtil;
@@ -37,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -166,7 +168,7 @@ public abstract class SubGenerator<T> {
         EspIdfDebugRunConfig<GdbInitDebugConfigModel> espIdfDebugRunConfig = (EspIdfDebugRunConfig<GdbInitDebugConfigModel>) configuration;
         var debugConfigModel = new GdbInitDebugConfigModel();
         espIdfDebugRunConfig.setConfigDataModel(debugConfigModel);
-        debugConfigModel.setTarget(idfTarget);
+        debugConfigModel.setBuildDir(IDF_CMAKE_BUILD_DIR);
         debugConfigModel.setPath(IDF_CMAKE_BUILD_DIR + GdbSymbolsPathBox.GDB_INIT_PATH_IN_BUILD);
         IdfSysConfService idfSysConfService = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         debugConfigModel.setGdbExe(idfSysConfService.getGdbExecutable(idfTarget));
@@ -202,6 +204,20 @@ public abstract class SubGenerator<T> {
                             $i18n("idf.tmp.folder.may.not.deleted"), NotificationType.INFORMATION).notify(project);
                 }
             });
+            FileEditorManager editorManager = FileEditorManager.getInstance(project);
+            String basePath = project.getBasePath();
+            if (basePath == null) {
+                return;
+            }
+            Path appMainCSrc = Path.of(basePath, "main", project.getName() + ".c");
+            if (!Files.exists(appMainCSrc)) {
+                return;
+            }
+            VirtualFile mainSrc = VfsUtil.findFileByIoFile(appMainCSrc.toFile(), true);
+            if (mainSrc == null) {
+                return;
+            }
+            editorManager.openFile(mainSrc, true);
         });
     }
 

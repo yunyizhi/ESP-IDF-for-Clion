@@ -87,7 +87,8 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         return getEnvOfToolChain(toolchain);
     }
 
-    private Map<String, String> getEnvOfToolChain(CPPToolchains.Toolchain toolchain) {
+    @Override
+    public Map<String, String> getEnvOfToolChain(CPPToolchains.Toolchain toolchain) {
         if (toolchain == null) {
             return new HashMap<>();
         }
@@ -276,14 +277,13 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         CPPToolchains.Toolchain idfToolChain = new CPPToolchains.Toolchain(OSType.getCurrent());
         idfToolChain.setToolSetKind(IS_WINDOWS ? CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET : CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET);
         idfToolChain.setName(IDF_TOOLCHAIN_NAME_PREFIX + Integer.toHexString(envFileName.hashCode()));
-        ApplicationManager.getApplication().invokeLater(() ->
-                ApplicationManager.getApplication().runWriteAction(() -> {
-                            CPPToolchains.getInstance().beginUpdate();
-                            CPPToolchains.getInstance().addToolchain(idfToolChain);
-                            idfToolChain.setEnvironment(envFileName);
-                            CPPToolchains.getInstance().endUpdate();
-                        }
-                ));
+        ApplicationManager.getApplication().runWriteAction(() -> {
+                    CPPToolchains.getInstance().beginUpdate();
+                    CPPToolchains.getInstance().addToolchain(idfToolChain);
+                    idfToolChain.setEnvironment(envFileName);
+                    CPPToolchains.getInstance().endUpdate();
+                }
+        );
         return idfToolChain;
     }
 

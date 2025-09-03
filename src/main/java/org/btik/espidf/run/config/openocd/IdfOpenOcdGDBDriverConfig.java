@@ -90,7 +90,7 @@ public class IdfOpenOcdGDBDriverConfig<T> extends CLionGDBDriverConfiguration {
         throw new RuntimeException("not supported debugConfig[" + debugRunConfig + "]");
     }
 
-    private void setOpenOcdProcessListener(String openOcdArguments, Map<String, String> envs) {
+    private void setOpenOcdProcessListener(String openOcdArguments, String buildDir, Map<String, String> envs) {
         String idfFullPath = EnvironmentVarUtil.findIdfFullPath(envs);
         if (EnvironmentVarUtil.checkIdfPyNotFound(idfFullPath, project)) {
             return;
@@ -103,6 +103,10 @@ public class IdfOpenOcdGDBDriverConfig<T> extends CLionGDBDriverConfiguration {
         openOcdCli.setWorkDirectory(project.getBasePath());
 
         openOcdCli.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
+        if (StringUtils.isEmpty(buildDir)) {
+            buildDir = project.getService(IdfProjectConfigService.class).getCmakeBuildDir();
+        }
+        openOcdCli.withParameters("-B", buildDir);
         openOcdCli.addParameters("openocd");
         if (StringUtil.isNotEmpty(openOcdArguments)) {
             envs.put(OPENOCD_COMMANDS, openOcdArguments);
@@ -111,14 +115,6 @@ public class IdfOpenOcdGDBDriverConfig<T> extends CLionGDBDriverConfiguration {
     }
 
     private @NotNull GeneralCommandLine createGdbInitRunConfig(@NotNull DebuggerDriver driver, @NotNull ArchitectureType architectureType, GdbInitDebugConfigModel configModel) {
-        IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
-        IdfProfileInfo selectedIdfProfileInfo = projectConfigService.getSelectedIdfProfileInfo();
-        if ((selectedIdfProfileInfo != null) && (!Objects.equals(configModel.getTarget(), selectedIdfProfileInfo.getTarget()))) {
-            ApplicationManager.getApplication().invokeLater(
-                    () -> I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("esp.idf.debug.target.miss.match"),
-                            $i18nF("esp.idf.debug.target.miss.match.info", configModel.getTarget(), selectedIdfProfileInfo.getTarget()),
-                            NotificationType.WARNING).notify(project));
-        }
         if (StringUtils.isEmpty(configModel.getGdbExe())) {
             throw new RuntimeException($i18n("esp.idf.debugging.gdb.not.selected"));
         }
@@ -128,7 +124,7 @@ public class IdfOpenOcdGDBDriverConfig<T> extends CLionGDBDriverConfiguration {
         Map<String, String> envs = new HashMap<>(configModel.getEnvData().getEnvs());
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         idfEnvironmentService.putTo(envs);
-        setOpenOcdProcessListener(configModel.getOpenOcdArguments(), envs);
+        setOpenOcdProcessListener(configModel.getOpenOcdArguments(), configModel.getBuildDir(), envs);
         GeneralCommandLine generalCommandLine = new GeneralCommandLine()
                 .withExePath(configModel.getGdbExe())
                 .withWorkDirectory(project.getBasePath())
@@ -169,7 +165,7 @@ public class IdfOpenOcdGDBDriverConfig<T> extends CLionGDBDriverConfiguration {
         Map<String, String> envs = new HashMap<>(configDataModel.getEnvData().getEnvs());
         IdfEnvironmentService idfEnvironmentService = project.getService(IdfEnvironmentService.class);
         idfEnvironmentService.putTo(envs);
-        setOpenOcdProcessListener(configDataModel.getOpenOcdArguments(), envs);
+        setOpenOcdProcessListener(configDataModel.getOpenOcdArguments(), null, envs);
         GeneralCommandLine commandLine = new GeneralCommandLine()
                 .withExePath(configDataModel.getGdbExe())
                 .withWorkDirectory(project.getBasePath())

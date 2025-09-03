@@ -120,6 +120,7 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugR
                 Object selectedItem = gdbSymbolsPathBox.getSelectedItem();
                 if (selectedItem instanceof GdbInitProfileInfo gdbInitProfileInfo) {
                     setGdbByTarget(gdbInitProfileInfo.target());
+                    gdbSymbolsPathBox.setCmakeBuildDir(gdbInitProfileInfo.buildDir(), false);
                 }
             }
         });
@@ -151,7 +152,7 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugR
         IdfProjectConfigService idfProjectConfigService = project.getService(IdfProjectConfigService.class);
         IdfProfileInfo selectedIdfProfileInfo = idfProjectConfigService.getSelectedIdfProfileInfo();
         String target = selectedIdfProfileInfo.getTarget();
-        gdbSymbolsPathBox.setCmakeBuildDir(selectedIdfProfileInfo.getBuildDir());
+        gdbSymbolsPathBox.setCmakeBuildDir(selectedIdfProfileInfo.getBuildDir(), true);
         setGdbByTarget(target);
 
     }
@@ -182,13 +183,9 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugR
         debugRunConfig.setConfigDataModel(debugConfigModel);
         debugConfigModel.setOpenOcdArguments(arguments.getText());
         debugConfigModel.setPath(gdbSymbolsPathBox.getEditorText());
+        debugConfigModel.setBuildDir(gdbSymbolsPathBox.getBuildDir());
         debugConfigModel.setGdbExe(gdb.getText());
         debugConfigModel.setEnvData(envComponent.getEnvData());
-        IdfProfileInfo selectedIdfProfileInfo = project.getService(IdfProjectConfigService.class).getSelectedIdfProfileInfo();
-        if (selectedIdfProfileInfo == null) {
-            return;
-        }
-        debugConfigModel.setTarget(selectedIdfProfileInfo.getTarget());
     }
 
     @Override

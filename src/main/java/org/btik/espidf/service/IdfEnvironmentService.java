@@ -1,6 +1,7 @@
 package org.btik.espidf.service;
 
 
+import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.btik.espidf.conf.IdfToolConf;
 
 
@@ -26,6 +27,8 @@ public interface IdfEnvironmentService {
     String OPENOCD_COMMANDS = "OPENOCD_COMMANDS";
 
     Map<String, String> getEnvironments();
+
+    Map<String, String> getEnvOfToolChain(CPPToolchains.Toolchain toolchain);
 
     void putTo(Map<String, String> newEnvironments);
 
