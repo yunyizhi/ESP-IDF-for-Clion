@@ -47,16 +47,25 @@
                 <xs:element name="command" type="tns:CommandType">
                     <xs:annotation>
                         <xs:documentation>
-                            <p><code>idf.py</code> command tasks with advanced features like serial port preemption and console filters (e.g., file links can jump to specific IDE lines).</p>
-                            <p><code>idf.py</code>命令任务，比起终端任务可以实现串口占用抢占和控制台过滤器(文件链接可以跳转ide的具体行等)</p>
+                            <p>
+                                <code>idf.py</code>
+                                command tasks with advanced features like serial port preemption and console filters
+                                (e.g., file links can jump to specific IDE lines).
+                            </p>
+                            <p><code>idf.py</code>命令任务，比起终端任务可以实现串口占用抢占和控制台过滤器(文件链接可以跳转ide的具体行等)
+                            </p>
                         </xs:documentation>
                     </xs:annotation>
                 </xs:element>
                 <xs:element name="console-command" type="tns:ConsoleCommandType">
                     <xs:annotation>
                         <xs:documentation>
-                            <p><code>idf.py</code> command terminal task with full TTY capabilities compared to regular terminal tasks.</p>
-                            <p><code>idf.py</code>命令终端任务，比起普通任务终端具备完整TTY能力</p>
+                            <p>
+                                <code>idf.py</code>
+                                command terminal task with full TTY capabilities compared to regular terminal tasks.
+                            </p>
+                            <p><code>idf.py</code>命令终端任务，比起普通任务终端具备完整TTY能力
+                            </p>
                         </xs:documentation>
                     </xs:annotation>
                 </xs:element>
@@ -90,23 +99,35 @@
                 <xs:attribute name="value" type="xs:string" use="required">
                     <xs:annotation>
                         <xs:documentation>
-                            <p><p>Arguments for <code>idf.py</code></p></p>
-                            <p><code>idf.py</code>的参数</p>
+                            <p>
+                                <p>Arguments for
+                                    <code>idf.py</code>
+                                </p>
+                            </p>
+                            <p><code>idf.py</code>的参数
+                            </p>
                         </xs:documentation>
                     </xs:annotation>
                 </xs:attribute>
                 <xs:attribute name="console-filter" type="xs:boolean" use="optional" default="false">
                     <xs:annotation>
                         <xs:documentation>
-                            <p>When this option is enabled, the console view output will be processed: stderr will be highlighted in red, and the printed file lines will become clickable links for navigation.</p>
-                            <p>使能此项后，会对控制台视图输出进行处理，stderr会被以红色标记，打印的具体文件行也会变成链接可以进行跳转</p>
+                            <p>When this option is enabled, the console view output will be processed: stderr will be
+                                highlighted in red, and the printed file lines will become clickable links for
+                                navigation.
+                            </p>
+                            <p>
+                                使能此项后，会对控制台视图输出进行处理，stderr会被以红色标记，打印的具体文件行也会变成链接可以进行跳转
+                            </p>
                         </xs:documentation>
                     </xs:annotation>
                 </xs:attribute>
                 <xs:attribute name="request-port" type="xs:boolean" use="optional" default="false">
                     <xs:annotation>
                         <xs:documentation>
-                            <p>Requests serial port. Automatically terminates any Monitor task currently using the requested port.</p>
+                            <p>Requests serial port. Automatically terminates any Monitor task currently using the
+                                requested port.
+                            </p>
                             <p>请求串口。会关闭当前占用该串口的Monitor任务</p>
                         </xs:documentation>
                     </xs:annotation>
@@ -114,8 +135,12 @@
                 <xs:attribute name="use-monitor" type="xs:boolean" use="optional" default="false">
                     <xs:annotation>
                         <xs:documentation>
-                            <p>Registers as a Monitor task. Any active task on the same serial port will be interrupted by a port-requesting task. This attribute implicitly enables 'request-port' capability.</p>
-                            <p>注册为Monitor任务，同一串口的当前任务会被request-port任务中断，本属性也包含request-port能力</p>
+                            <p>Registers as a Monitor task. Any active task on the same serial port will be interrupted
+                                by a port-requesting task. This attribute implicitly enables 'request-port' capability.
+                            </p>
+                            <p>
+                                注册为Monitor任务，同一串口的当前任务会被request-port任务中断，本属性也包含request-port能力
+                            </p>
                         </xs:documentation>
                     </xs:annotation>
                 </xs:attribute>
@@ -131,8 +156,13 @@
                 <xs:attribute name="value" type="xs:string" use="required">
                     <xs:annotation>
                         <xs:documentation>
-                            <p><p>Arguments for <code>idf.py</code></p></p>
-                            <p><code>idf.py</code>的参数</p>
+                            <p>
+                                <p>Arguments for
+                                    <code>idf.py</code>
+                                </p>
+                            </p>
+                            <p><code>idf.py</code>的参数
+                            </p>
                         </xs:documentation>
                     </xs:annotation>
                 </xs:attribute>
@@ -159,10 +189,13 @@
                     <xs:annotation>
                         <xs:documentation>
                             <p>Executable file path: It can be an absolute path, an executable found in directories
-                                listed in the PATH environment variable, or a path relative to the current project.
-                                If left empty, the system default shell (cmd, bash, or zsh) will be used to
-                                execute the command.</p>
-                            <p>可执行文件路径:可以是全路径,PATH变量中的路径下的可执行文件,也可以是基于当前项目的相对路径。为空时默认使用cmd/bash/zsh执行</p>
+                                listed in the PATH environment variable (use args if a path relative to this project is
+                                needed). If left empty, the system default shell (cmd, bash, or zsh) will be used to
+                                execute the command.
+                            </p>
+                            <p>
+                                可执行文件路径:可以是全路径,PATH变量中的路径下的可执行文件(需要使用相对本项目的路径可使用args)。为空时默认使用cmd/bash/zsh执行
+                            </p>
                         </xs:documentation>
                     </xs:annotation>
                 </xs:attribute>
