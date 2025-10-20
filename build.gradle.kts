@@ -8,11 +8,11 @@ plugins {
 group = "org.btik"
 
 repositories {
-    mavenCentral()
     maven {
         url = uri("https://maven.aliyun.com/repository/public/")
         url = uri("https://oss.sonatype.org/content/repositories/snapshots/")
     }
+    mavenCentral()
     intellijPlatform {
         defaultRepositories()
         marketplace()
@@ -21,10 +21,10 @@ repositories {
 
 dependencies {
     testImplementation("junit:junit:4.13.2")
-    testImplementation("org.mockito:mockito-core:4.5.1")
+    testImplementation("org.mockito:mockito-core:5.20.0")
     implementation("com.fazecast:jSerialComm:2.11.2")
     intellijPlatform {
-        clion("2025.2") { useInstaller = false }
+        clion("LATEST-EAP-SNAPSHOT") { useInstaller = false }
         bundledPlugins(
             "com.intellij.clion",
             "com.intellij.clion.cmake",
@@ -41,7 +41,7 @@ intellijPlatform {
     pluginConfiguration {
         version = providers.gradleProperty("pluginVersion")
 
-        val changeNoteHtml = "change_note.html"
+        val changeNoteHtml = "./change_note.html"
         val changeNoteFile = File(changeNoteHtml)
 
         if (changeNoteFile.exists()) {

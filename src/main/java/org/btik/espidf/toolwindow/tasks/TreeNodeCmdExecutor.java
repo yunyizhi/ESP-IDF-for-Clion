@@ -84,7 +84,7 @@ public class TreeNodeCmdExecutor {
         String finalPort = port;
         aliveHandler.addProcessListener(new ProcessEventAdaptor().withProcessTerminatedCb((event) -> {
                     I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("esp.idf.monitor.task.auto.stop.title"),
-                            $i18nF("esp.idf.monitor.task.auto.stop.msg", aliveHandler.getTaskRawName(), commandNode.getDisplayName()),
+                            $i18nF("esp.idf.monitor.task.auto.stop.msg", aliveHandler.getTaskRawName(), commandNode.getDisplayName(), finalPort),
                             NotificationType.INFORMATION).notify(project);
                     ApplicationManager.getApplication().invokeLater(() ->
                             execTask(commandNode.isUseMonitor(), finalPort, project, idfConsoleRunProfile, null));
