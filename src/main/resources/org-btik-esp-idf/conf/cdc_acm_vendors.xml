@@ -68,15 +68,8 @@
         <product id="5740" type="ST CDC "/>
     </vendor>
     <vendor id="303A" name="Espressif Systems" default-name="Espressif Device">
-        <product id="1001" type="ESP32 CDC"/>
+        <product id="1001" type="ESP32 JTAG CDC"/>
+        <product id="0002" type="ESP32S2"/>
+        <product id="0012" type="ESP32P4"/>
     </vendor>
 </Vendors>
-
-
-
-
-
-
-
-
-
