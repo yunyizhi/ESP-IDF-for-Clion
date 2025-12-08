@@ -24,7 +24,7 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.20.0")
     implementation("com.fazecast:jSerialComm:2.11.2")
     intellijPlatform {
-        clion("LATEST-EAP-SNAPSHOT") { useInstaller = false }
+        clion("2025.3") { useInstaller = false }
         bundledPlugins(
             "com.intellij.clion",
             "com.intellij.clion.cmake",

@@ -18,6 +18,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.jetbrains.cidr.CidrProjectApplicationVersion;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
+import kotlin.Result;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -143,10 +144,13 @@ public abstract class SubGenerator<T> {
 
             @Override
             public void resumeWith(@NotNull Object o) {
-                if (o instanceof Boolean success && success) {
-                    ApplicationManager.getApplication().invokeLater(SubGenerator.this::createDebugRunConfig);
+                if (o instanceof Result.Failure) {
+                    // 处理失败情况，例如记录错误日志
+                    Throwable exception = ((Result.Failure) o).exception;
+                    LOG.warn("Failed to link CMake project: ", exception);
                 } else {
-                    LOG.warn(o + ":class " + o.getClass().getName());
+                    // 如果没有异常，则认为操作成功，无论o的具体值是什么（即使是Unit）
+                    ApplicationManager.getApplication().invokeLater(SubGenerator.this::createDebugRunConfig);
                 }
             }
         });
