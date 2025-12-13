@@ -2,6 +2,9 @@
 > 关于环境变量设置，
 > 本项目使用了clion从toolchain环境变量文件加载环境变量的能力，idf的export脚本会导出变量，一般不需要设置全局的环境变量。
 
+>关于中国下载站:本篇涉及idf安装方式均可完全走乐鑫在中国下载站以及python组件使用中国国内镜像源。若出现下载问题，请注意 **完全使用中国站(乐鑫中国站和python清华源)** 这个选项
+> 当然python也可设置其他国内源如阿里源。
+
 ## 首次使用clion注意事项
 如果首次使用clion,第一次新建当前项目的时候，会弹出一个选择Toolchain的窗口，这个时候不要选择，
 本插件初始化项目的时候会自动新建属于IDF的Toolchain并创建对应cmake profile选中它。
@@ -35,8 +38,8 @@
 
 
 ## Windows下源码安装
->windows下这里默认是在安装过离线版本后测试，不能确保未安装离线版的环境，源码安装时一些需要的依赖项已经安装。
->测试时python git等也有单独安装的版本
+
+>python git需要提前安装，python的版本可能随着idf版本支持度有所不同，比如在测试idf5.5.1的时候使用3.14存在问题使用3.12版本则可以。
 
 ### 克隆代码
 在一个没有空格路径下打开`cmd`执行以下命令(powershell设置环境变量的方式不同)
@@ -320,3 +323,5 @@ export PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
 
 生成的Toolchain名称前缀为`EspIdfAutoGen`，目前本插件不依赖Toolchain名称，可以重命名。
 重命名后，已经配置过的项目需要在cmake profile处重新指定对应名称即可。
+
+![toolchains](toolchains.png)
