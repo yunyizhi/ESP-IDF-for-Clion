@@ -40,6 +40,8 @@
 ## Windows下源码安装
 
 >python git需要提前安装，python的版本可能随着idf版本支持度有所不同，比如在测试idf5.5.1的时候使用3.14存在问题使用3.12版本则可以。
+> 
+> 目前依赖的python仅仅支持3.10, 3.11, 3.12, 3.13.在其他系统可能3.10也不支持参考[idf-im-ui/python版本](https://docs.espressif.com/projects/idf-im-ui/en/latest/prerequisites.html#python-version)
 
 ### 克隆代码
 在一个没有空格路径下打开`cmd`执行以下命令(powershell设置环境变量的方式不同)
