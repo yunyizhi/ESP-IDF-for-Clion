@@ -10,7 +10,7 @@ import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
-import com.jetbrains.cidr.toolchains.OSType;
+import com.intellij.util.system.OS;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.service.IdfEnvironmentService;
@@ -274,7 +274,7 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
             return existsToolChain;
         }
 
-        CPPToolchains.Toolchain idfToolChain = new CPPToolchains.Toolchain(OSType.getCurrent());
+        CPPToolchains.Toolchain idfToolChain = new CPPToolchains.Toolchain(OS.CURRENT);
         idfToolChain.setToolSetKind(IS_WINDOWS ? CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET : CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET);
         idfToolChain.setName(IDF_TOOLCHAIN_NAME_PREFIX + Integer.toHexString(envFileName.hashCode()));
         ApplicationManager.getApplication().runWriteAction(() -> {
