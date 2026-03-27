@@ -1,7 +1,7 @@
 # ESP-IDF for CLion
 为CLion添加完善的<a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif IoT Development Framework)</a>支持。
 
-当前版本:0.7 对应clion版本25.2/25.3
+当前版本:0.7 对应clion版本25.2/25.3/26.1
 
 ### 插件市场
 
