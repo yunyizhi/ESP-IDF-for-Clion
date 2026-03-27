@@ -2,7 +2,7 @@
 > 关于环境变量设置，
 > 本项目使用了clion从toolchain环境变量文件加载环境变量的能力，idf的export脚本会导出变量，一般不需要设置全局的环境变量。
 
->关于中国下载站:本篇涉及idf安装方式均可完全走乐鑫在中国下载站以及python组件使用中国国内镜像源。若出现下载问题，请注意 **完全使用中国站(乐鑫中国站和python清华源)** 这个选项
+>关于中国下载站:本篇涉及idf安装方式均可完全走乐鑫在中国下载站以及python组件使用中国国内镜像源。若出现下载问题，请注意 **完全使用中国站(乐鑫中国站和python阿里源)** 这个选项
 > 当然python也可设置其他国内源如阿里源。
 
 ## 首次使用clion注意事项
@@ -67,12 +67,12 @@ git clone --recursive https://github.com/espressif/esp-idf.git
 </tab>
     <tab title="乐鑫中国站下载全量源码(含子模块)">
 
-以idf5.5为例，将idf5.5的release中附件esp-idf-v5.5.zip的url复制出，<br>
+以idf5.5为例，将idf5.5的release中附件esp-idf-v6.0.zip的url复制出，<br>
 然后替换`github.com` 到 `dl.espressif.cn/github_assets`
 
 得到其乐鑫中国站下载地址如下:
 
-`https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v5.5/esp-idf-v5.5.zip`
+`https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v6.0/esp-idf-v6.0.zip`
 
 可用浏览器下载，后解压到一个没有空格的目录
 </tab>
@@ -81,10 +81,10 @@ git clone --recursive https://github.com/espressif/esp-idf.git
 ### 切换到一个具体的稳定版本(可选)
 > 使用中国站下载源码包已经是具体版本了无需进行这一步
 
-例如`v5.5`标签
+例如`v6.0`标签
 ```Bash
 cd esp-idf
-git checkout v5.5
+git checkout v6.0
 git submodule update --init --recursive
 
 ```
@@ -108,12 +108,12 @@ set IDF_GITHUB_ASSETS=dl.espressif.com/github_assets
 install.bat
 ```
 </tab>
-<tab title="完全使用中国站(乐鑫中国站和python清华源)">
+<tab title="完全使用中国站(乐鑫中国站和python阿里源)">
 
 ```bash
 set IDF_GITHUB_ASSETS=dl.espressif.cn/github_assets
-set PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
-set PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
+set PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
+set PIP_TRUSTED_HOST=mirrors.aliyun.com
 install.bat
 ```
 </tab>
@@ -168,13 +168,13 @@ git clone --recursive https://github.com/espressif/esp-idf.git
 </tab>
     <tab title="从中国站直接下载">
 <code-block>
-# 以idf5.5为例，将idf5.5的release中附件esp-idf-v5.5.zip的url复制出
+# 以idf6.0为例，将idf6.0的release中附件esp-idf-v6.0.zip的url复制出
 # 然后替换`github.com` 到 `dl.espressif.cn/github_assets`
 mkdir -p ~/esp
 cd ~/esp
-wget https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v5.5/esp-idf-v5.5.zip
-unzip esp-idf-v5.5.zip
-mv esp-idf-v5.5/ esp-idf
+wget https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v6.0/esp-idf-v6.0.zip
+unzip esp-idf-v6.0.zip
+mv esp-idf-v6.0/ esp-idf
 </code-block>
 </tab>
 </tabs>
@@ -182,10 +182,10 @@ mv esp-idf-v5.5/ esp-idf
 #### 切换到一个具体的稳定版本(可选)
 > 使用中国站下载源码包已经是具体版本了无需进行这一步
 
-例如`v5.5`标签
+例如`v6.0`标签
 ```Bash
 cd esp-idf
-git checkout v5.5
+git checkout v6.0
 git submodule update --init --recursive
 
 ```
@@ -209,13 +209,13 @@ export IDF_GITHUB_ASSETS="dl.espressif.com/github_assets"
 ./install.sh
 ```
 </tab>
-<tab title="完全使用中国站(乐鑫中国站和python清华源)">
+<tab title="完全使用中国站(乐鑫中国站和python阿里源)">
 
 ```bash
 cd ~/esp/esp-idf
 export IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
-export PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
-export PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
+export PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
+export PIP_TRUSTED_HOST=mirrors.aliyun.com
 ./install.sh
 ```
 </tab>
@@ -260,14 +260,14 @@ git clone --recursive https://github.com/espressif/esp-idf.git
 </tab>
     <tab title="从中国站直接下载">
 
- 以idf5.5为例，将idf5.5的release中附件esp-idf-v5.5.zip的url复制出<br>
+ 以idf5.5为例，将idf5.5的release中附件esp-idf-v6.0.zip的url复制出<br>
  然后替换`github.com` 到 `dl.espressif.cn/github_assets`
 ```Bash
 mkdir -p ~/esp
 cd ~/esp
-curl -O  https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v5.5/esp-idf-v5.5.zip
-unzip esp-idf-v5.5.zip
-mv esp-idf-v5.5/ esp-idf
+curl -O  https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v6.0/esp-idf-v6.0.zip
+unzip esp-idf-v6.0.zip
+mv esp-idf-v6.0/ esp-idf
 ```
 
 </tab>
@@ -276,10 +276,10 @@ mv esp-idf-v5.5/ esp-idf
 ### 切换到一个具体的稳定版本(可选)
 > 使用中国站下载源码包已经是具体版本了无需进行这一步
 
-例如`v5.5`标签
+例如`v6.0`标签
 ```Bash
 cd esp-idf
-git checkout v5.5
+git checkout v6.0
 git submodule update --init --recursive
 
 ```
@@ -303,13 +303,13 @@ export IDF_GITHUB_ASSETS="dl.espressif.com/github_assets"
 ./install.sh
 ```
 </tab>
-<tab title="完全使用中国站(乐鑫中国站和python清华源)">
+<tab title="完全使用中国站(乐鑫中国站和python阿里源)">
 
 ```bash
 cd ~/esp/esp-idf
 export IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
-export PIP_INDEX_URL=https://pypi.tuna.tsinghua.edu.cn/simple
-export PIP_TRUSTED_HOST=pypi.tuna.tsinghua.edu.cn
+export PIP_INDEX_URL=https://mirrors.aliyun.com/simple
+export PIP_TRUSTED_HOST=mirrors.aliyun.com
 ./install.sh
 ```
 </tab>
