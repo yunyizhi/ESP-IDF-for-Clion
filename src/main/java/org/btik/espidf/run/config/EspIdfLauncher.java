@@ -14,6 +14,7 @@ import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.execution.ui.RunnerLayoutUi;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.ThrowableComputable;
 import com.intellij.ui.content.Content;
 import com.intellij.xdebugger.XDebugProcess;
 import com.intellij.xdebugger.XDebugSession;
@@ -31,7 +32,7 @@ import com.jetbrains.cidr.execution.TrivialRunParameters;
 import com.jetbrains.cidr.execution.debugger.CidrDebugProcess;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriverConfiguration;
-import com.jetbrains.cidr.toolchains.OSType;
+import com.intellij.util.system.OS;
 import kotlin.Pair;
 import org.btik.espidf.run.config.openocd.IdfOpenOcdGDBDriverConfig;
 import org.btik.espidf.service.IdfProjectConfigService;
@@ -93,10 +94,11 @@ public class EspIdfLauncher<T> extends CLionLauncher {
     }
 
     @Override
-    public @NotNull XDebugProcess createDebugProcess(@NotNull CommandLineState state, @NotNull XDebugSession session) {
+    public @NotNull XDebugProcess createDebugProcess(@NotNull CommandLineState state, @NotNull XDebugSession session) throws ExecutionException {
         Project project = getProject();
         @SystemIndependent final String projectPath = project.getBasePath();
-        CPPToolchains.Toolchain nativeToolchain = TrivialNativeToolchain.Companion.forDebugger(CPPDebugger.customGdb("gdb"), OSType.getCurrent());
+
+        CPPToolchains.Toolchain nativeToolchain = TrivialNativeToolchain.Companion.forDebugger(CPPDebugger.customGdb("gdb"), OS.CURRENT);
         DebuggerDriverConfiguration debuggerDriverConfiguration = new IdfOpenOcdGDBDriverConfig<>(project,
                 nativeToolchain, debugRunConfig);
 
@@ -106,8 +108,10 @@ public class EspIdfLauncher<T> extends CLionLauncher {
             session.getConsoleView().print(s, ConsoleViewContentType.NORMAL_OUTPUT);
             return null;
         }};
-        return CidrCoroutineHelper.runOnEDT(
-                () -> new CidrDebugProcess(parameters, session, state.getConsoleBuilder(),
+        return CidrCoroutineHelper.runOnEDT(new ThrowableComputable<>() {
+            @Override
+            public XDebugProcess compute() throws ExecutionException {
+                return new CidrDebugProcess(parameters, session, state.getConsoleBuilder(),
                         consoleCopyFilter) {
 
                     @Override
@@ -160,7 +164,10 @@ public class EspIdfLauncher<T> extends CLionLauncher {
                             }
                         };
                     }
-                });
+                };
+            }
+        });
+
     }
 
 }
