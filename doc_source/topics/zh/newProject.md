@@ -67,7 +67,7 @@ git clone --recursive https://github.com/espressif/esp-idf.git
 </tab>
     <tab title="乐鑫中国站下载全量源码(含子模块)">
 
-以idf5.5为例，将idf5.5的release中附件esp-idf-v6.0.zip的url复制出，<br>
+以idf6.0为例，将idf6.0的release中附件esp-idf-v6.0.zip的url复制出，<br>
 然后替换`github.com` 到 `dl.espressif.cn/github_assets`
 
 得到其乐鑫中国站下载地址如下:
@@ -260,7 +260,7 @@ git clone --recursive https://github.com/espressif/esp-idf.git
 </tab>
     <tab title="从中国站直接下载">
 
- 以idf5.5为例，将idf5.5的release中附件esp-idf-v6.0.zip的url复制出<br>
+ 以idf6.0为例，将idf6.0的release中附件esp-idf-v6.0.zip的url复制出<br>
  然后替换`github.com` 到 `dl.espressif.cn/github_assets`
 ```Bash
 mkdir -p ~/esp
