@@ -1,4 +1,4 @@
-package org.btik.espidf.project;
+package org.btik.espidf.project.generator.idfenv;
 
 import com.intellij.facet.ui.ValidationResult;
 import com.intellij.notification.NotificationType;

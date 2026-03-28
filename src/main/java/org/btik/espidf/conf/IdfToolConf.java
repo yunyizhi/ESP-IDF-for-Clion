@@ -1,13 +1,8 @@
 package org.btik.espidf.conf;
 
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
-import org.btik.espidf.project.IdfEnvType;
 
 import java.util.Objects;
-
-import static org.btik.espidf.project.IdfEnvType.IDF_FRAMEWORK;
-import static org.btik.espidf.project.IdfEnvType.IDF_TOOL;
-import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
 /**
  * @author lustre

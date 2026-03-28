@@ -1,4 +1,4 @@
-package org.btik.espidf.project;
+package org.btik.espidf.project.generator.idfenv;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
 

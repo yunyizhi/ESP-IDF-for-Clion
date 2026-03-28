@@ -1,4 +1,4 @@
-package org.btik.espidf.project;
+package org.btik.espidf.project.generator.idfenv;
 
 import com.intellij.facet.ui.ValidationResult;
 import com.intellij.ide.util.projectWizard.AbstractNewProjectStep;
@@ -48,7 +48,7 @@ public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements 
 
     @Override
     public @NotNull @NlsContexts.Label String getName() {
-        return $sys("project.type.name");
+        return $sys("project.type.name.legacy");
     }
 
     public @NotNull String getGroupName() {

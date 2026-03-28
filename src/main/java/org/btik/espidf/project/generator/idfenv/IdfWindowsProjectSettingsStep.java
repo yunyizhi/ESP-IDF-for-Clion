@@ -1,4 +1,4 @@
-package org.btik.espidf.project;
+package org.btik.espidf.project.generator.idfenv;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;

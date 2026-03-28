@@ -34,8 +34,10 @@ Enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <directoryProjectGenerator implementation="org.btik.espidf.project.IdfProjectGenerator"
+        <directoryProjectGenerator implementation="org.btik.espidf.project.generator.toolchain.IdfProjectGenerator"
                                    id="org.btiik.espidf" order="after jetbrains.cidr.stm32cubemx"/>
+        <directoryProjectGenerator implementation="org.btik.espidf.project.generator.idfenv.IdfProjectGenerator"
+                                   id="org.btiik.espidf.by.idf.env" order="after org.btiik.espidf"/>
         <notificationGroup id="org.btiik.espidf" displayType="BALLOON" bundle="messages.org_btik_espidf"
                            key="notification.group"/>
         <postStartupActivity implementation="org.btik.espidf.state.EspIdfProjectActivity"/>

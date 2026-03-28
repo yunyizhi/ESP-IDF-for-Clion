@@ -17,6 +17,7 @@ import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.state.model.IdfProfileInfo;
+import org.btik.espidf.util.ToolChainTool;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -261,19 +262,10 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
     }
 
     private CPPToolchains.Toolchain getToolChain(String envFileName) {
-        CPPToolchains.Toolchain existsToolChain = ApplicationManager.getApplication().runReadAction((Computable<CPPToolchains.Toolchain>) () -> {
-            List<CPPToolchains.Toolchain> toolchains = CPPToolchains.getInstance().getToolchains();
-            for (CPPToolchains.Toolchain toolchain : toolchains) {
-                if (Objects.equals(toolchain.getEnvironment(), envFileName)) {
-                    return toolchain;
-                }
-            }
-            return null;
-        });
+        CPPToolchains.Toolchain existsToolChain = ToolChainTool.findToolchainByEnvFile(envFileName);
         if (existsToolChain != null) {
             return existsToolChain;
         }
-
         CPPToolchains.Toolchain idfToolChain = new CPPToolchains.Toolchain(OS.CURRENT);
         idfToolChain.setToolSetKind(IS_WINDOWS ? CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET : CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET);
         idfToolChain.setName(IDF_TOOLCHAIN_NAME_PREFIX + Integer.toHexString(envFileName.hashCode()));
