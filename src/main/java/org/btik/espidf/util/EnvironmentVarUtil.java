@@ -4,12 +4,14 @@ import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -51,7 +53,7 @@ public class EnvironmentVarUtil {
         return resultEnv;
     }
 
-    public static boolean checkIdfPyNotFound(String idfPyPath , Project project) {
+    public static boolean checkIdfPyNotFound(String idfPyPath, Project project) {
         if (StringUtil.isNotEmpty(idfPyPath)) {
             return false;
         }
@@ -60,12 +62,22 @@ public class EnvironmentVarUtil {
         return true;
 
     }
+
     public static String findIdfFullPath(Map<String, String> env) {
         String path = env.get("PATH");
         if (path == null) {
             path = env.get("Path");
         }
-        return findIdfFullPath(path);
+        String idfFullPath = findIdfFullPath(path);
+        if (StringUtils.isEmpty(idfFullPath)) {
+            String idfPath = env.get("IDF_PATH");
+            Path idfPy = Path.of(idfPath, "tools", OsUtil.Const.IDF_EXE);
+            File file = idfPy.toFile();
+            if (file.exists()) {
+                return safe2String(file, File::getPath);
+            }
+        }
+        return idfFullPath;
     }
 
     public static String findIdfFullPath(String path) {

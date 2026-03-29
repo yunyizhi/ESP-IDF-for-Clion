@@ -6,16 +6,17 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.platform.DirectoryProjectGenerator;
+import com.intellij.platform.ide.progress.TasksKt;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.service.IdfSysConfService;
+import org.btik.espidf.util.UIUtils;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
-
 import static org.btik.espidf.util.SysConf.$sys;
 import static org.btik.espidf.util.UIUtils.createConstraints;
 import static org.btik.espidf.util.UIUtils.i18nLabel;
@@ -52,6 +53,9 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
 
     private void initIdfToolChianBox() {
         idfToolchainCombBox = new IdfToolchainCombBox();
+        UIUtils.setWidth(idfToolchainCombBox, 300);
+        idfToolchainCombBox.load();
+        ApplicationManager.getApplication().invokeLater(idfToolchainCombBox::load);
 
     }
 
