@@ -3,8 +3,10 @@ package org.btik.espidf.service;
 
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.btik.espidf.conf.IdfToolConf;
+import org.jetbrains.annotations.NotNull;
 
 
+import java.io.File;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -17,6 +19,8 @@ public interface IdfEnvironmentService {
 
     String IDF_TOOLCHAIN_NAME_PREFIX = "EspIdfAutoGen";
 
+    String PATH = "PATH";
+
     String ESP_PORT = "ESPPORT";
     String IDF_MONITOR_BAUD = "IDF_MONITOR_BAUD";
     String MONITOR_BAUD = "MONITORBAUD";
@@ -26,9 +30,21 @@ public interface IdfEnvironmentService {
 
     String OPENOCD_COMMANDS = "OPENOCD_COMMANDS";
 
+    String ESP_IDF_VERSION = "ESP_IDF_VERSION";
+
+    String IDF_PATH = "IDF_PATH";
+
+    String SRC_TOOLS_DIR = "tools"; // idf源码目录的tools
+
+    String IDF_TOOLS_PATH = "IDF_TOOLS_PATH";
+
+    String DEFAULT_IDF_TOOLS_PATH = System.getProperty("user.home") + File.separator + ".espressif";
+
     Map<String, String> getEnvironments();
 
     Map<String, String> getEnvOfToolChain(CPPToolchains.Toolchain toolchain);
+
+    Map<String, String> setCache(@NotNull CPPToolchains.Toolchain toolchain,@NotNull Map<String,String> env);
 
     void putTo(Map<String, String> newEnvironments);
 

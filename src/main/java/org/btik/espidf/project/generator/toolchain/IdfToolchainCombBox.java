@@ -2,7 +2,6 @@ package org.btik.espidf.project.generator.toolchain;
 
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.openapi.util.Pair;
 import com.intellij.platform.ide.progress.ModalTaskOwner;
 import com.intellij.platform.ide.progress.TaskCancellation;
 import com.intellij.platform.ide.progress.TasksKt;
@@ -20,27 +19,30 @@ import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import javax.swing.plaf.basic.BasicComboBoxEditor;
 import java.awt.*;
-import java.io.IOException;
+import java.awt.event.ItemEvent;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET;
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET;
-import static org.btik.espidf.adapter.Adapter.readEnvironment;
-import static org.btik.espidf.util.I18nMessage.$i18nF;
+import static org.btik.espidf.environment.ToolchainEnvReader.toolChainEnvByComp;
+import static org.btik.espidf.service.IdfEnvironmentService.*;
 import static org.btik.espidf.util.ListCellRendererAttr.BLUE_ITALIC_SMALL_ATTRIBUTES;
 import static org.btik.espidf.util.ListCellRendererAttr.GRAY_ITALIC_SMALL_ATTRIBUTES;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
 public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
 
-    private static final HashMap<CPPToolchains.Toolchain, Pair<Map<String, String>, IdfToolchain>> toolchainEnvMap = new HashMap<>();
+    private static final HashMap<CPPToolchains.Toolchain, IdfToolchain> toolchainEnvMap = new HashMap<>();
 
     private static final HashSet<CPPToolchains.Toolchain> envFileNotIdfToolchains = new HashSet<>();
 
     private final IdfToolchainComboEditor editor;
+
+    private Consumer<IdfToolchain> selectChangeHook;
 
     public IdfToolchainCombBox() {
         setRenderer(new IdfToolchainListCellRenderer());
@@ -66,6 +68,17 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
 
 
         });
+        addItemListener((e) -> {
+            if (e.getStateChange() != ItemEvent.SELECTED || selectChangeHook == null) {
+                return;
+            }
+            Object selectedItem = getSelectedItem();
+            if (!(selectedItem instanceof IdfToolchain idfToolchain)) {
+                return;
+            }
+            selectChangeHook.accept(idfToolchain);
+
+        });
 
     }
 
@@ -81,30 +94,22 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
             if (toolchainEnvMap.containsKey(envToolchain)) {
                 continue;
             }
-            Map<String, String> rawEnv = TasksKt.runWithModalProgressBlocking(ModalTaskOwner.component(IdfToolchainCombBox.this),
-                    $i18nF("esp.idf.read.envs", envToolchain.getName()),
-                    TaskCancellation.nonCancellable(), (scope, continuation) -> {
-                        try {
-                            return readEnvironment(envToolchain, envToolchain.getEnvironment());
-                        } catch (IOException | com.intellij.execution.ExecutionException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-            String idfPath = rawEnv.get("IDF_PATH");
+            Map<String, String> rawEnv = toolChainEnvByComp(envToolchain, IdfToolchainCombBox.this);
+            String idfPath = rawEnv.get(IDF_PATH);
             if (StringUtils.isEmpty(idfPath)) {
                 envFileNotIdfToolchains.add(envToolchain);
                 continue;
             }
             String versionStr = getVersion(rawEnv);
             if (StringUtils.isEmpty(versionStr)) {
-                versionStr = "idf" + rawEnv.get("ESP_IDF_VERSION");
+                versionStr = "idf" + rawEnv.get(ESP_IDF_VERSION);
             }
-
-            IdfToolchain idfToolchain = new IdfToolchain(envToolchain.getName(), envToolchain.getEnvironment(), versionStr, idfPath);
-            toolchainEnvMap.put(envToolchain, Pair.create(rawEnv, idfToolchain));
+            String idfToolsPath = rawEnv.get(IDF_TOOLS_PATH);
+            IdfToolchain idfToolchain = new IdfToolchain(envToolchain, versionStr, idfPath, idfToolsPath, rawEnv);
+            toolchainEnvMap.put(envToolchain, idfToolchain);
         }
 
-        toolchainEnvMap.forEach((toolchain, toolchainInfo) -> addItem(toolchainInfo.second));
+        toolchainEnvMap.forEach((toolchain, toolchainInfo) -> addItem(toolchainInfo));
     }
 
     private String getVersion(Map<String, String> environments) {
@@ -117,6 +122,10 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
 
     }
 
+    public void onSelectChange(Consumer<IdfToolchain> selectChangeHook) {
+        this.selectChangeHook = selectChangeHook;
+    }
+
     static class IdfToolchainListCellRenderer implements ListCellRenderer<IdfToolchain> {
 
         @Override
@@ -125,7 +134,7 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
                 return new JPanel(new BorderLayout());
             }
             JPanel panel = new JPanel(new BorderLayout());
-            panel.getAccessibleContext().setAccessibleName(idfToolchain.name());
+            panel.getAccessibleContext().setAccessibleName(idfToolchain.getName());
             panel.setOpaque(true);
             panel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
 
@@ -135,13 +144,13 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
             SimpleColoredComponent primary = new SimpleColoredComponent();
             primary.setOpaque(false); // 透明背景，继承 panel 背景
             primary.setIpad(JBUI.emptyInsets());
-            primary.append(idfToolchain.name(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
+            primary.append(idfToolchain.getName(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
             primary.append(" ", SimpleTextAttributes.REGULAR_ATTRIBUTES);
-            primary.append(idfToolchain.idfVersion(), BLUE_ITALIC_SMALL_ATTRIBUTES);
+            primary.append(idfToolchain.getIdfVersion(), BLUE_ITALIC_SMALL_ATTRIBUTES);
             SimpleColoredComponent secondary = new SimpleColoredComponent();
             secondary.setOpaque(false);
             secondary.setIpad(JBUI.emptyInsets()); // 更小内边距
-            secondary.append(idfToolchain.idfPath(), GRAY_ITALIC_SMALL_ATTRIBUTES);
+            secondary.append(idfToolchain.getIdfPath(), GRAY_ITALIC_SMALL_ATTRIBUTES);
             JPanel textPanel = new JPanel();
             textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
             textPanel.setOpaque(false);

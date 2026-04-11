@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.text.StringUtil;
 import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.project.generator.GeneratorActions;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.util.I18nMessage;
 
@@ -20,8 +21,8 @@ import static org.btik.espidf.util.SysConf.$sys;
  * @author lustre
  * @since 2024/2/11 16:57
  */
-public class WindowsGenerator<T> extends SubGenerator<T> {
-    private final Logger LOG = Logger.getInstance(WindowsGenerator.class);
+public class WindowsGeneratorActions<T> extends GeneratorActions<T> {
+    private final Logger LOG = Logger.getInstance(WindowsGeneratorActions.class);
     private String installPath;
 
     private String idfId;

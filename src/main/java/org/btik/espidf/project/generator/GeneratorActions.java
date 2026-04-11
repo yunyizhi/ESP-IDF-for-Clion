@@ -1,4 +1,4 @@
-package org.btik.espidf.project.generator.idfenv;
+package org.btik.espidf.project.generator;
 
 
 import com.intellij.execution.ExecutionException;
@@ -51,8 +51,8 @@ import static org.btik.espidf.util.I18nMessage.$i18n;
  * @author lustre
  * @since 2024/2/11 17:18
  */
-public abstract class SubGenerator<T> {
-    protected final Logger LOG = Logger.getInstance(SubGenerator.class);
+public abstract class GeneratorActions<T> {
+    protected final Logger LOG = Logger.getInstance(GeneratorActions.class);
 
     protected static final String IDF_CMAKE_PROFILE_NAME = "idf";
 
@@ -150,7 +150,7 @@ public abstract class SubGenerator<T> {
                     LOG.warn("Failed to link CMake project: ", exception);
                 } else {
                     // 如果没有异常，则认为操作成功，无论o的具体值是什么（即使是Unit）
-                    ApplicationManager.getApplication().invokeLater(SubGenerator.this::createDebugRunConfig);
+                    ApplicationManager.getApplication().invokeLater(GeneratorActions.this::createDebugRunConfig);
                 }
             }
         });

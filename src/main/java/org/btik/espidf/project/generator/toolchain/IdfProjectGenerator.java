@@ -19,6 +19,8 @@ import javax.swing.*;
 import static org.btik.espidf.util.SysConf.$sys;
 
 public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements CustomStepProjectGenerator<T> {
+
+    private final IdfProjectCreatorActions<T> idfProjectCreatorActions = new IdfProjectCreatorActions<>();
     @Override
     public AbstractActionWithPanel createStep(DirectoryProjectGenerator<T> projectGenerator, AbstractNewProjectStep.AbstractCallback<T> callback) {
         return new IdfProjectSettingsStep<>(projectGenerator, callback);
@@ -48,6 +50,14 @@ public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements 
 
     @Override
     public void generateProject(@NotNull Project project, @NotNull VirtualFile baseDir, @NotNull T settings, @NotNull Module module) {
+        idfProjectCreatorActions.generateProject(project, baseDir, settings, module);
+    }
 
+    public void setIdfToolChian(IdfToolchain idfToolchain){
+        idfProjectCreatorActions.setIdfToolchain(idfToolchain);
+    }
+
+    public void setIdfTarget(String idfTarget){
+        idfProjectCreatorActions.setIdfTarget(idfTarget);
     }
 }

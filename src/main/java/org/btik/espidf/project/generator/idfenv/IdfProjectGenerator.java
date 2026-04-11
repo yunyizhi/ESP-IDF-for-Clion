@@ -27,17 +27,17 @@ import static org.btik.espidf.util.SysConf.$sys;
  */
 public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements CustomStepProjectGenerator<T> {
 
-    private WindowsGenerator<T> windowsGenerator;
+    private WindowsGeneratorActions<T> windowsGenerator;
 
-    private UnixLikeGenerator<T> unixLikeGenerator;
+    private UnixLikeGeneratorActions<T> unixLikeGenerator;
 
 
     public IdfProjectGenerator() {
 
         if (IS_WINDOWS) {
-            windowsGenerator = new WindowsGenerator<>();
+            windowsGenerator = new WindowsGeneratorActions<>();
         } else {
-            unixLikeGenerator = new UnixLikeGenerator<>();
+            unixLikeGenerator = new UnixLikeGeneratorActions<>();
         }
     }
 

@@ -2,9 +2,7 @@ package org.btik.espidf.environment;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.text.StringUtil;
-import com.intellij.platform.ide.progress.TasksKt;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
@@ -17,6 +15,7 @@ import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.state.model.IdfProfileInfo;
+import org.btik.espidf.util.EnvironmentVarUtil;
 import org.btik.espidf.util.ToolChainTool;
 import org.jetbrains.annotations.NotNull;
 
@@ -27,13 +26,11 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.btik.espidf.adapter.Adapter.readEnvironment;
-import static org.btik.espidf.util.I18nMessage.$i18nF;
+import static org.btik.espidf.environment.ToolchainEnvReader.toolChainEnvByProj;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 import static org.btik.espidf.util.SysConf.$sys;
 
@@ -105,6 +102,13 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
     }
 
     @Override
+    public Map<String, String> setCache(@NotNull CPPToolchains.Toolchain toolchain, @NotNull Map<String, String> env) {
+        Map<String, String> newEnv = sanitizeEnv(env);
+        envFile2Envs.put(toolchain.getEnvironment(), newEnv);
+        return newEnv;
+    }
+
+    @Override
     public void putTo(Map<String, String> newEnvironments) {
         if (newEnvironments == null) {
             return;
@@ -126,19 +130,9 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
     }
 
     private Map<String, String> generateEnvironment(CPPToolchains.Toolchain toolchain) {
-        String environment = toolchain.getEnvironment();
-        if (StringUtil.isEmpty(environment)) {
-            return new HashMap<>();
-        }
-        Map<String, String> rawEnv = TasksKt.runWithModalProgressBlocking(project, $i18nF("esp.idf.read.envs", toolchain.getName()), (scope, continuation) -> {
-            try {
-                return readEnvironment(toolchain, environment);
-            } catch (IOException | com.intellij.execution.ExecutionException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        Map<String, String> rawEnv = toolChainEnvByProj(toolchain, project);
         rawEnv = sanitizeEnv(rawEnv);
-        envFile2Envs.put(environment, rawEnv);
+        envFile2Envs.put(toolchain.getEnvironment(), rawEnv);
         return rawEnv;
     }
 
@@ -245,7 +239,7 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
             return true;
         }));
         if (floatingToolbarVisibleHandler != null) {
-            floatingToolbarVisibleHandler.accept(needReload.get());
+            ApplicationManager.getApplication().invokeLater(() -> floatingToolbarVisibleHandler.accept(needReload.get()));
         }
     }
 
@@ -279,17 +273,27 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         return idfToolChain;
     }
 
-    private Map<String, String> sanitizeEnv(Map<String, String> env) {
-        Map<String, String> cleanEnv = new HashMap<>();
-        for (Map.Entry<String, String> entry : env.entrySet()) {
-            String key = entry.getKey();
-            String value = entry.getValue();
-            if (key.equalsIgnoreCase("PATH")) {
-                // making sure to remove extra quotes and semicolon-prefixes
-                value = value.replace("\"", "").replaceAll("^;+|;+$", "");
-            }
-            cleanEnv.put(key, value);
+    private String pathEnvProcess(Map<String, String> env) {
+        String path = env.get(PATH);
+        if (path == null) {
+            path = env.get("Path");
         }
+        if (StringUtils.isEmpty(path)) {
+            return "";
+        }
+        path = path.replace("\"", "").replaceAll("^;+|;+$", "");
+        String idfFullPath = EnvironmentVarUtil.findIdfFullPath(path);
+        if (StringUtils.isNotEmpty(idfFullPath)) {
+            return path;
+        }
+        String idfPath = env.get(IDF_PATH);
+        String separator = IS_WINDOWS ? ";" : ":";
+        return path + separator + idfPath + File.separatorChar + SRC_TOOLS_DIR;
+    }
+
+    private Map<String, String> sanitizeEnv(Map<String, String> env) {
+        Map<String, String> cleanEnv = new HashMap<>(env);
+        cleanEnv.put(PATH, pathEnvProcess(env));
         return cleanEnv;
     }
 
