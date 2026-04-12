@@ -30,6 +30,7 @@ import static org.btik.espidf.util.I18nMessage.$i18n;
  * @since 2025/7/7 22:57
  */
 public class SearchTextBox extends SearchTextField {
+    private static final String KCONFIG_PREFIX = "CONFIG_";
     private Consumer<ConfModel> jumpTreeFunc;
 
     private ListPopup popup;
@@ -64,11 +65,17 @@ public class SearchTextBox extends SearchTextField {
         LinkedHashSet<ConfModel> results = new LinkedHashSet<>();
         String text = getText();
         String lowerKeyword = text.toLowerCase();
+        String configKey = "";
+        int config_index = text.indexOf(KCONFIG_PREFIX);
+        if (config_index >= 0) {
+            configKey = lowerKeyword.substring(config_index + KCONFIG_PREFIX.length());
+        }
+        final String noPrefixKey = configKey;
         TreeUtils.treeEachWithBreak(treeRootModel, (model) -> {
             if (results.size() >= maxSearchCount) {
                 return false;
             }
-            if (isMatch(model, lowerKeyword)) {
+            if (isMatch(model, lowerKeyword) || ((!noPrefixKey.isEmpty()) && isMatch(model, noPrefixKey))) {
                 results.add(model);
             }
             return results.size() < maxSearchCount;
