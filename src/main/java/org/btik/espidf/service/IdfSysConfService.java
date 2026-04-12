@@ -2,6 +2,8 @@ package org.btik.espidf.service;
 
 import com.intellij.openapi.project.Project;
 import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.conf.LastChosenIdfEnv;
+import org.btik.espidf.conf.LastChosenIdfToolchian;
 import org.btik.espidf.toolwindow.settings.model.CdcAcmVendorInfo;
 import org.btik.espidf.util.ClassMetaUtils;
 
@@ -19,11 +21,15 @@ public interface IdfSysConfService {
 
     String MONITOR_COMMAND = "monitor";
 
-    IdfToolConf getLastActivedIdfToolConf();
+    LastChosenIdfToolchian getLastChosenIdfToolchian();
+
+    LastChosenIdfEnv getLastChosenIdfEnv();
 
     void store(IdfToolConf newIdfToolConf);
 
     Path getIdfConfFolder();
+
+    void setLastEnv(LastChosenIdfEnv lastChosenIdfEnv);
 
     IdfToolConf getToolConfByKey(String key);
 

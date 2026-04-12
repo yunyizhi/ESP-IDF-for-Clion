@@ -10,13 +10,12 @@ import com.intellij.ui.components.JBPanel;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.apache.commons.lang3.StringUtils;
-import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.conf.LastChosenIdfToolchian;
 import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.util.UIUtils;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ItemEvent;
 
 import static org.btik.espidf.service.IdfEnvironmentService.DEFAULT_IDF_TOOLS_PATH;
 import static org.btik.espidf.ui.componets.SelectedItemListener.selectedListener;
@@ -57,15 +56,20 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
     private void initIdfToolChianBox() {
         idfToolchainCombBox = new IdfToolchainCombBox();
         UIUtils.setWidth(idfToolchainCombBox, 300);
-        idfToolchainCombBox.onSelectChange((IdfToolchain item) ->{
-            idfPath.setText(item.getIdfPath());
-            String idfToolsPathValue = item.getIdfToolsPath();
+        idfToolchainCombBox.addItemListener(selectedListener(e -> {
+            Object selectedItem = e.getItem();
+            if (!(selectedItem instanceof IdfToolchain idfToolchain)) {
+                return;
+            }
+            idfPath.setText(idfToolchain.getIdfPath());
+            String idfToolsPathValue = idfToolchain.getIdfToolsPath();
             if (StringUtils.isEmpty(idfToolsPathValue)) {
                 idfToolsPathValue = "not set default as:" + DEFAULT_IDF_TOOLS_PATH;
             }
             idfToolsPath.setText(idfToolsPathValue);
-            idfProjectGenerator.setIdfToolChian(item);
-        });
+            idfProjectGenerator.setIdfToolChian(idfToolchain);
+        }));
+
     }
 
 
@@ -97,7 +101,10 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
 
         panel.add(wrapper, BorderLayout.WEST);
         IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
-        IdfToolConf idfToolConf = service.getLastActivedIdfToolConf();
+        LastChosenIdfToolchian lastChosenIdfToolchian = service.getLastChosenIdfToolchian();
+        if (lastChosenIdfToolchian != null){
+            idfToolchainCombBox.setSelectedToolchain(lastChosenIdfToolchian.getEnvFile());
+        }
         return panel;
     }
 }

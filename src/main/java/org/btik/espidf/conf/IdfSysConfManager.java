@@ -12,7 +12,6 @@ import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.project.Project;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
-import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.btik.espidf.run.config.model.CustomDebugConfigModel;
 import org.btik.espidf.run.config.model.GdbInitDebugConfigModel;
@@ -32,7 +31,6 @@ import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Predicate;
 
 import static org.btik.espidf.util.ClassMetaUtils.isMod;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
@@ -47,6 +45,10 @@ public class IdfSysConfManager implements IdfSysConfService {
     private static final String IDF_FOLDER_NAME = "org.btik.espidf";
 
     private static final String IDF_JSON_NAME = "espidf.json";
+
+    private static final String IDF_LAST_ENV = "espidf_last_env.json";
+
+    private static final String IDF_LAST_TOOLCHAIN = "espidf_last_toolchain.json";
 
     private static final String GDB_MAP_CONF = "/org-btik-esp-idf/conf/esp32_gdb.json";
 
@@ -67,6 +69,11 @@ public class IdfSysConfManager implements IdfSysConfService {
 
     private final Map<Integer, Map<Integer, CdcAcmVendorInfo>> vendorInfoMap;
 
+    private LastChosenIdfToolchian lastChosenIdfToolchian;
+
+    private LastChosenIdfEnv lastChosenIdfEnv;
+
+
     public IdfSysConfManager() {
         vendorInfoMap = SerialPortLoader.loadCdcAcmVendorInfo();
         parseGdbConf();
@@ -77,16 +84,46 @@ public class IdfSysConfManager implements IdfSysConfService {
         if (!Files.exists(idfFolder)) {
             return;
         }
-        Path idfJson = idfFolder.resolve(IDF_JSON_NAME);
-        if (!Files.exists(idfJson)) {
-            return;
-        }
-        parseToolConf(idfJson);
+        loadLastChosenToolchain(idfFolder);
+        loadLastChosenIdfEnv(idfFolder);
 
     }
 
+    private void loadLastChosenIdfEnv(Path idfFolder) {
+        Path jsonPath = idfFolder.resolve(IDF_LAST_TOOLCHAIN);
+        if (!Files.exists(jsonPath)) {
+            return;
+        }
+        try {
+            String json = Files.readString(jsonPath);
+            lastChosenIdfToolchian = new Gson().fromJson(json, LastChosenIdfToolchian.class);
+        } catch (JsonSyntaxException jsonSyntaxException) {
+            LOG.error(jsonSyntaxException);
+        } catch (IOException e) {
+            NOTIFICATION_GROUP.createNotification($i18n("notification.group.idf"),
+                    e.getMessage(), NotificationType.ERROR).notify(null);
+        }
+
+    }
+
+    private void loadLastChosenToolchain(Path idfFolder) {
+        Path jsonPath = idfFolder.resolve(IDF_LAST_ENV);
+        if (!Files.exists(jsonPath)) {
+            return;
+        }
+        try {
+            String json = Files.readString(jsonPath);
+            lastChosenIdfEnv = new Gson().fromJson(json, LastChosenIdfEnv.class);
+        } catch (JsonSyntaxException jsonSyntaxException) {
+            LOG.error(jsonSyntaxException);
+        } catch (IOException e) {
+            NOTIFICATION_GROUP.createNotification($i18n("notification.group.idf"),
+                    e.getMessage(), NotificationType.ERROR).notify(null);
+        }
+    }
+
     private void parseDebugModelSerialMeta() {
-        Class<?>[] modelClassArr= new Class[] {CustomDebugConfigModel.class , GdbInitDebugConfigModel.class};
+        Class<?>[] modelClassArr = new Class[]{CustomDebugConfigModel.class, GdbInitDebugConfigModel.class};
         for (Class<?> modelClass : modelClassArr) {
             var propOptMetaList = ClassMetaUtils.parseFieldsByAnnotation(modelClass, Serial.class);
             for (ClassMetaUtils.PropOptMeta propOptMeta : propOptMetaList) {
@@ -117,47 +154,20 @@ public class IdfSysConfManager implements IdfSysConfService {
         }
     }
 
-    private void parseToolConf(Path idfJson) {
-        try {
-            String json = Files.readString(idfJson);
-            HashSet<IdfToolConf> idfToolConfSet = new Gson().fromJson(json, toolConfSetType);
-            if (idfToolConfSet == null || idfToolConfSet.isEmpty()) {
-                return;
-            }
-            for (IdfToolConf toolConf : idfToolConfSet) {
-                List<CPPToolchains.Toolchain> toolchains = CPPToolchains.getInstance().getToolchains();
-                String envFileName = toolConf.getEnvFileName();
-                Predicate<CPPToolSet.Kind> kindPredicate = IS_WINDOWS ?
-                        (kind -> kind == CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET) :
-                        (kind -> kind == CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET);
-                for (CPPToolchains.Toolchain toolchain : toolchains) {
-                    if (!kindPredicate.test(toolchain.getToolSetKind())) {
-                        continue;
-                    }
-                    String environment = toolchain.getEnvironment();
-                    if (Objects.equals(environment, envFileName)) {
-                        toolConf.setToolchain(toolchain);
-                        break;
-                    }
-                }
-                idfToolConfMap.put(toolConf.getKey(), toolConf);
-                this.idfToolConfs.addAll(idfToolConfSet);
-            }
-
-        } catch (JsonSyntaxException jsonSyntaxException) {
-            LOG.error(jsonSyntaxException);
-        } catch (IOException e) {
-            NOTIFICATION_GROUP.createNotification(getMsg("idf.cmd.init.failed"),
-                    getMsgF("idf.cmd.init.failed.with", e.getMessage()), NotificationType.ERROR).notify(null);
-        }
+    @Override
+    public LastChosenIdfToolchian getLastChosenIdfToolchian() {
+        return lastChosenIdfToolchian;
     }
 
     @Override
-    public IdfToolConf getLastActivedIdfToolConf() {
-        if (idfToolConfs.isEmpty()) {
-            return null;
-        }
-        return idfToolConfs.stream().max(Comparator.comparing(IdfToolConf::getActiveTime)).get();
+    public LastChosenIdfEnv getLastChosenIdfEnv() {
+        return lastChosenIdfEnv;
+    }
+
+    @Override
+    public void setLastEnv(LastChosenIdfEnv lastChosenIdfEnv) {
+        this.lastChosenIdfEnv = lastChosenIdfEnv;
+        saveConfig(IDF_LAST_ENV, lastChosenIdfEnv);
     }
 
     @Override
@@ -253,6 +263,19 @@ public class IdfSysConfManager implements IdfSysConfService {
                     Path idfJson = idfConfFolder.resolve(IDF_JSON_NAME);
                     try {
                         Files.writeString(idfJson, new Gson().toJson(idfToolConfs));
+                    } catch (IOException e) {
+                        LOG.error(e);
+                    }
+                });
+    }
+
+    private void saveConfig(String name, Object conf) {
+        ApplicationManager.getApplication()
+                .executeOnPooledThread(() -> {
+                    Path idfConfFolder = getIdfConfFolder();
+                    Path idfJson = idfConfFolder.resolve(name);
+                    try {
+                        Files.writeString(idfJson, new Gson().toJson(conf));
                     } catch (IOException e) {
                         LOG.error(e);
                     }

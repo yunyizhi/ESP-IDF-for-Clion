@@ -7,8 +7,10 @@ import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.text.StringUtil;
 import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.conf.LastChosenIdfEnv;
 import org.btik.espidf.project.generator.GeneratorActions;
 import org.btik.espidf.service.IdfEnvironmentService;
+import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.util.I18nMessage;
 
 
@@ -55,11 +57,17 @@ public class IdfProjectCreatorActions<T> extends GeneratorActions<T> {
     public void generateProject() {
         ApplicationManager.getApplication().invokeLater(() -> {
             try {
+                idfEnvConf.setIdfToolsPath(idfToolsPath);
                 IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
                 IdfToolConf idfToolConf = environmentService.getSourceToolConf(idfEnvConf.getPath());
                 Map<String, String> envOfToolChain = environmentService.getEnvOfToolChain(idfToolConf.getToolchain());
                 String toolChainName = idfToolConf.getToolchain().getName();
                 generateProject(envOfToolChain, toolChainName);
+                IdfSysConfService sysConfService = ApplicationManager.getApplication().getService(IdfSysConfService.class);
+                LastChosenIdfEnv lastChosenIdfEnv = new LastChosenIdfEnv();
+                lastChosenIdfEnv.setIdfPath(idfEnvConf.getPath());
+                lastChosenIdfEnv.setIdfToolsPath(idfToolsPath);
+                sysConfService.setLastEnv(lastChosenIdfEnv);
             } catch (RuntimeException | ExecutionException e) {
                 I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("idf.cmd.init.project.failed"), e.getMessage(), NotificationType.ERROR).notify(project);
             }

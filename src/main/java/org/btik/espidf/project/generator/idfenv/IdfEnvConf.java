@@ -1,12 +1,9 @@
 package org.btik.espidf.project.generator.idfenv;
 
-import com.google.gson.annotations.SerializedName;
-
 import java.util.List;
 
 public class IdfEnvConf {
     public static final String IDF_ENV_JSON = "idf-env.json";
-    @SerializedName("path")
     private String path;
     private String version;
     private List<String> targets;

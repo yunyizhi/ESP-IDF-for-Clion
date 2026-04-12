@@ -18,12 +18,10 @@ import org.btik.espidf.util.ToolChainTool;
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
 import java.awt.*;
-import java.awt.event.ItemEvent;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET;
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET;
@@ -39,8 +37,7 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
 
     private static final HashSet<CPPToolchains.Toolchain> envFileNotIdfToolchains = new HashSet<>();
 
-
-    private Consumer<IdfToolchain> selectChangeHook;
+    private String lastEnvFile;
 
     public IdfToolchainCombBox() {
         setRenderer(new IdfToolchainListCellRenderer());
@@ -61,18 +58,6 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
                     setSelectedItem(lastSelectedItem);
                 }
             }
-
-
-        });
-        addItemListener((e) -> {
-            if (e.getStateChange() != ItemEvent.SELECTED || selectChangeHook == null) {
-                return;
-            }
-            Object selectedItem = getSelectedItem();
-            if (!(selectedItem instanceof IdfToolchain idfToolchain)) {
-                return;
-            }
-            selectChangeHook.accept(idfToolchain);
 
         });
 
@@ -108,6 +93,10 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
         toolchainEnvMap.forEach((toolchain, toolchainInfo) -> addItem(toolchainInfo));
     }
 
+    public void setSelectedToolchain(String lastEnvFile){
+        this.lastEnvFile = lastEnvFile;
+    }
+
     private String getVersion(Map<String, String> environments) {
         GeneralCommandLine readVersion = new GeneralCommandLine();
         readVersion.withEnvironment(environments);
@@ -116,10 +105,6 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
         return TasksKt.runWithModalProgressBlocking(ModalTaskOwner.component(this), "Read Version", TaskCancellation.nonCancellable(),
                 (scope, continuation) -> CmdTaskExecutor.exeGetStdOut(readVersion, 60 * 1000));
 
-    }
-
-    public void onSelectChange(Consumer<IdfToolchain> selectChangeHook) {
-        this.selectChangeHook = selectChangeHook;
     }
 
     static class IdfToolchainListCellRenderer implements ListCellRenderer<IdfToolchain> {

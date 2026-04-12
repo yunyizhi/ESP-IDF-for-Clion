@@ -12,9 +12,8 @@ import com.intellij.openapi.ui.*;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.platform.DirectoryProjectGenerator;
 import com.intellij.ui.components.JBPanel;
-import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
-import org.btik.espidf.conf.IdfToolConf;
+import org.btik.espidf.conf.LastChosenIdfEnv;
 import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.util.UIUtils;
 
@@ -29,7 +28,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
+import static org.btik.espidf.service.IdfEnvironmentService.DEFAULT_IDF_TOOLS_PATH;
 import static org.btik.espidf.ui.componets.SelectedItemListener.selectedListener;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
@@ -112,11 +113,27 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
         wrapper.add(idfTargets, createConstraints(rowIndex, 1));
         panel.add(wrapper, BorderLayout.WEST);
         IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
-        IdfToolConf idfToolConf = service.getLastActivedIdfToolConf();
-        if (idfToolConf != null) {
-            idfToolsPathBrowserButton.getTextField().setText(idfToolConf.getIdfToolPath());
+        LastChosenIdfEnv lastChosenIdfEnv = service.getLastChosenIdfEnv();
+        if (lastChosenIdfEnv != null) {
+            idfToolsPathBrowserButton.getTextField().setText(lastChosenIdfEnv.getIdfToolsPath());
+        } else {
+            idfToolsPathBrowserButton.getTextField().setText(DEFAULT_IDF_TOOLS_PATH);
+        }
+        refreshIdfs();
+        if (lastChosenIdfEnv != null) {
+            selectIdf(lastChosenIdfEnv.getIdfPath());
         }
         return panel;
+    }
+
+    private void selectIdf(String idfPath) {
+        for (int i = 0; i < idfs.getItemCount(); i++) {
+            IdfEnvConf item = idfs.getItemAt(i);
+            if (Objects.equals(idfPath, item.getPath())) {
+                idfs.setSelectedIndex(i);
+                break;
+            }
+        }
     }
 
     private void initIdfPathBrowser() {
