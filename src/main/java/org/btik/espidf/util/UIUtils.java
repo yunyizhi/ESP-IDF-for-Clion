@@ -23,6 +23,13 @@ public class UIUtils {
         return constraints;
     }
 
+    public static @NotNull GridConstraints createHCrowConstraints(int row, int column){
+        GridConstraints constraints = createConstraints(row, column);
+        constraints.setFill(GridConstraints.FILL_HORIZONTAL);
+        constraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
+        return constraints;
+    }
+
     public static @NotNull JLabel i18nLabel(String i18nKey) {
         return new JLabel($i18n(i18nKey));
     }

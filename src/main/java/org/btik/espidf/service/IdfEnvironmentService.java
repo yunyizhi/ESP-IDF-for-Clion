@@ -44,14 +44,9 @@ public interface IdfEnvironmentService {
 
     Map<String, String> getEnvOfToolChain(CPPToolchains.Toolchain toolchain);
 
-    Map<String, String> setCache(@NotNull CPPToolchains.Toolchain toolchain,@NotNull Map<String,String> env);
+    Map<String, String> setCache(@NotNull CPPToolchains.Toolchain toolchain, @NotNull Map<String, String> env);
 
     void putTo(Map<String, String> newEnvironments);
-
-    /**
-     * 仅windows
-     */
-    IdfToolConf getWinToolConf(String idfToolPath, String idfId);
 
     IdfToolConf getSourceToolConf(String idfFrameworkPath);
 

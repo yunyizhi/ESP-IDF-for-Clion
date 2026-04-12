@@ -19,6 +19,7 @@ import java.awt.*;
 import java.awt.event.ItemEvent;
 
 import static org.btik.espidf.service.IdfEnvironmentService.DEFAULT_IDF_TOOLS_PATH;
+import static org.btik.espidf.ui.componets.SelectedItemListener.selectedListener;
 import static org.btik.espidf.util.SysConf.$sys;
 import static org.btik.espidf.util.UIUtils.createConstraints;
 import static org.btik.espidf.util.UIUtils.i18nLabel;
@@ -48,12 +49,9 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
         for (String target : targetArr) {
             idfTargets.addItem(target);
         }
-        idfTargets.addItemListener(e -> {
-            if (e.getStateChange() != ItemEvent.SELECTED) {
-                return;
-            }
-            idfProjectGenerator.setIdfTarget(String.valueOf(e.getItem()));
-        });
+        idfTargets.addItemListener(selectedListener(
+                e -> idfProjectGenerator.setIdfTarget(String.valueOf(e.getItem()))
+        ));
     }
 
     private void initIdfToolChianBox() {

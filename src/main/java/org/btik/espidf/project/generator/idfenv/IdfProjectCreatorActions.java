@@ -16,32 +16,37 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 
+import static org.btik.espidf.project.generator.idfenv.IdfEnvConf.IDF_ENV_JSON;
 import static org.btik.espidf.util.I18nMessage.$i18n;
-import static org.btik.espidf.util.SysConf.$sys;
 
 /**
  * @author lustre
  * @since 2024/2/11 17:00
  */
-public class UnixLikeGeneratorActions<T> extends GeneratorActions<T> {
-    private String idfFrameworkPath;
+public class IdfProjectCreatorActions<T> extends GeneratorActions<T> {
+    private String idfToolsPath;
+    private IdfEnvConf idfEnvConf;
 
-    public void setIdfFrameworkPath(String idfFrameworkPath) {
-        this.idfFrameworkPath = idfFrameworkPath;
+    public void setIdfToolsPath(String idfToolsPath) {
+        this.idfToolsPath = idfToolsPath;
+    }
+
+    public void setIdfEnvConf(IdfEnvConf idfEnvConf) {
+        this.idfEnvConf = idfEnvConf;
     }
 
     @Override
     public ValidationResult validate() {
-        if (StringUtil.isEmpty(idfFrameworkPath)) {
+        if (StringUtil.isEmpty(idfToolsPath)) {
             return new ValidationResult($i18n("please.select.idf.path"));
         }
-        Path folder = Path.of(idfFrameworkPath);
+        Path folder = Path.of(idfToolsPath);
         if (!Files.exists(folder)) {
             return new ValidationResult($i18n("please.select.idf.path.not.exist"));
         }
-        Path exportSh = folder.resolve($sys("idf.unix.export.script"));
+        Path exportSh = folder.resolve(IDF_ENV_JSON);
         if (!Files.exists(exportSh)) {
-            return new ValidationResult($i18n("idf.folder.invalid"));
+            return new ValidationResult($i18n("idf.tool.folder.invalid"));
         }
         return ValidationResult.OK;
     }
@@ -51,7 +56,7 @@ public class UnixLikeGeneratorActions<T> extends GeneratorActions<T> {
         ApplicationManager.getApplication().invokeLater(() -> {
             try {
                 IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
-                IdfToolConf idfToolConf = environmentService.getSourceToolConf(idfFrameworkPath);
+                IdfToolConf idfToolConf = environmentService.getSourceToolConf(idfEnvConf.getPath());
                 Map<String, String> envOfToolChain = environmentService.getEnvOfToolChain(idfToolConf.getToolchain());
                 String toolChainName = idfToolConf.getToolchain().getName();
                 generateProject(envOfToolChain, toolChainName);

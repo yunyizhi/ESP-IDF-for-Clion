@@ -17,7 +17,6 @@ import org.btik.espidf.util.ToolChainTool;
 
 import javax.swing.*;
 import javax.swing.event.PopupMenuEvent;
-import javax.swing.plaf.basic.BasicComboBoxEditor;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.util.HashMap;
@@ -40,7 +39,6 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
 
     private static final HashSet<CPPToolchains.Toolchain> envFileNotIdfToolchains = new HashSet<>();
 
-    private final IdfToolchainComboEditor editor;
 
     private Consumer<IdfToolchain> selectChangeHook;
 
@@ -48,8 +46,6 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
         setRenderer(new IdfToolchainListCellRenderer());
         setEditable(false);
         setLightWeightPopupEnabled(true);
-        editor = new IdfToolchainComboEditor();
-        setEditor(editor);
         addPopupMenuListener(new PopupMenuListenerAdapter() {
 
             @Override
@@ -60,10 +56,10 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
                     lastSelectedItem = oldSelected;
                 }
                 removeAllItems();
-                if (lastSelectedItem != null) {
-                    editor.setItem(lastSelectedItem);
-                }
                 load();
+                if (lastSelectedItem != null) {
+                    setSelectedItem(lastSelectedItem);
+                }
             }
 
 
@@ -159,12 +155,6 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
 
             panel.add(textPanel, BorderLayout.CENTER);
             return panel;
-        }
-    }
-
-    static class IdfToolchainComboEditor extends BasicComboBoxEditor {
-        public JTextField getTextField() {
-            return editor;
         }
     }
 }

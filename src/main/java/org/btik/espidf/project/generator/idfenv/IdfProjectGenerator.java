@@ -17,8 +17,6 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 
-
-import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 import static org.btik.espidf.util.SysConf.$sys;
 
 /**
@@ -27,19 +25,8 @@ import static org.btik.espidf.util.SysConf.$sys;
  */
 public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements CustomStepProjectGenerator<T> {
 
-    private WindowsGeneratorActions<T> windowsGenerator;
 
-    private UnixLikeGeneratorActions<T> unixLikeGenerator;
-
-
-    public IdfProjectGenerator() {
-
-        if (IS_WINDOWS) {
-            windowsGenerator = new WindowsGeneratorActions<>();
-        } else {
-            unixLikeGenerator = new UnixLikeGeneratorActions<>();
-        }
-    }
+    private final IdfProjectCreatorActions<T> creatorActions = new IdfProjectCreatorActions<>();
 
     @Override
     public @Nullable @Nls(capitalization = Nls.Capitalization.Sentence) String getDescription() {
@@ -74,48 +61,30 @@ public class IdfProjectGenerator<T> extends CLionProjectGenerator<T> implements 
         if (!superResult.isOk()) {
             return superResult;
         }
-        return IS_WINDOWS ? windowsGenerator.validate() : unixLikeGenerator.validate();
-    }
-
-    public void setIdfToolsPath(String text) {
-        windowsGenerator.setIdfToolsPath(text);
+        return creatorActions.validate();
     }
 
 
-    public void setIdfId(String idfId) {
-        windowsGenerator.setIdfId(idfId);
+    public void setIdfToolsPath(String idfToolsPath) {
+        creatorActions.setIdfToolsPath(idfToolsPath);
     }
 
-    public void setIdfFrameworkPath(String idfFrameworkPath) {
-        unixLikeGenerator.setIdfFrameworkPath(idfFrameworkPath);
+    public void setIdfEnvConf(IdfEnvConf idfEnvConf) {
+        creatorActions.setIdfEnvConf(idfEnvConf);
     }
 
     @Override
     public AbstractActionWithPanel createStep(DirectoryProjectGenerator<T> directoryProjectGenerator, AbstractNewProjectStep.AbstractCallback<T> abstractCallback) {
 
-        return IS_WINDOWS ? new IdfWindowsProjectSettingsStep<>(directoryProjectGenerator, abstractCallback) :
-                new IdfUnixLikeProjectSettingsStep<>(directoryProjectGenerator, abstractCallback);
+        return new IdfProjectSettingsStep<>(directoryProjectGenerator, abstractCallback);
     }
 
     @Override
     public void generateProject(@NotNull Project project, @NotNull VirtualFile baseDir, @NotNull T settings, @NotNull Module module) {
-        if (IS_WINDOWS) {
-            windowsGenerator.generateProject(project, baseDir, settings, module);
-        } else {
-            unixLikeGenerator.generateProject(project, baseDir, settings, module);
-        }
-
-    }
-
-    public void setEnvType(IdfEnvType envType) {
-        windowsGenerator.setEnvType(envType);
+        creatorActions.generateProject(project, baseDir, settings, module);
     }
 
     public void setIdfTarget(String idfTarget) {
-        if (IS_WINDOWS) {
-            windowsGenerator.setIdfTarget(idfTarget);
-        } else {
-            unixLikeGenerator.setIdfTarget(idfTarget);
-        }
+        creatorActions.setIdfTarget(idfTarget);
     }
 }

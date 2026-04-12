@@ -137,36 +137,6 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
     }
 
     @Override
-    public IdfToolConf getWinToolConf(String idfToolPath, String idfId) {
-        IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
-        IdfToolConf toolConfByKey = service.getToolConfByKey(idfToolPath + idfId);
-        if (toolConfByKey != null && toolConfByKey.getToolchain() != null) {
-            return toolConfByKey;
-        }
-        Path idfConfFolder = service.getIdfConfFolder();
-        String exportEnvCmd = idfToolPath + File.separatorChar +
-                $sys("idf.windows.command.init.bat") + " " + idfId;
-        Path idfExportPs1 = idfConfFolder.resolve(ENV_FILE_PREFIX + Integer.toHexString(exportEnvCmd.hashCode()) + ".bat");
-        try {
-            Files.writeString(idfExportPs1, exportEnvCmd);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        String exportBatPath = idfExportPs1.toString();
-        IdfToolConf newIdfToolConf = new IdfToolConf();
-        newIdfToolConf.setIdfId(idfId);
-        newIdfToolConf.setEnvFileName(exportBatPath);
-        newIdfToolConf.setIdfToolPath(idfToolPath);
-
-        CPPToolchains.Toolchain toolchain = getToolChain(exportBatPath);
-        newIdfToolConf.setToolchain(toolchain);
-
-        service.store(newIdfToolConf);
-        this.idfToolConf = newIdfToolConf;
-        return this.idfToolConf;
-    }
-
-    @Override
     public IdfToolConf getSourceToolConf(String idfFrameworkPath) {
         IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         IdfToolConf toolConfByKey = service.getToolConfByKey(idfFrameworkPath);
