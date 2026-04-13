@@ -1,13 +1,33 @@
 package org.btik.espidf.util;
 
+import com.intellij.execution.ExecutionException;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.platform.ide.progress.ModalTaskOwner;
+import com.intellij.platform.ide.progress.TaskCancellation;
+import com.intellij.platform.ide.progress.TasksKt;
+import com.intellij.util.system.OS;
+import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
+import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
+import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
+import com.jetbrains.cidr.system.LocalHost;
+import org.jetbrains.annotations.NotNull;
 
+import java.awt.*;
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import static org.btik.espidf.service.IdfEnvironmentService.IDF_TOOLCHAIN_NAME_PREFIX;
+import static org.btik.espidf.util.I18nMessage.$i18nF;
+import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
 public class ToolChainTool {
 
@@ -24,5 +44,66 @@ public class ToolChainTool {
                 () -> CPPToolchains.getInstance().getToolchains().stream()
                         .filter(filter).collect(Collectors.toList())
         );
+    }
+
+    public static CPPToolchains.Toolchain getFirestCMakeToolchain(@NotNull Project project) {
+        CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
+        List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
+        if (activeProfiles.isEmpty()) {
+            return null;
+        }
+        CMakeSettings.Profile currentProfile = activeProfiles.get(0);
+        return CPPToolchains.getInstance()
+                .getToolchainByNameOrDefault(currentProfile.getToolchainName());
+    }
+
+    public static CPPToolchains.Toolchain newIdfToolChain(String envFile) {
+        CPPToolchains.Toolchain idfToolChain = new CPPToolchains.Toolchain(OS.CURRENT);
+        idfToolChain.setToolSetKind(IS_WINDOWS ? CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET : CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET);
+        idfToolChain.setName(IDF_TOOLCHAIN_NAME_PREFIX + Integer.toHexString(envFile.hashCode()));
+        ApplicationManager.getApplication().runWriteAction(() -> {
+                    CPPToolchains.getInstance().beginUpdate();
+                    CPPToolchains.getInstance().addToolchain(idfToolChain);
+                    idfToolChain.setEnvironment(envFile);
+                    CPPToolchains.getInstance().endUpdate();
+                }
+        );
+        return idfToolChain;
+    }
+
+    /**
+     * * @param toolchain 必须包含环境变量文件
+     */
+    public static Map<String, String> toolChainEnv(CPPToolchains.Toolchain toolchain) throws IOException, ExecutionException {
+        String environment = toolchain.getEnvironment();
+        if (StringUtil.isEmpty(environment)) {
+            return new HashMap<>();
+        }
+        return toolchain.getToolSet().readEnvironment(toolchain.getEnvironment(), LocalHost.INSTANCE,
+                new HashMap<>());
+    }
+
+    public static Map<String, String> toolChainEnvByComp(CPPToolchains.Toolchain toolchain, Component component) {
+        return TasksKt.runWithModalProgressBlocking(ModalTaskOwner.component(component),
+                $i18nF("esp.idf.read.envs", toolchain.getName()),
+                TaskCancellation.nonCancellable(), (scope, continuation) -> {
+                    try {
+                        return toolChainEnv(toolchain);
+                    } catch (IOException | com.intellij.execution.ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+
+    public static Map<String, String> toolChainEnvByProj(CPPToolchains.Toolchain toolchain, Project project) {
+        return TasksKt.runWithModalProgressBlocking(project, $i18nF("esp.idf.read.envs", toolchain.getName()),
+                (scope, continuation) -> {
+                    try {
+                        return toolChainEnv(toolchain);
+                    } catch (IOException | com.intellij.execution.ExecutionException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
     }
 }

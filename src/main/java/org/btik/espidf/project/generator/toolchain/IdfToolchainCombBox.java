@@ -25,11 +25,11 @@ import java.util.Map;
 
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET;
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET;
-import static org.btik.espidf.environment.ToolchainEnvReader.toolChainEnvByComp;
 import static org.btik.espidf.service.IdfEnvironmentService.*;
 import static org.btik.espidf.util.ListCellRendererAttr.BLUE_ITALIC_SMALL_ATTRIBUTES;
 import static org.btik.espidf.util.ListCellRendererAttr.GRAY_ITALIC_SMALL_ATTRIBUTES;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
+import static org.btik.espidf.util.ToolChainTool.toolChainEnvByComp;
 
 public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
 

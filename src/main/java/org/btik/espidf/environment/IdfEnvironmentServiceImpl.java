@@ -6,15 +6,12 @@ import com.intellij.openapi.util.text.StringUtil;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
-import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
-import com.intellij.util.system.OS;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.util.EnvironmentVarUtil;
-import org.btik.espidf.util.ToolChainTool;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -28,10 +25,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static org.btik.espidf.environment.ToolchainEnvReader.toolChainEnvByProj;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 import static org.btik.espidf.util.PathTool.normalizePath;
 import static org.btik.espidf.util.SysConf.$sys;
+import static org.btik.espidf.util.ToolChainTool.*;
 
 /**
  * @author lustre
@@ -53,7 +50,7 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
         IdfProfileInfo idfProfileInfo = projectConfigService.getSelectedIdfProfileInfo();
         if (idfProfileInfo == null || StringUtils.isEmpty(idfProfileInfo.getDisplayName())) {
-            return getFirestCMakeToolchain();
+            return getFirestCMakeToolchain(project);
         }
 
         CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
@@ -72,7 +69,7 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
                 return cppToolchains.getToolchainByNameOrDefault(activeProfile.getToolchainName());
             }
         }
-        return getFirestCMakeToolchain();
+        return getFirestCMakeToolchain(project);
 
     }
 
@@ -113,17 +110,6 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         Map<String, String> environments1 = getEnvironments();
         // 用户输入的同名环境变量比idf初始化变量优先级高 故保留用户输入值
         environments1.forEach((k, v) -> newEnvironments.merge(k, v, (key, oldValue) -> oldValue));
-    }
-
-    private CPPToolchains.Toolchain getFirestCMakeToolchain() {
-        CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
-        List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
-        if (activeProfiles.isEmpty()) {
-            return null;
-        }
-        CMakeSettings.Profile currentProfile = activeProfiles.get(0);
-        return CPPToolchains.getInstance()
-                .getToolchainByNameOrDefault(currentProfile.getToolchainName());
     }
 
     private Map<String, String> generateEnvironment(CPPToolchains.Toolchain toolchain) {
@@ -266,21 +252,11 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
     }
 
     private CPPToolchains.Toolchain getToolChain(String envFileName) {
-        CPPToolchains.Toolchain existsToolChain = ToolChainTool.findToolchainByEnvFile(envFileName);
+        CPPToolchains.Toolchain existsToolChain = findToolchainByEnvFile(envFileName);
         if (existsToolChain != null) {
             return existsToolChain;
         }
-        CPPToolchains.Toolchain idfToolChain = new CPPToolchains.Toolchain(OS.CURRENT);
-        idfToolChain.setToolSetKind(IS_WINDOWS ? CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET : CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET);
-        idfToolChain.setName(IDF_TOOLCHAIN_NAME_PREFIX + Integer.toHexString(envFileName.hashCode()));
-        ApplicationManager.getApplication().runWriteAction(() -> {
-                    CPPToolchains.getInstance().beginUpdate();
-                    CPPToolchains.getInstance().addToolchain(idfToolChain);
-                    idfToolChain.setEnvironment(envFileName);
-                    CPPToolchains.getInstance().endUpdate();
-                }
-        );
-        return idfToolChain;
+        return newIdfToolChain(envFileName);
     }
 
     private String pathEnvProcess(Map<String, String> env) {
