@@ -27,7 +27,7 @@ import java.util.function.Function;
 
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 import static org.btik.espidf.util.PathTool.normalizePath;
-import static org.btik.espidf.util.SysConf.$sys;
+import static org.btik.espidf.util.SysConf.$sysOs;
 import static org.btik.espidf.util.ToolChainTool.*;
 
 /**
@@ -123,7 +123,7 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
     public CPPToolchains.Toolchain getSourceToolConf(String idfPath, String idfToolsPath) {
         String envFileName;
         if (isDefaultIdfToolsPath(idfToolsPath)) {
-            envFileName = idfPath + File.separatorChar + $sys(IS_WINDOWS ? "idf.windows.export.bat" : "idf.unix.export.script");
+            envFileName = idfPath + File.separatorChar + $sysOs("idf.windows.export.bat", "idf.unix.export.script");
         } else {
             envFileName = createCustomExportScript(idfPath, idfToolsPath);
         }
@@ -143,14 +143,14 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
 
     private String createCustomExportScript(String idfPath, String idfToolsPath) {
         Path idfPathObj = Path.of(idfPath);
-        String originalExportName = IS_WINDOWS ? $sys("idf.windows.export.ps1") : $sys("idf.unix.export.script");
+        String originalExportName = $sysOs("idf.windows.export.ps1","idf.unix.export.script");
         Path originalExport = idfPathObj.resolve(originalExportName);
 
         if (!Files.exists(originalExport)) {
             throw new RuntimeException("Export script not found: " + originalExport);
         }
 
-        String customExportName = IS_WINDOWS ? $sys("idf.windows.export.clion.ps1") : $sys("idf.unix.export.clion.sh");
+        String customExportName = $sysOs("idf.windows.export.clion.ps1", "idf.unix.export.clion.sh");
         Path customExport = idfPathObj.resolve(customExportName);
 
         try {
