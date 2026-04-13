@@ -35,7 +35,7 @@ public class EspIdfActionMap {
     static {
         actionMap = new HashMap<>();
         actionMap.put("idf.export.console", EspIdfActionMap::exportConsole);
-        actionMap.put("open.component.registry",EspIdfActionMap::openComponentRegistry);
+        actionMap.put("open.component.registry", EspIdfActionMap::openComponentRegistry);
         actionMap.put("idf.rebuild.all.env.cache", EspIdfActionMap::reBuildAllIdfEnvCache);
     }
 
@@ -62,10 +62,6 @@ public class EspIdfActionMap {
                     NotificationType.ERROR).notify(project);
             return;
         }
-        String basePath = project.getBasePath();
-        if (basePath == null) {
-            return;
-        }
         String envFile = toolchain.getEnvironment();
         if (StringUtil.isEmpty(envFile)) {
             I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.failed"),
@@ -81,71 +77,48 @@ public class EspIdfActionMap {
             return;
         }
 
-        String fileName = envFilePath.getFileName().toString().toLowerCase();
+
         String displayName = actionNode.getDisplayName();
-        if (fileName.endsWith(".bat")) {
-            handleBatScript(project, displayName, envFile);
-        } else if (IS_WINDOWS && (fileName.endsWith(".ps1") || fileName.endsWith(".powershell"))) {
-            executeWindowsPowerShellScript(project, displayName, envFile);
-        } else if (!IS_WINDOWS) {
-            executeUnixScript(project, displayName, envFile);
-        } else {
+        try {
+            if (IS_WINDOWS) {
+                checkWindowsScript(envFile);
+            }
+            String basePath = project.getBasePath();
+            RunnerAndConfigurationSettings settings = RunManager.getInstance(project)
+                    .createConfiguration(displayName, ShConfigurationType.class);
+            ShRunConfiguration runConfiguration = (ShRunConfiguration) settings.getConfiguration();
+            runConfiguration.setExecuteInTerminal(true);
+            runConfiguration.setExecuteScriptFile(false);
+            runConfiguration.setScriptText(". \"" + envFile + '"');
+            if (basePath != null) {
+                runConfiguration.setScriptWorkingDirectory(basePath);
+            }
+
+            ExecutionEnvironmentBuilder builder =
+                    ExecutionEnvironmentBuilder.createOrNull(DefaultRunExecutor.getRunExecutorInstance(), runConfiguration);
+            if (builder != null) {
+                ExecutionManager.getInstance(project).restartRunProfile(builder.build());
+            }
+
+        } catch (Exception e) {
             I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.failed"),
-                    "Unsupported script type: " + fileName,
+                    e.getMessage(),
                     NotificationType.ERROR).notify(project);
         }
     }
 
-private static void handleBatScript(Project project, String displayName, String envFile) {
-    String message = "BAT scripts cannot be executed directly in PowerShell. " +
-            "Please use 'IDF Console' action to open a CMD terminal first, " +
-            "then manually run: " + envFile;
-    I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.failed"),
-            message,
-            NotificationType.WARNING).notify(project);
-}
-
-private static void executeWindowsPowerShellScript(Project project, String displayName, String envFile) {
-    String basePath = project.getBasePath();
-    if (basePath == null) {
-        return;
+    private static void checkWindowsScript(String envFile) {
+        String fileNameLower = envFile.toLowerCase();
+        if (fileNameLower.endsWith(".bat")) {
+            throw new IllegalArgumentException("BAT scripts cannot be executed directly in PowerShell. " +
+                    "Please use 'IDF Console' action to open a CMD terminal first, " +
+                    "then manually run: " + envFile);
+        }
+        if ((!fileNameLower.endsWith(".ps1") || (!fileNameLower.endsWith(".powershell")))) {
+            throw new IllegalArgumentException("Unsupported script type: " + envFile);
+        }
     }
 
-    RunnerAndConfigurationSettings settings = RunManager.getInstance(project)
-            .createConfiguration(displayName, ShConfigurationType.class);
-    ShRunConfiguration runConfiguration = (ShRunConfiguration) settings.getConfiguration();
-    runConfiguration.setExecuteInTerminal(true);
-    runConfiguration.setExecuteScriptFile(false);
-    runConfiguration.setScriptText(". \"" + envFile + '"');
-    runConfiguration.setScriptWorkingDirectory(basePath);
-
-    ExecutionEnvironmentBuilder builder =
-            ExecutionEnvironmentBuilder.createOrNull(DefaultRunExecutor.getRunExecutorInstance(), runConfiguration);
-    if (builder != null) {
-        ExecutionManager.getInstance(project).restartRunProfile(builder.build());
-    }
-}
-
-private static void executeUnixScript(Project project, String displayName, String envFile) {
-    String basePath = project.getBasePath();
-    if (basePath == null) {
-        return;
-    }
-
-    RunnerAndConfigurationSettings settings = RunManager.getInstance(project)
-            .createConfiguration(displayName, ShConfigurationType.class);
-    ShRunConfiguration runConfiguration = (ShRunConfiguration) settings.getConfiguration();
-    runConfiguration.setExecuteInTerminal(true);
-    runConfiguration.setExecuteScriptFile(false);
-    runConfiguration.setScriptText(". \"" + envFile + '"');
-    runConfiguration.setScriptWorkingDirectory(basePath);
-
-    ExecutionEnvironmentBuilder builder =
-            ExecutionEnvironmentBuilder.createOrNull(DefaultRunExecutor.getRunExecutorInstance(), runConfiguration);
-    if (builder != null) {
-        ExecutionManager.getInstance(project).restartRunProfile(builder.build());
-    }
-}
 
     public static void exec(EspIdfTaskActionNode actionNode, Project project) {
         BiConsumer<EspIdfTaskActionNode, Project> action = actionMap.get(actionNode.getId());
