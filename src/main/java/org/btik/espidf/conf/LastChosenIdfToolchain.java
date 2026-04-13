@@ -1,6 +1,6 @@
 package org.btik.espidf.conf;
 
-public class LastChosenIdfToolchian {
+public class LastChosenIdfToolchain {
     private String envFile;
     private String path;
     private String name;

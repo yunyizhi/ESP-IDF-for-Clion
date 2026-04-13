@@ -1,7 +1,7 @@
 package org.btik.espidf.service;
 
 import org.btik.espidf.conf.LastChosenIdfEnv;
-import org.btik.espidf.conf.LastChosenIdfToolchian;
+import org.btik.espidf.conf.LastChosenIdfToolchain;
 import org.btik.espidf.toolwindow.settings.model.CdcAcmVendorInfo;
 import org.btik.espidf.util.ClassMetaUtils;
 
@@ -19,7 +19,7 @@ public interface IdfSysConfService {
 
     String MONITOR_COMMAND = "monitor";
 
-    LastChosenIdfToolchian getLastChosenIdfToolchian();
+    LastChosenIdfToolchain getLastChosenIdfToolchian();
 
     LastChosenIdfEnv getLastChosenIdfEnv();
 

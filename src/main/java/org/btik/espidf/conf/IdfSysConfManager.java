@@ -55,7 +55,7 @@ public class IdfSysConfManager implements IdfSysConfService {
 
     private final Map<Integer, Map<Integer, CdcAcmVendorInfo>> vendorInfoMap;
 
-    private LastChosenIdfToolchian lastChosenIdfToolchian;
+    private LastChosenIdfToolchain lastChosenIdfToolchain;
 
     private LastChosenIdfEnv lastChosenIdfEnv;
 
@@ -82,7 +82,7 @@ public class IdfSysConfManager implements IdfSysConfService {
         }
         try {
             String json = Files.readString(jsonPath);
-            lastChosenIdfToolchian = new Gson().fromJson(json, LastChosenIdfToolchian.class);
+            lastChosenIdfToolchain = new Gson().fromJson(json, LastChosenIdfToolchain.class);
         } catch (JsonSyntaxException jsonSyntaxException) {
             LOG.error(jsonSyntaxException);
         } catch (IOException e) {
@@ -141,8 +141,8 @@ public class IdfSysConfManager implements IdfSysConfService {
     }
 
     @Override
-    public LastChosenIdfToolchian getLastChosenIdfToolchian() {
-        return lastChosenIdfToolchian;
+    public LastChosenIdfToolchain getLastChosenIdfToolchian() {
+        return lastChosenIdfToolchain;
     }
 
     @Override

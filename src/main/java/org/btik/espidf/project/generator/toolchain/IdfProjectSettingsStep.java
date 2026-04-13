@@ -10,7 +10,7 @@ import com.intellij.ui.components.JBPanel;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.apache.commons.lang3.StringUtils;
-import org.btik.espidf.conf.LastChosenIdfToolchian;
+import org.btik.espidf.conf.LastChosenIdfToolchain;
 import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.util.UIUtils;
 
@@ -101,7 +101,7 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
 
         panel.add(wrapper, BorderLayout.WEST);
         IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
-        LastChosenIdfToolchian lastChosenIdfToolchian = service.getLastChosenIdfToolchian();
+        LastChosenIdfToolchain lastChosenIdfToolchian = service.getLastChosenIdfToolchian();
         if (lastChosenIdfToolchian != null){
             idfToolchainCombBox.setSelectedToolchain(lastChosenIdfToolchian.getEnvFile());
         }
