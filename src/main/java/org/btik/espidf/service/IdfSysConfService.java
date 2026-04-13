@@ -1,7 +1,5 @@
 package org.btik.espidf.service;
 
-import com.intellij.openapi.project.Project;
-import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.conf.LastChosenIdfEnv;
 import org.btik.espidf.conf.LastChosenIdfToolchian;
 import org.btik.espidf.toolwindow.settings.model.CdcAcmVendorInfo;
@@ -25,15 +23,10 @@ public interface IdfSysConfService {
 
     LastChosenIdfEnv getLastChosenIdfEnv();
 
-    void store(IdfToolConf newIdfToolConf);
-
     Path getIdfConfFolder();
 
     void setLastEnv(LastChosenIdfEnv lastChosenIdfEnv);
 
-    IdfToolConf getToolConfByKey(String key);
-
-    IdfToolConf getIdfConfByProject(Project project);
 
     String getGdbExecutable(String target);
 

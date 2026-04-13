@@ -6,7 +6,7 @@ import com.intellij.facet.ui.ValidationResult;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.util.text.StringUtil;
-import org.btik.espidf.conf.IdfToolConf;
+import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.btik.espidf.conf.LastChosenIdfEnv;
 import org.btik.espidf.project.generator.GeneratorActions;
 import org.btik.espidf.service.IdfEnvironmentService;
@@ -59,9 +59,9 @@ public class IdfProjectCreatorActions<T> extends GeneratorActions<T> {
             try {
                 idfEnvConf.setIdfToolsPath(idfToolsPath);
                 IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
-                IdfToolConf idfToolConf = environmentService.getSourceToolConf(idfEnvConf.getPath());
-                Map<String, String> envOfToolChain = environmentService.getEnvOfToolChain(idfToolConf.getToolchain());
-                String toolChainName = idfToolConf.getToolchain().getName();
+                CPPToolchains.Toolchain toolchain = environmentService.getSourceToolConf(idfEnvConf.getPath(), idfToolsPath);
+                Map<String, String> envOfToolChain = environmentService.getEnvOfToolChain(toolchain);
+                String toolChainName = toolchain.getName();
                 generateProject(envOfToolChain, toolChainName);
                 IdfSysConfService sysConfService = ApplicationManager.getApplication().getService(IdfSysConfService.class);
                 LastChosenIdfEnv lastChosenIdfEnv = new LastChosenIdfEnv();

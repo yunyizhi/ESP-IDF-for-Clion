@@ -9,10 +9,6 @@ import com.google.gson.stream.JsonReader;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PathManager;
-import com.intellij.openapi.project.Project;
-import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
-import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
-import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.btik.espidf.run.config.model.CustomDebugConfigModel;
 import org.btik.espidf.run.config.model.GdbInitDebugConfigModel;
 import org.btik.espidf.run.config.model.Serial;
@@ -43,23 +39,13 @@ import static org.btik.espidf.util.I18nMessage.*;
 public class IdfSysConfManager implements IdfSysConfService {
     private static final Logger LOG = Logger.getInstance(IdfSysConfManager.class);
     private static final String IDF_FOLDER_NAME = "org.btik.espidf";
-
-    private static final String IDF_JSON_NAME = "espidf.json";
-
     private static final String IDF_LAST_ENV = "espidf_last_env.json";
 
     private static final String IDF_LAST_TOOLCHAIN = "espidf_last_toolchain.json";
 
     private static final String GDB_MAP_CONF = "/org-btik-esp-idf/conf/esp32_gdb.json";
 
-    private final HashSet<IdfToolConf> idfToolConfs = new HashSet<>();
-
-    private final HashMap<String, IdfToolConf> idfToolConfMap = new HashMap<>();
-
     private final HashMap<String, String> gdbMap = new HashMap<>();
-
-    private final Type toolConfSetType = new TypeToken<HashSet<IdfToolConf>>() {
-    }.getType();
 
     private final Type gdbMapType = new TypeToken<HashMap<String, String>>() {
     }.getType();
@@ -171,14 +157,6 @@ public class IdfSysConfManager implements IdfSysConfService {
     }
 
     @Override
-    public void store(IdfToolConf newIdfToolConf) {
-        idfToolConfs.add(newIdfToolConf);
-        idfToolConfMap.put(newIdfToolConf.getKey(), newIdfToolConf);
-        newIdfToolConf.setActiveTime(System.currentTimeMillis());
-        saveConfig();
-    }
-
-    @Override
     public Path getIdfConfFolder() {
         Path configDir = PathManager.getConfigDir();
         Path idfFolder = configDir.resolve(IDF_FOLDER_NAME);
@@ -190,38 +168,6 @@ public class IdfSysConfManager implements IdfSysConfService {
             }
         }
         return idfFolder;
-    }
-
-    @Override
-    public IdfToolConf getToolConfByKey(String key) {
-        IdfToolConf idfToolConf = idfToolConfMap.get(key);
-        if (idfToolConf != null) {
-            idfToolConf.setActiveTime(System.currentTimeMillis());
-            saveConfig();
-        }
-        return idfToolConf;
-    }
-
-    @Override
-    public IdfToolConf getIdfConfByProject(Project project) {
-        CMakeWorkspace instance = CMakeWorkspace.getInstance(project);
-        List<CMakeSettings.Profile> activeProfiles = instance.getSettings().getActiveProfiles();
-        if (activeProfiles.isEmpty()) {
-            return null;
-        }
-        CMakeSettings.Profile currentProfile = activeProfiles.get(0);
-        CPPToolchains.Toolchain toolchain = CPPToolchains.getInstance()
-                .getToolchainByNameOrDefault(currentProfile.getToolchainName());
-        if (toolchain == null) {
-            return null;
-        }
-        IdfToolConf[] idfToolConfRef = {null};
-        idfToolConfMap.forEach((key, value) -> {
-            if (Objects.equals(value.getEnvFileName(), toolchain.getEnvironment())) {
-                idfToolConfRef[0] = value;
-            }
-        });
-        return idfToolConfRef[0];
     }
 
     @Override
@@ -254,19 +200,6 @@ public class IdfSysConfManager implements IdfSysConfService {
         }
         cdcAcmVendorInfo = vendorProductMap.get(null);
         return cdcAcmVendorInfo;
-    }
-
-    private void saveConfig() {
-        ApplicationManager.getApplication()
-                .executeOnPooledThread(() -> {
-                    Path idfConfFolder = getIdfConfFolder();
-                    Path idfJson = idfConfFolder.resolve(IDF_JSON_NAME);
-                    try {
-                        Files.writeString(idfJson, new Gson().toJson(idfToolConfs));
-                    } catch (IOException e) {
-                        LOG.error(e);
-                    }
-                });
     }
 
     private void saveConfig(String name, Object conf) {

@@ -10,10 +10,8 @@ import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.intellij.util.system.OS;
 import org.apache.commons.lang3.StringUtils;
-import org.btik.espidf.conf.IdfToolConf;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
-import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.util.EnvironmentVarUtil;
 import org.btik.espidf.util.ToolChainTool;
@@ -32,6 +30,7 @@ import java.util.function.Function;
 
 import static org.btik.espidf.environment.ToolchainEnvReader.toolChainEnvByProj;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
+import static org.btik.espidf.util.PathTool.normalizePath;
 import static org.btik.espidf.util.SysConf.$sys;
 
 /**
@@ -44,15 +43,13 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
 
     private final Project project;
 
-    private IdfToolConf idfToolConf;
-
     private Consumer<Boolean> floatingToolbarVisibleHandler;
 
     public IdfEnvironmentServiceImpl(Project project) {
         this.project = project;
     }
 
-    private CPPToolchains.Toolchain getToolChianOfCheckedProfile() {
+    public CPPToolchains.Toolchain getToolChianOfCheckedProfile() {
         IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
         IdfProfileInfo idfProfileInfo = projectConfigService.getSelectedIdfProfileInfo();
         if (idfProfileInfo == null || StringUtils.isEmpty(idfProfileInfo.getDisplayName())) {
@@ -137,21 +134,64 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
     }
 
     @Override
-    public IdfToolConf getSourceToolConf(String idfFrameworkPath) {
-        IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
-        IdfToolConf toolConfByKey = service.getToolConfByKey(idfFrameworkPath);
-        if (toolConfByKey != null && toolConfByKey.getToolchain() != null) {
-            return toolConfByKey;
+    public CPPToolchains.Toolchain getSourceToolConf(String idfPath, String idfToolsPath) {
+        String envFileName;
+        if (isDefaultIdfToolsPath(idfToolsPath)) {
+            envFileName = idfPath + File.separatorChar + $sys(IS_WINDOWS ? "idf.windows.export.bat" : "idf.unix.export.script");
+        } else {
+            envFileName = createCustomExportScript(idfPath, idfToolsPath);
         }
-        IdfToolConf newIdfToolConf = new IdfToolConf();
-        String envFileName = idfFrameworkPath + File.separatorChar + $sys(IS_WINDOWS ? "idf.windows.export.bat" : "idf.unix.export.script");
-        newIdfToolConf.setEnvFileName(envFileName);
-        newIdfToolConf.setIdfToolPath(idfFrameworkPath);
-        CPPToolchains.Toolchain toolchain = getToolChain(envFileName);
-        newIdfToolConf.setToolchain(toolchain);
-        service.store(newIdfToolConf);
-        this.idfToolConf = newIdfToolConf;
-        return newIdfToolConf;
+        return getToolChain(envFileName);
+    }
+
+    private boolean isDefaultIdfToolsPath(String idfToolsPath) {
+        if (idfToolsPath == null || idfToolsPath.isEmpty()) {
+            return true;
+        }
+
+        Path inputPath = normalizePath(idfToolsPath);
+        Path defaultPath = normalizePath(DEFAULT_IDF_TOOLS_PATH);
+
+        return inputPath.equals(defaultPath);
+    }
+
+    private String createCustomExportScript(String idfPath, String idfToolsPath) {
+        Path idfPathObj = Path.of(idfPath);
+        String originalExportName = IS_WINDOWS ? $sys("idf.windows.export.ps1") : $sys("idf.unix.export.script");
+        Path originalExport = idfPathObj.resolve(originalExportName);
+
+        if (!Files.exists(originalExport)) {
+            throw new RuntimeException("Export script not found: " + originalExport);
+        }
+
+        String customExportName = IS_WINDOWS ? $sys("idf.windows.export.clion.ps1") : $sys("idf.unix.export.clion.sh");
+        Path customExport = idfPathObj.resolve(customExportName);
+
+        try {
+            List<String> originalLines = Files.readAllLines(originalExport);
+
+            StringBuilder content = new StringBuilder();
+            if (IS_WINDOWS) {
+                content.append("$env:" + IDF_TOOLS_PATH + "=\"").append(idfToolsPath).append("\"\n");
+            } else {
+                content.append("export" + IDF_TOOLS_PATH + "=\"").append(idfToolsPath).append("\"\n");
+            }
+
+            for (String line : originalLines) {
+                content.append(line).append("\n");
+            }
+
+            Files.writeString(customExport, content.toString());
+
+            if (!IS_WINDOWS) {
+                Files.setPosixFilePermissions(customExport,
+                        java.nio.file.attribute.PosixFilePermissions.fromString("rwxr-xr-x"));
+            }
+
+            return customExport.toString();
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to create custom export script: " + e.getMessage(), e);
+        }
     }
 
     private void eachIdfToolChain(Function<CPPToolchains.Toolchain, @NotNull Boolean> callback) {

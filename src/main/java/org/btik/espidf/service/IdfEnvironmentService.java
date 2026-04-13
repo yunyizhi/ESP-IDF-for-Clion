@@ -2,7 +2,6 @@ package org.btik.espidf.service;
 
 
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
-import org.btik.espidf.conf.IdfToolConf;
 import org.jetbrains.annotations.NotNull;
 
 
@@ -40,6 +39,8 @@ public interface IdfEnvironmentService {
 
     String DEFAULT_IDF_TOOLS_PATH = System.getProperty("user.home") + File.separator + ".espressif";
 
+    CPPToolchains.Toolchain getToolChianOfCheckedProfile();
+
     Map<String, String> getEnvironments();
 
     Map<String, String> getEnvOfToolChain(CPPToolchains.Toolchain toolchain);
@@ -48,7 +49,7 @@ public interface IdfEnvironmentService {
 
     void putTo(Map<String, String> newEnvironments);
 
-    IdfToolConf getSourceToolConf(String idfFrameworkPath);
+    CPPToolchains.Toolchain getSourceToolConf(String idfPath, String idfToolsPath);
 
     /**
      * 构建环境遍历缓存，在初始化或者Toolchain发生变化后调用，会覆盖已有缓存
