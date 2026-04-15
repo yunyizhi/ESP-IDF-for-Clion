@@ -2,6 +2,9 @@ package org.btik.espidf.project.generator.toolchain;
 
 import com.intellij.ide.util.projectWizard.AbstractNewProjectStep;
 import com.intellij.ide.util.projectWizard.ProjectSettingsStepBase;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.VerticalFlowLayout;
@@ -12,16 +15,18 @@ import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.conf.LastChosenIdfToolchain;
 import org.btik.espidf.service.IdfSysConfService;
+import org.btik.espidf.ui.componets.MouseHooks;
 import org.btik.espidf.util.UIUtils;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
 
 import static org.btik.espidf.service.IdfEnvironmentService.DEFAULT_IDF_TOOLS_PATH;
 import static org.btik.espidf.ui.componets.SelectedItemListener.selectedListener;
+import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
-import static org.btik.espidf.util.UIUtils.createConstraints;
-import static org.btik.espidf.util.UIUtils.i18nLabel;
+import static org.btik.espidf.util.UIUtils.*;
 
 public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
 
@@ -53,9 +58,11 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
         ));
     }
 
-    private void initIdfToolChianBox() {
+    private JPanel createToolchainSelectorPanel() {
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(1, 2);
+        JPanel toolchainPanel = new JPanel(gridLayoutManager);
         idfToolchainCombBox = new IdfToolchainCombBox();
-        UIUtils.setWidth(idfToolchainCombBox, 300);
+        UIUtils.setWidth(idfToolchainCombBox, 250);
         idfToolchainCombBox.addItemListener(selectedListener(e -> {
             Object selectedItem = e.getItem();
             if (!(selectedItem instanceof IdfToolchain idfToolchain)) {
@@ -70,6 +77,16 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
             idfProjectGenerator.setIdfToolChian(idfToolchain);
         }));
 
+        DefaultActionGroup actionGroup = new DefaultActionGroup();
+        actionGroup.add(new OpenEimDialogAction());
+        actionGroup.add(new OpenCustomScriptDialogAction());
+        JButton newToolchainButton = new JButton($i18n("idf.common.new"));
+        newToolchainButton.setToolTipText($i18n("idf.toolchain.new"));
+        toolchainPanel.add(idfToolchainCombBox, createHCrowConstraints(0, 0));
+        toolchainPanel.add(newToolchainButton, createConstraints(0, 1));
+        newToolchainButton.addMouseListener(new MouseHooks().withClickedCB(
+                e -> showPop(newToolchainButton, "", actionGroup)));
+        return toolchainPanel;
     }
 
 
@@ -80,10 +97,10 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
         JPanel wrapper = new JPanel(gridLayoutManager);
         int rowIndex = 0;
 
-        initIdfToolChianBox();
+        JPanel toolchainSelectorPanel = createToolchainSelectorPanel();
         wrapper.add(i18nLabel("idf.env.type.tool.chian"), createConstraints(rowIndex, 0));
         initIdfTargets();
-        wrapper.add(idfToolchainCombBox, createConstraints(rowIndex, 1));
+        wrapper.add(toolchainSelectorPanel, createHCrowConstraints(rowIndex, 1));
         rowIndex++;
         wrapper.add(i18nLabel("idf.env.type.target"), createConstraints(rowIndex, 0));
         initIdfTargets();
@@ -102,9 +119,33 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
         panel.add(wrapper, BorderLayout.WEST);
         IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         LastChosenIdfToolchain lastChosenIdfToolchian = service.getLastChosenIdfToolchian();
-        if (lastChosenIdfToolchian != null){
+        if (lastChosenIdfToolchian != null) {
             idfToolchainCombBox.setSelectedToolchain(lastChosenIdfToolchian.getEnvFile());
+        } else {
+            idfToolchainCombBox.load(true);
         }
         return panel;
+    }
+
+    static class OpenEimDialogAction extends AnAction {
+        public OpenEimDialogAction() {
+            super("EIM");
+        }
+
+        @Override
+        public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
+
+        }
+    }
+
+    static class OpenCustomScriptDialogAction extends AnAction {
+        public OpenCustomScriptDialogAction() {
+            super("Custom Script");
+        }
+
+        @Override
+        public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
+
+        }
     }
 }
