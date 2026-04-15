@@ -1,5 +1,11 @@
 package org.btik.espidf.util;
 
+import com.intellij.ide.DataManager;
+import com.intellij.openapi.actionSystem.ActionGroup;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.ui.popup.JBPopupFactory;
+import com.intellij.openapi.ui.popup.ListPopup;
+import com.intellij.ui.awt.RelativePoint;
 import com.intellij.uiDesigner.core.GridConstraints;
 import org.jetbrains.annotations.NotNull;
 
@@ -42,5 +48,13 @@ public class UIUtils {
 
     public static void setHeight(Component component, int height) {
         component.setSize(component.getPreferredSize().width, height);
+    }
+
+    public static void showPop(JComponent component, String title, ActionGroup actionGroup){
+        DataContext dataContext = DataManager.getInstance().getDataContext(component);
+        ListPopup popup = JBPopupFactory.getInstance().createActionGroupPopup(title,
+                actionGroup, dataContext, JBPopupFactory.ActionSelectionAid.SPEEDSEARCH, false);
+        RelativePoint pos = JBPopupFactory.getInstance().guessBestPopupLocation(component);
+        popup.showInScreenCoordinates(component, pos.getScreenPoint());
     }
 }

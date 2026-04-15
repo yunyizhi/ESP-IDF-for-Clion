@@ -5,8 +5,6 @@ import com.intellij.openapi.ui.ComboBox;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 /**
  * @author lustre
@@ -32,14 +30,12 @@ public class ComboBoxWithRefresh<T> extends JPanel {
         add(comboBox);
         add(new JLabel("  "));
         add(refresh);
-        refresh.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-               if (e.getClickCount() == 1) {
-                   clickEventHandler.run();
-               }
-            }
-        });
+        refresh.addMouseListener(new MouseHooks().withClickedCB(e -> {
+                    if (e.getClickCount() == 1) {
+                        clickEventHandler.run();
+                    }
+                })
+        );
     }
 
 }

@@ -11,6 +11,7 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.treeStructure.Tree;
 import org.btik.espidf.toolwindow.tasks.*;
 import org.btik.espidf.toolwindow.tasks.model.*;
+import org.btik.espidf.ui.componets.MouseHooks;
 import org.btik.espidf.util.I18nMessage;
 import org.jetbrains.annotations.NotNull;
 
@@ -18,8 +19,6 @@ import javax.swing.*;
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -55,9 +54,7 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
         viewport.setView(tree);
         tree.expandPath(new TreePath(rootNode.getPath()));
         tree.setCellRenderer(new TaskIconCellRenderer());
-        tree.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
+        tree.addMouseListener(new MouseHooks().withClickedCB(e -> {
                 TreePath path = tree.getPathForLocation(e.getX(), e.getY());
                 if (path == null) {
                     return;
@@ -83,8 +80,8 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
                         TreeNodeCmdExecutor.execute(actionNode, project);
                     }
                 }
-            }
-        });
+            })
+        );
         actionMap.put("idf.custom.tasks.load", this::loadCustomTask);
         for (int i = 0; i < rootNode.getChildCount(); i++) {
             TreeNode child = rootNode.getChildAt(i);

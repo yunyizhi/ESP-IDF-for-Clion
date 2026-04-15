@@ -5,6 +5,7 @@ import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
+import org.btik.espidf.ui.componets.MouseHooks;
 import org.btik.espidf.ui.componets.TreeChoseListener;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,8 +13,6 @@ import javax.swing.*;
 
 import javax.swing.tree.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.*;
 
 import java.util.List;
@@ -43,9 +42,7 @@ public class KconfigTreePanel extends JScrollPane {
         tree.setCellRenderer(kconfTreeCellRenderer);
         defaultTreeModel = tree.getModel();
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        tree.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
+        tree.addMouseListener(new MouseHooks().withClickedCB(e -> {
                 int x = e.getX();
                 int y = e.getY();
                 TreePath path = tree.getPathForLocation(x, y);
@@ -78,8 +75,8 @@ public class KconfigTreePanel extends JScrollPane {
                     KconfigTreePanel.this.commandSender.accept(kconfigSetCommand);
                     lastCheckTime = System.currentTimeMillis();
                 }
-            }
-        });
+            })
+        );
     }
 
     public void clear() {

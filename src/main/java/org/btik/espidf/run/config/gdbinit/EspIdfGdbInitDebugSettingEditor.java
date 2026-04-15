@@ -18,6 +18,7 @@ import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.state.model.IdfProfileInfo;
+import org.btik.espidf.ui.componets.MouseHooks;
 import org.btik.espidf.ui.componets.TextFieldFileChooser;
 import org.btik.espidf.util.UIUtils;
 import org.jetbrains.annotations.NotNull;
@@ -25,8 +26,6 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.Map;
 
@@ -104,17 +103,15 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugR
 
 
     private void bindAction() {
-        setDefault.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                try {
-                    setDefault.setEnabled(false);
-                    initValue();
-                } finally {
-                    setDefault.setEnabled(true);
-                }
-            }
-        });
+        setDefault.addMouseListener(new MouseHooks().withClickedCB(e -> {
+                    try {
+                        setDefault.setEnabled(false);
+                        initValue();
+                    } finally {
+                        setDefault.setEnabled(true);
+                    }
+                })
+        );
         gdbSymbolsPathBox.addItemListener(e -> {
             if (e.getStateChange() == ItemEvent.SELECTED) {
                 Object selectedItem = gdbSymbolsPathBox.getSelectedItem();

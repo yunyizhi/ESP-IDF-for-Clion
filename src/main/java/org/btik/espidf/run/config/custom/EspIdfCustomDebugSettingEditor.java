@@ -19,6 +19,7 @@ import org.btik.espidf.run.config.EspIdfDebugRunConfig;
 import org.btik.espidf.run.config.model.CustomDebugConfigModel;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
+import org.btik.espidf.ui.componets.MouseHooks;
 import org.btik.espidf.ui.componets.TextFieldFileChooser;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfSysConfService;
@@ -27,8 +28,6 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.io.File;
 import java.util.Map;
 
@@ -126,17 +125,15 @@ public class EspIdfCustomDebugSettingEditor extends SettingsEditor<EspIdfDebugRu
 
 
     private void bindAction() {
-        setDefault.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                try {
-                    setDefault.setEnabled(false);
-                    initValue();
-                } finally {
-                    setDefault.setEnabled(true);
-                }
-            }
-        });
+        setDefault.addMouseListener(new MouseHooks().withClickedCB(e -> {
+                    try {
+                        setDefault.setEnabled(false);
+                        initValue();
+                    } finally {
+                        setDefault.setEnabled(true);
+                    }
+                })
+        );
         installWatcher(arguments);
         installWatcher(appElf);
         installWatcher(bootloaderElf);
