@@ -244,7 +244,7 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
             return true;
         }));
         if (floatingToolbarVisibleHandler != null) {
-            floatingToolbarVisibleHandler.accept(needReload.get());
+            ApplicationManager.getApplication().invokeLater(() -> floatingToolbarVisibleHandler.accept(needReload.get()));
         }
     }
 
