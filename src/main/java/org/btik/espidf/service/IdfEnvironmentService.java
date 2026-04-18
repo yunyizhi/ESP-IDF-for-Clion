@@ -33,6 +33,8 @@ public interface IdfEnvironmentService {
 
     String IDF_PATH = "IDF_PATH";
 
+    String ADF_PATH = "ADF_PATH";
+
     String SRC_TOOLS_DIR = "tools"; // idf源码目录的tools
 
     String IDF_TOOLS_PATH = "IDF_TOOLS_PATH";

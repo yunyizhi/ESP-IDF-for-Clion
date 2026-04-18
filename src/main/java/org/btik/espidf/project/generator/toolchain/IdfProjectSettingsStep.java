@@ -9,17 +9,21 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.platform.DirectoryProjectGenerator;
+import com.intellij.ui.AncestorListenerAdapter;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
+import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.conf.LastChosenIdfToolchain;
 import org.btik.espidf.service.IdfSysConfService;
 import org.btik.espidf.ui.componets.MouseHooks;
+import org.btik.espidf.util.ToolChainTool;
 import org.btik.espidf.util.UIUtils;
 import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.event.AncestorEvent;
 import java.awt.*;
 
 import static org.btik.espidf.service.IdfEnvironmentService.DEFAULT_IDF_TOOLS_PATH;
@@ -35,6 +39,7 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
     private IdfToolchainCombBox idfToolchainCombBox;
     private final JLabel idfPath = new JLabel();
     private final JLabel idfToolsPath = new JLabel();
+    private boolean toolchainLoaded = false;
 
 
     public IdfProjectSettingsStep(DirectoryProjectGenerator<T> projectGenerator, AbstractNewProjectStep.AbstractCallback<T> callback) {
@@ -79,7 +84,7 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
 
         DefaultActionGroup actionGroup = new DefaultActionGroup();
         actionGroup.add(new OpenEimDialogAction());
-        actionGroup.add(new OpenCustomScriptDialogAction());
+        actionGroup.add(new OpenCustomScriptDialogAction(toolchainPanel));
         JButton newToolchainButton = new JButton($i18n("idf.common.new"));
         newToolchainButton.setToolTipText($i18n("idf.toolchain.new"));
         toolchainPanel.add(idfToolchainCombBox, createHCrowConstraints(0, 0));
@@ -117,19 +122,33 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
         wrapper.add(i18nLabel("idf.env.type.target.tip"), targetTipCell);
 
         panel.add(wrapper, BorderLayout.WEST);
-        IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
-        LastChosenIdfToolchain lastChosenIdfToolchian = service.getLastChosenIdfToolchian();
-        if (lastChosenIdfToolchian != null) {
-            idfToolchainCombBox.setSelectedToolchain(lastChosenIdfToolchian.getEnvFile());
-        } else {
-            idfToolchainCombBox.load(true);
-        }
+        panel.addAncestorListener(
+                new AncestorListenerAdapter() {
+                    @Override
+                    public void ancestorAdded(AncestorEvent event) {
+                        if (!toolchainLoaded) {
+                            loadToolchain();
+                            toolchainLoaded = true;
+                        }
+                    }
+                }
+        );
         return panel;
+    }
+
+    private void loadToolchain() {
+        IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
+        LastChosenIdfToolchain lastChosenIdfToolchain = service.getLastChosenIdfToolchian();
+        if (lastChosenIdfToolchain != null) {
+            idfToolchainCombBox.setSelectedToolchain(lastChosenIdfToolchain.getEnvFile());
+        } else {
+            idfToolchainCombBox.load();
+        }
     }
 
     static class OpenEimDialogAction extends AnAction {
         public OpenEimDialogAction() {
-            super("EIM");
+            super($i18n("idf.env.type.tool.chian.eim"));
         }
 
         @Override
@@ -138,14 +157,23 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
         }
     }
 
-    static class OpenCustomScriptDialogAction extends AnAction {
-        public OpenCustomScriptDialogAction() {
-            super("Custom Script");
+    class OpenCustomScriptDialogAction extends AnAction {
+        private final Component dialogParent;
+
+        public OpenCustomScriptDialogAction(JPanel toolchainPanel) {
+            super($i18n("idf.env.type.tool.chian.custom.script"));
+            this.dialogParent = toolchainPanel;
+
         }
 
         @Override
         public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
-
+            CustomScriptDialog customScript = new CustomScriptDialog(dialogParent, "Custom Script");
+            customScript.show();
+            String scriptPath = customScript.getScriptPath();
+            String toolChainName = customScript.getToolChainName();
+            CPPToolchains.Toolchain toolchain = ToolChainTool.newEnvToolChain(scriptPath, toolChainName);
+            idfToolchainCombBox.selectToolchain(toolchain);
         }
     }
 }

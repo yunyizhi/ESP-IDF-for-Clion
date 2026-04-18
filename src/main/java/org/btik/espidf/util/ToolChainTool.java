@@ -14,14 +14,14 @@ import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolSet;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.system.LocalHost;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.awt.*;
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -58,9 +58,17 @@ public class ToolChainTool {
     }
 
     public static CPPToolchains.Toolchain newIdfToolChain(String envFile) {
+        return newEnvToolChain(envFile, null);
+    }
+
+    public static CPPToolchains.Toolchain newEnvToolChain(String envFile, @Nullable String name) {
         CPPToolchains.Toolchain idfToolChain = new CPPToolchains.Toolchain(OS.CURRENT);
         idfToolChain.setToolSetKind(IS_WINDOWS ? CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET : CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET);
-        idfToolChain.setName(IDF_TOOLCHAIN_NAME_PREFIX + Integer.toHexString(envFile.hashCode()));
+        if (StringUtils.isEmpty(name)) {
+            name = generateToolChainName(envFile);
+        }
+        name = toolchainNameRename(name);
+        idfToolChain.setName(name);
         ApplicationManager.getApplication().runWriteAction(() -> {
                     CPPToolchains.getInstance().beginUpdate();
                     CPPToolchains.getInstance().addToolchain(idfToolChain);
@@ -69,6 +77,24 @@ public class ToolChainTool {
                 }
         );
         return idfToolChain;
+    }
+
+    public static String toolchainNameRename(String name) {
+        Set<String> toolchainNames = ApplicationManager.getApplication().runReadAction((Computable<Set<String>>)
+                () -> CPPToolchains.getInstance().getToolchains().stream()
+                        .map(CPPToolchains.Toolchain::getName)
+                        .collect(Collectors.toSet())
+        );
+        String newName = name;
+        int index = 1;
+        while (toolchainNames.contains(newName)) {
+            newName = name + "(" + index++ + ")";
+        }
+        return newName;
+    }
+
+    public static String generateToolChainName(String envFile) {
+        return IDF_TOOLCHAIN_NAME_PREFIX + Integer.toHexString(envFile.hashCode());
     }
 
     /**

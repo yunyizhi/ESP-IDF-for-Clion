@@ -20,7 +20,6 @@ import javax.swing.event.PopupMenuEvent;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
-import java.util.function.Predicate;
 
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET;
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET;
@@ -49,56 +48,71 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
                 if (selectedItem instanceof IdfToolchain oldSelected) {
                     lastSelectedItem = oldSelected;
                 }
-                removeAllItems();
-                load(false);
+                load();
                 if (lastSelectedItem != null) {
                     setSelectedItem(lastSelectedItem);
                 }
             }
-
         });
 
     }
 
-    public void load(boolean onlyFirst) {
-        load(StringUtils::isNoneEmpty, onlyFirst);
+    private void syncMapToItems() {
+        removeAllItems();
+        toolchainEnvMap.forEach((toolchain, toolchainInfo) -> addItem(toolchainInfo));
     }
 
-    public void load(Predicate<String> envFilePredicate, boolean onlyFirst) {
+    public void load() {
         final var toolSetKind = IS_WINDOWS ? SYSTEM_WINDOWS_TOOLSET : SYSTEM_UNIX_TOOLSET;
         List<CPPToolchains.Toolchain> envToolchains = ToolChainTool.getFilteredToolchains(
                 (toolchain) -> (!toolchainEnvMap.containsKey(toolchain))
                         && (!envFileNotIdfToolchains.contains(toolchain))
-                        && envFilePredicate.test(toolchain.getEnvironment())
+                        && StringUtils.isNotEmpty(toolchain.getEnvironment())
                         && toolSetKind == toolchain.getToolSet().getKind()
         );
         for (CPPToolchains.Toolchain envToolchain : envToolchains) {
-            if (toolchainEnvMap.containsKey(envToolchain)) {
-                continue;
-            }
-            Map<String, String> rawEnv = toolChainEnvByComp(envToolchain, IdfToolchainCombBox.this);
-            String idfPath = rawEnv.get(IDF_PATH);
-            if (StringUtils.isEmpty(idfPath)) {
-                envFileNotIdfToolchains.add(envToolchain);
-                continue;
-            }
-            String versionStr = getVersion(rawEnv);
-            if (StringUtils.isEmpty(versionStr)) {
-                versionStr = "idf" + rawEnv.get(ESP_IDF_VERSION);
-            }
-            String idfToolsPath = rawEnv.get(IDF_TOOLS_PATH);
-            IdfToolchain idfToolchain = new IdfToolchain(envToolchain, versionStr, idfPath, idfToolsPath, rawEnv);
-            toolchainEnvMap.put(envToolchain, idfToolchain);
-            if (onlyFirst) {
-                break;
-            }
+            loadToolchain(envToolchain);
+        }
+        syncMapToItems();
+    }
+
+    private IdfToolchain loadToolchain(CPPToolchains.Toolchain toolchain) {
+        if (toolchainEnvMap.containsKey(toolchain)) {
+            return null;
+        }
+        Map<String, String> rawEnv = toolChainEnvByComp(toolchain, IdfToolchainCombBox.this);
+        String idfPath = rawEnv.get(IDF_PATH);
+        if (StringUtils.isEmpty(idfPath)) {
+            envFileNotIdfToolchains.add(toolchain);
+            return null;
         }
 
-        toolchainEnvMap.forEach((toolchain, toolchainInfo) -> addItem(toolchainInfo));
+        String versionStr = getVersion(rawEnv);
+        if (StringUtils.isEmpty(versionStr)) {
+            versionStr = "idf" + rawEnv.get(ESP_IDF_VERSION);
+        }
+        String idfToolsPath = rawEnv.get(IDF_TOOLS_PATH);
+        IdfToolchain idfToolchain = new IdfToolchain(toolchain, versionStr, idfPath, idfToolsPath, rawEnv);
+        String adfPath = rawEnv.get(ADF_PATH);
+        if (StringUtils.isNotEmpty(adfPath)) {
+            idfToolchain.setAdfPath(adfPath);
+        }
+        toolchainEnvMap.put(toolchain, idfToolchain);
+        return idfToolchain;
     }
 
     public void setSelectedToolchain(String lastEnvFile) {
-        load(envFile -> Objects.equals(lastEnvFile, envFile), true);
+        CPPToolchains.Toolchain toolChain = ToolChainTool.findToolchainByEnvFile(lastEnvFile);
+        selectToolchain(toolChain);
+    }
+
+    public void selectToolchain(CPPToolchains.Toolchain toolchain) {
+        if (toolchain == null) {
+            return;
+        }
+        IdfToolchain idfToolchain = loadToolchain(toolchain);
+        syncMapToItems();
+        setSelectedItem(idfToolchain);
     }
 
     private String getVersion(Map<String, String> environments) {
@@ -135,7 +149,11 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
             SimpleColoredComponent secondary = new SimpleColoredComponent();
             secondary.setOpaque(false);
             secondary.setIpad(JBUI.emptyInsets()); // 更小内边距
-            secondary.append(idfToolchain.getIdfPath(), GRAY_ITALIC_SMALL_ATTRIBUTES);
+            String path = idfToolchain.getAdfPath(); // 优先展示 ADF 路径
+            if (StringUtils.isEmpty(path)) {
+                path = idfToolchain.getIdfPath();
+            }
+            secondary.append(path, GRAY_ITALIC_SMALL_ATTRIBUTES);
             JPanel textPanel = new JPanel();
             textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
             textPanel.setOpaque(false);

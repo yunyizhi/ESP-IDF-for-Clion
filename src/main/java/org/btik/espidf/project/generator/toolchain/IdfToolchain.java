@@ -6,12 +6,13 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Map;
 
 public class IdfToolchain {
-    private CPPToolchains.Toolchain toolchain;
-    private String name;
-    private String idfVersion;
-    private String idfPath;
-    private String idfToolsPath;
-    private Map<String, String> env;
+    private final CPPToolchains.Toolchain toolchain;
+    private final String name;
+    private final String idfVersion;
+    private final String idfPath;
+    private final String idfToolsPath;
+    private final Map<String, String> env;
+    private String adfPath;
 
     public IdfToolchain(CPPToolchains.Toolchain toolchain, String idfVersion, String idfPath, String idfToolsPath, Map<String, String> env) {
         this.toolchain = toolchain;
@@ -49,5 +50,13 @@ public class IdfToolchain {
 
     public Map<String, String> getEnv() {
         return env;
+    }
+
+    public String getAdfPath() {
+        return adfPath;
+    }
+
+    public void setAdfPath(String adfPath) {
+        this.adfPath = adfPath;
     }
 }
