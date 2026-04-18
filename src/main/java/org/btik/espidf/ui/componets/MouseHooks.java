@@ -51,6 +51,14 @@ public class MouseHooks implements MouseListener {
         exitedCB.accept(e);
     }
 
+    public static MouseHooks mouseClicked(Consumer<MouseEvent> clickedCB) {
+        return new MouseHooks().withClickedCB(clickedCB);
+    }
+
+    public static MouseHooks mouseExited(Consumer<MouseEvent> exitedCB) {
+        return new MouseHooks().withExitedCB(exitedCB);
+    }
+
     public MouseHooks withClickedCB(Consumer<MouseEvent> clickedCB) {
         this.clickedCB = clickedCB;
         return this;

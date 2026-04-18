@@ -17,7 +17,6 @@ import org.btik.espidf.run.config.EspIdfDebugRunConfig;
 import org.btik.espidf.run.config.model.CustomDebugConfigModel;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
-import org.btik.espidf.ui.componets.MouseHooks;
 import org.btik.espidf.ui.componets.TextFieldFileChooser;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfSysConfService;
@@ -29,6 +28,7 @@ import java.awt.*;
 import java.io.File;
 import java.util.Map;
 
+import static org.btik.espidf.ui.componets.MouseHooks.mouseClicked;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.UIUtils.*;
 
@@ -122,7 +122,7 @@ public class EspIdfCustomDebugSettingEditor extends SettingsEditor<EspIdfDebugRu
 
 
     private void bindAction() {
-        setDefault.addMouseListener(new MouseHooks().withClickedCB(e -> {
+        setDefault.addMouseListener(mouseClicked(e -> {
                     try {
                         setDefault.setEnabled(false);
                         initValue();

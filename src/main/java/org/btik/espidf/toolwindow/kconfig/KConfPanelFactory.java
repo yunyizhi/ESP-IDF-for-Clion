@@ -9,7 +9,6 @@ import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
 import org.btik.espidf.ui.componets.HexTextField;
 import org.btik.espidf.ui.componets.InsertPanel;
 import org.btik.espidf.ui.componets.LongTextField;
-import org.btik.espidf.ui.componets.MouseHooks;
 
 import javax.swing.*;
 import java.awt.*;
@@ -21,6 +20,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import static org.btik.espidf.toolwindow.kconfig.model.KconfigType.*;
+import static org.btik.espidf.ui.componets.MouseHooks.mouseExited;
 
 public class KConfPanelFactory {
     static class PanelItem {
@@ -192,7 +192,7 @@ public class KConfPanelFactory {
             strValue = null;
         }
         wrapper.setMaximumSize(wrapper.getPreferredSize());
-        textField.addMouseListener(new MouseHooks().withExitedCB(e -> {
+        textField.addMouseListener(mouseExited(e -> {
                     if (!textField.isValid()) {
                         textField.setText(strValue == null ? "" : strValue);
                         return;
@@ -238,7 +238,7 @@ public class KConfPanelFactory {
         addComponent(wrapper, longField, 0, 1);
 
         wrapper.setMaximumSize(wrapper.getPreferredSize());
-        longField.addMouseListener(new MouseHooks().withExitedCB(e -> {
+        longField.addMouseListener(mouseExited(e -> {
                     try {
                         long longValue = longField.getLongValue();
                         if (Objects.equals(longValue, longVal)) {
@@ -274,7 +274,7 @@ public class KConfPanelFactory {
         addComponent(wrapper, textField, 0, 1);
 
         wrapper.setMaximumSize(wrapper.getPreferredSize());
-        textField.addMouseListener(new MouseHooks().withExitedCB(e -> {
+        textField.addMouseListener(mouseExited(e -> {
                     String text = textField.getText();
                     if (Objects.equals(String.valueOf(value), text)) {
                         return;

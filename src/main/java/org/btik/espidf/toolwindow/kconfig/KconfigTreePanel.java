@@ -5,7 +5,6 @@ import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;
-import org.btik.espidf.ui.componets.MouseHooks;
 import org.btik.espidf.ui.componets.TreeChoseListener;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,6 +16,8 @@ import java.util.*;
 
 import java.util.List;
 import java.util.function.Consumer;
+
+import static org.btik.espidf.ui.componets.MouseHooks.mouseClicked;
 
 public class KconfigTreePanel extends JScrollPane {
     private final Tree tree;
@@ -42,40 +43,40 @@ public class KconfigTreePanel extends JScrollPane {
         tree.setCellRenderer(kconfTreeCellRenderer);
         defaultTreeModel = tree.getModel();
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-        tree.addMouseListener(new MouseHooks().withClickedCB(e -> {
-                int x = e.getX();
-                int y = e.getY();
-                TreePath path = tree.getPathForLocation(x, y);
-                if (path == null) {
-                    return;
-                }
-                int selRow = tree.getRowForLocation(x, y);
-                TreePath selPath = tree.getPathForLocation(x, y);
-                if (selRow == -1) {
-                    return;
-                }
-                Rectangle pathBounds = tree.getPathBounds(selPath);
-                if (pathBounds == null || !pathBounds.contains(x, y)) {
-                    return;
-                }
-                DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode) path.getLastPathComponent();
-                Object userObject = lastPathComponent.getUserObject();
-                if (!(userObject instanceof ConfModel confModel)) {
-                    return;
-                }
-                if (confModel.getRedefinedType() != KconfigType.ENABLE_SWITCH) {
-                    return;
-                }
-                int checkBoxWidth = kconfTreeCellRenderer.getCheckBoxWidth(confModel.getId());
-                if (x < pathBounds.x + checkBoxWidth && (isTreeCheckEnabled || (System.currentTimeMillis() - lastCheckTime) > 3000)) {
-                    isTreeCheckEnabled = false;
-                    KconfigSetCommand kconfigSetCommand = new KconfigSetCommand();
-                    Object value = confModel.getValue();
-                    kconfigSetCommand.setValues(Map.of(confModel.getId(), !Boolean.parseBoolean(String.valueOf(value))));
-                    KconfigTreePanel.this.commandSender.accept(kconfigSetCommand);
-                    lastCheckTime = System.currentTimeMillis();
-                }
-            })
+        tree.addMouseListener(mouseClicked(e -> {
+                    int x = e.getX();
+                    int y = e.getY();
+                    TreePath path = tree.getPathForLocation(x, y);
+                    if (path == null) {
+                        return;
+                    }
+                    int selRow = tree.getRowForLocation(x, y);
+                    TreePath selPath = tree.getPathForLocation(x, y);
+                    if (selRow == -1) {
+                        return;
+                    }
+                    Rectangle pathBounds = tree.getPathBounds(selPath);
+                    if (pathBounds == null || !pathBounds.contains(x, y)) {
+                        return;
+                    }
+                    DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode) path.getLastPathComponent();
+                    Object userObject = lastPathComponent.getUserObject();
+                    if (!(userObject instanceof ConfModel confModel)) {
+                        return;
+                    }
+                    if (confModel.getRedefinedType() != KconfigType.ENABLE_SWITCH) {
+                        return;
+                    }
+                    int checkBoxWidth = kconfTreeCellRenderer.getCheckBoxWidth(confModel.getId());
+                    if (x < pathBounds.x + checkBoxWidth && (isTreeCheckEnabled || (System.currentTimeMillis() - lastCheckTime) > 3000)) {
+                        isTreeCheckEnabled = false;
+                        KconfigSetCommand kconfigSetCommand = new KconfigSetCommand();
+                        Object value = confModel.getValue();
+                        kconfigSetCommand.setValues(Map.of(confModel.getId(), !Boolean.parseBoolean(String.valueOf(value))));
+                        KconfigTreePanel.this.commandSender.accept(kconfigSetCommand);
+                        lastCheckTime = System.currentTimeMillis();
+                    }
+                })
         );
     }
 
@@ -181,15 +182,16 @@ public class KconfigTreePanel extends JScrollPane {
     }
 
     public void jumpTo(ConfModel searchModel) {
-            TreePath path = buildPathTo(searchModel);
-            if (path == null) {
-                return;
-            }
-            tree.scrollPathToVisible(path);
-            tree.setSelectionPath(path);
-            tree.expandPath(path);
+        TreePath path = buildPathTo(searchModel);
+        if (path == null) {
+            return;
+        }
+        tree.scrollPathToVisible(path);
+        tree.setSelectionPath(path);
+        tree.expandPath(path);
 
     }
+
     public TreePath buildPathTo(ConfModel target) {
         if (target == null) {
             return null;

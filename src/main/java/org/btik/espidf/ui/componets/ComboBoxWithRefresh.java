@@ -6,6 +6,8 @@ import com.intellij.openapi.ui.ComboBox;
 import javax.swing.*;
 import java.awt.*;
 
+import static org.btik.espidf.ui.componets.MouseHooks.mouseClicked;
+
 /**
  * @author lustre
  * @since 2024/2/10 10:19
@@ -30,7 +32,7 @@ public class ComboBoxWithRefresh<T> extends JPanel {
         add(comboBox);
         add(new JLabel("  "));
         add(refresh);
-        refresh.addMouseListener(new MouseHooks().withClickedCB(e -> {
+        refresh.addMouseListener(mouseClicked(e -> {
                     if (e.getClickCount() == 1) {
                         clickEventHandler.run();
                     }

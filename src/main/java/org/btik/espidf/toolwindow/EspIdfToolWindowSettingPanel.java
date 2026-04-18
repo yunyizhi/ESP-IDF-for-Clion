@@ -18,7 +18,6 @@ import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.toolwindow.settings.SerialPortBox;
 import org.btik.espidf.toolwindow.settings.model.SerialPortInfo;
-import org.btik.espidf.ui.componets.MouseHooks;
 import org.btik.espidf.util.EspIdfProjectUtil;
 import org.btik.espidf.util.UIUtils;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +31,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import static org.btik.espidf.service.IdfEnvironmentService.*;
+import static org.btik.espidf.ui.componets.MouseHooks.mouseClicked;
 import static org.btik.espidf.util.UIUtils.createConstraints;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
@@ -194,7 +194,7 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
 
     private void bindAction() {
 
-        saveButton.addMouseListener(new MouseHooks().withClickedCB(e -> {
+        saveButton.addMouseListener(mouseClicked(e -> {
                 saveButton.setEnabled(false);
                 String port = portField.getPort();
                 if (!StringUtil.isEmpty(port)) {

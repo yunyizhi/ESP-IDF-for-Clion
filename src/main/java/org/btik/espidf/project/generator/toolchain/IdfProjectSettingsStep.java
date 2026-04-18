@@ -17,7 +17,6 @@ import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.conf.LastChosenIdfToolchain;
 import org.btik.espidf.service.IdfSysConfService;
-import org.btik.espidf.ui.componets.MouseHooks;
 import org.btik.espidf.util.ToolChainTool;
 import org.btik.espidf.util.UIUtils;
 import org.jetbrains.annotations.NotNull;
@@ -27,6 +26,7 @@ import javax.swing.event.AncestorEvent;
 import java.awt.*;
 
 import static org.btik.espidf.service.IdfEnvironmentService.DEFAULT_IDF_TOOLS_PATH;
+import static org.btik.espidf.ui.componets.MouseHooks.mouseClicked;
 import static org.btik.espidf.ui.componets.SelectedItemListener.selectedListener;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
@@ -89,7 +89,7 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
         newToolchainButton.setToolTipText($i18n("idf.toolchain.new"));
         toolchainPanel.add(idfToolchainCombBox, createHCrowConstraints(0, 0));
         toolchainPanel.add(newToolchainButton, createConstraints(0, 1));
-        newToolchainButton.addMouseListener(new MouseHooks().withClickedCB(
+        newToolchainButton.addMouseListener(mouseClicked(
                 e -> showPop(newToolchainButton, "", actionGroup)));
         return toolchainPanel;
     }

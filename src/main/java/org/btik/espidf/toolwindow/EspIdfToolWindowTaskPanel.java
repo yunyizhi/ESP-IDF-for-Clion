@@ -11,7 +11,6 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.ui.treeStructure.Tree;
 import org.btik.espidf.toolwindow.tasks.*;
 import org.btik.espidf.toolwindow.tasks.model.*;
-import org.btik.espidf.ui.componets.MouseHooks;
 import org.btik.espidf.util.I18nMessage;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,6 +25,7 @@ import java.util.List;
 
 import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.ESP_CUSTOM_TASKS_XML_UNIX_TEMPLATE;
 import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.ESP_CUSTOM_TASKS_XML_WIN_TEMPLATE;
+import static org.btik.espidf.ui.componets.MouseHooks.mouseClicked;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
@@ -54,33 +54,33 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
         viewport.setView(tree);
         tree.expandPath(new TreePath(rootNode.getPath()));
         tree.setCellRenderer(new TaskIconCellRenderer());
-        tree.addMouseListener(new MouseHooks().withClickedCB(e -> {
-                TreePath path = tree.getPathForLocation(e.getX(), e.getY());
-                if (path == null) {
-                    return;
-                }
-                DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode) path.getLastPathComponent();
-                // 执行命令节点
-                if (e.getClickCount() == 2) {
-                    Object userObject = lastPathComponent.getUserObject();
-                    if (userObject instanceof EspIdfTaskCommandNode commandNode) {
-                        TreeNodeCmdExecutor.execute(commandNode, project);
-                    } else if (userObject instanceof EspIdfTaskConsoleCommandNode taskTerminalCommandNode) {
-                        TreeNodeCmdExecutor.execute(taskTerminalCommandNode, project);
-                    } else if (userObject instanceof RawCommandNode rawCommandNode) {
-                        TreeNodeCmdExecutor.execute(rawCommandNode, project);
-                    } else if (userObject instanceof LocalExecNode localExecNode) {
-                        TreeNodeCmdExecutor.execute(localExecNode, project);
-                    } else if (userObject instanceof EspIdfTaskActionNode actionNode) {
-                        Runnable runnable = actionMap.get(actionNode.getId());
-                        if (runnable != null) {
-                            runnable.run();
-                            return;
-                        }
-                        TreeNodeCmdExecutor.execute(actionNode, project);
+        tree.addMouseListener(mouseClicked(e -> {
+                    TreePath path = tree.getPathForLocation(e.getX(), e.getY());
+                    if (path == null) {
+                        return;
                     }
-                }
-            })
+                    DefaultMutableTreeNode lastPathComponent = (DefaultMutableTreeNode) path.getLastPathComponent();
+                    // 执行命令节点
+                    if (e.getClickCount() == 2) {
+                        Object userObject = lastPathComponent.getUserObject();
+                        if (userObject instanceof EspIdfTaskCommandNode commandNode) {
+                            TreeNodeCmdExecutor.execute(commandNode, project);
+                        } else if (userObject instanceof EspIdfTaskConsoleCommandNode taskTerminalCommandNode) {
+                            TreeNodeCmdExecutor.execute(taskTerminalCommandNode, project);
+                        } else if (userObject instanceof RawCommandNode rawCommandNode) {
+                            TreeNodeCmdExecutor.execute(rawCommandNode, project);
+                        } else if (userObject instanceof LocalExecNode localExecNode) {
+                            TreeNodeCmdExecutor.execute(localExecNode, project);
+                        } else if (userObject instanceof EspIdfTaskActionNode actionNode) {
+                            Runnable runnable = actionMap.get(actionNode.getId());
+                            if (runnable != null) {
+                                runnable.run();
+                                return;
+                            }
+                            TreeNodeCmdExecutor.execute(actionNode, project);
+                        }
+                    }
+                })
         );
         actionMap.put("idf.custom.tasks.load", this::loadCustomTask);
         for (int i = 0; i < rootNode.getChildCount(); i++) {
@@ -147,8 +147,8 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
             I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.failed"),
                     $i18n("action.exec.task.xml.notfound"),
                     NotificationType.ERROR).addAction(
-                            new CreateCustomTaskConfFileAction($i18n("action.exec.task.xml.create"), "esp_custom_tasks_empty.xml",
-                                    project, this::clearCustomTask)).addAction(
+                    new CreateCustomTaskConfFileAction($i18n("action.exec.task.xml.create"), "esp_custom_tasks_empty.xml",
+                            project, this::clearCustomTask)).addAction(
                     new CreateCustomTaskConfFileAction($i18n("action.exec.task.xml.create.use.template"),
                             IS_WINDOWS ? ESP_CUSTOM_TASKS_XML_WIN_TEMPLATE : ESP_CUSTOM_TASKS_XML_UNIX_TEMPLATE,
                             project, this::loadCustomTaskInit)
@@ -164,7 +164,7 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
         FileDocumentManager docManager = FileDocumentManager.getInstance();
         Document document = docManager.getCachedDocument(xmlVirtual);
         if (document != null) {
-           docManager.saveDocument(document);
+            docManager.saveDocument(document);
         }
 
         ApplicationManager.getApplication().invokeLater(() -> {
