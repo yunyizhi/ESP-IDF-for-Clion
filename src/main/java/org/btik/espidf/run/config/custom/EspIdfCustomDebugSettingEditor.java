@@ -32,8 +32,7 @@ import java.io.File;
 import java.util.Map;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
-import static org.btik.espidf.util.UIUtils.createConstraints;
-import static org.btik.espidf.util.UIUtils.i18nLabel;
+import static org.btik.espidf.util.UIUtils.*;
 
 /**
  * @author lustre
@@ -74,7 +73,7 @@ public class EspIdfCustomDebugSettingEditor extends SettingsEditor<EspIdfDebugRu
         appElfConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         appElfConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         appElf = new TextFieldFileChooser();
-        appElf.addActionListener(project, newElfFileChooser($i18n("select.elf.path"), $i18n("select.idf.path.for.idf")));
+        appElf.addActionListener(project, newExtFileChooser("elf", $i18n("select.elf.path"), $i18n("select.idf.path.for.idf")));
         wrapper.add(appElf, appElfConstraints);
         rowIndex++;
 
@@ -83,7 +82,7 @@ public class EspIdfCustomDebugSettingEditor extends SettingsEditor<EspIdfDebugRu
         bootLoaderConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         bootLoaderConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         bootloaderElf = new TextFieldFileChooser();
-        bootloaderElf.addActionListener(project, newElfFileChooser($i18n("select.elf.path"), $i18n("esp.idf.debug.bootloader_elf.select")));
+        bootloaderElf.addActionListener(project, newExtFileChooser("elf", $i18n("select.elf.path"), $i18n("esp.idf.debug.bootloader_elf.select")));
         wrapper.add(bootloaderElf, bootLoaderConstraints);
         rowIndex++;
 
@@ -92,7 +91,7 @@ public class EspIdfCustomDebugSettingEditor extends SettingsEditor<EspIdfDebugRu
         romElfConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         romElfConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         romElf = new TextFieldFileChooser();
-        romElf.addActionListener(project, newElfFileChooser($i18n("select.elf.path"), $i18n("esp.idf.debug.rom_elf.select")));
+        romElf.addActionListener(project, newExtFileChooser("elf", $i18n("select.elf.path"), $i18n("esp.idf.debug.rom_elf.select")));
         wrapper.add(romElf, romElfConstraints);
         rowIndex++;
 
@@ -223,17 +222,6 @@ public class EspIdfCustomDebugSettingEditor extends SettingsEditor<EspIdfDebugRu
     @Override
     protected @NotNull JComponent createEditor() {
         return rootPanel;
-    }
-
-    private FileChooserDescriptor newElfFileChooser(String title, String description) {
-        FileChooserDescriptor elf = FileChooserDescriptorFactory.createSingleFileDescriptor("elf");
-        if (StringUtil.isNotEmpty(description)) {
-            elf.setDescription(description);
-        }
-        if (StringUtil.isNotEmpty(title)) {
-            elf.setTitle(title);
-        }
-        return elf;
     }
 
 }

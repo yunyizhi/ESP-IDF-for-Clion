@@ -7,7 +7,7 @@ import com.intellij.openapi.ui.TextComponentAccessor;
 import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
-import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 
@@ -18,7 +18,7 @@ import java.io.File;
 public class TextFieldFileChooser extends TextFieldWithBrowseButton {
     private FileChooserDescriptor descriptor;
 
-    public void addActionListener(@NotNull Project project, FileChooserDescriptor descriptor) {
+    public void addActionListener(@Nullable Project project, FileChooserDescriptor descriptor) {
         super.addActionListener(new ComponentWithBrowseButton.BrowseFolderActionListener<>(this, project,
                 descriptor, TextComponentAccessor.TEXT_FIELD_SELECTED_TEXT));
         this.descriptor = descriptor;

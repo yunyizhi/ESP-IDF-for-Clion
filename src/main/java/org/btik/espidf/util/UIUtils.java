@@ -3,8 +3,11 @@ package org.btik.espidf.util;
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.fileChooser.FileChooserDescriptor;
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.ListPopup;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.awt.RelativePoint;
 import com.intellij.uiDesigner.core.GridConstraints;
 import org.jetbrains.annotations.NotNull;
@@ -56,5 +59,16 @@ public class UIUtils {
                 actionGroup, dataContext, JBPopupFactory.ActionSelectionAid.SPEEDSEARCH, false);
         RelativePoint pos = JBPopupFactory.getInstance().guessBestPopupLocation(component);
         popup.showInScreenCoordinates(component, pos.getScreenPoint());
+    }
+
+    public static FileChooserDescriptor newExtFileChooser(@NotNull String extension, String title, String description) {
+        FileChooserDescriptor elf = FileChooserDescriptorFactory.createSingleFileDescriptor(extension);
+        if (StringUtil.isNotEmpty(description)) {
+            elf.setDescription(description);
+        }
+        if (StringUtil.isNotEmpty(title)) {
+            elf.setTitle(title);
+        }
+        return elf;
     }
 }

@@ -30,8 +30,7 @@ import java.io.File;
 import java.util.Map;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
-import static org.btik.espidf.util.UIUtils.createConstraints;
-import static org.btik.espidf.util.UIUtils.i18nLabel;
+import static org.btik.espidf.util.UIUtils.*;
 
 /**
  * @author lustre
@@ -79,9 +78,7 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugR
         gdbArgConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
         gdbArgConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
         gdb = new TextFieldFileChooser();
-        FileChooserDescriptor gdbChooser = new FileChooserDescriptor(true, false, false, false, false, false)
-                .withTitle($i18n("select.esp.gdb.path")).withDescription($i18n("select.esp.gdb.path"));
-        gdb.addActionListener(project, gdbChooser);
+        gdb.addActionListener(project, newExtFileChooser("gdb" , $i18n("select.esp.gdb.path"), $i18n("select.esp.gdb.path")));
         wrapper.add(gdb, gdbArgConstraints);
         rowIndex++;
 
