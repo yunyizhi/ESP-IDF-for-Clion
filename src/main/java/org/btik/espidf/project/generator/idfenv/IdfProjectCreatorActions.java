@@ -44,7 +44,7 @@ public class IdfProjectCreatorActions<T> extends GeneratorActions<T> {
         }
         Path folder = Path.of(idfToolsPath);
         if (!Files.exists(folder)) {
-            return new ValidationResult($i18n("please.select.idf.path.not.exist"));
+            return new ValidationResult($i18n("idf.path.not.exist"));
         }
         Path exportSh = folder.resolve(IDF_ENV_JSON);
         if (!Files.exists(exportSh)) {

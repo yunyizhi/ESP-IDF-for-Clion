@@ -12,14 +12,12 @@ import com.intellij.openapi.ui.*;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.platform.DirectoryProjectGenerator;
 import com.intellij.ui.components.JBPanel;
-import com.intellij.uiDesigner.core.GridLayoutManager;
 import org.btik.espidf.conf.LastChosenIdfEnv;
 import org.btik.espidf.service.IdfSysConfService;
+import org.btik.espidf.ui.componets.GridPanel;
 import org.btik.espidf.util.UIUtils;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.IOException;
@@ -31,10 +29,10 @@ import java.util.Map;
 import java.util.Objects;
 
 import static org.btik.espidf.service.IdfEnvironmentService.DEFAULT_IDF_TOOLS_PATH;
+import static org.btik.espidf.ui.componets.DocumentChangeListener.bindDocChange;
 import static org.btik.espidf.ui.componets.SelectedItemListener.selectedListener;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
-import static org.btik.espidf.util.UIUtils.*;
 
 /**
  * @author lustre
@@ -95,23 +93,14 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
     @Override
     public JPanel createAdvancedSettings() {
         panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(3, 2);
-        JPanel wrapper = new JPanel(gridLayoutManager);
-        int rowIndex = 0;
-
-        wrapper.add(i18nLabel("idf.tools.path.title"), createConstraints(rowIndex, 0));
+        GridPanel gridPanel = new GridPanel(3, 2);
         initIdfPathBrowser();
-        wrapper.add(idfToolsPathBrowserButton, createHCrowConstraints(rowIndex, 1));
-        rowIndex++;
-
-        wrapper.add(i18nLabel("idf.framework"), createConstraints(rowIndex, 0));
+        gridPanel.addNewFormRow("idf.tools.path.title", idfToolsPathBrowserButton, true);
         initIdfs();
-        wrapper.add(idfs, createHCrowConstraints(rowIndex, 1));
-        rowIndex++;
-        wrapper.add(i18nLabel("idf.env.type.target"), createConstraints(rowIndex, 0));
+        gridPanel.addNewFormRow("idf.framework", idfs, true);
         initIdfTargets();
-        wrapper.add(idfTargets, createConstraints(rowIndex, 1));
-        panel.add(wrapper, BorderLayout.WEST);
+        gridPanel.addNewFormRow("idf.env.type.target", idfTargets, false);
+        panel.add(gridPanel, BorderLayout.WEST);
         IdfSysConfService service = ApplicationManager.getApplication().getService(IdfSysConfService.class);
         LastChosenIdfEnv lastChosenIdfEnv = service.getLastChosenIdfEnv();
         if (lastChosenIdfEnv != null) {
@@ -137,27 +126,13 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
     }
 
     private void initIdfPathBrowser() {
-        FileChooserDescriptor descriptor = FileChooserDescriptorFactory.createSingleFolderDescriptor().
+        FileChooserDescriptor descriptor = FileChooserDescriptorFactory.singleFile().
                 withTitle($i18n("select.idf.path")).withDescription($i18n("select.idf.path.for.idf"));
         idfToolsPathBrowserButton = new TextFieldWithBrowseButton();
-        idfToolsPathBrowserButton.getTextField().getDocument().addDocumentListener(new DocumentListener() {
-            private void handleChange() {
-                idfToolsPath = idfToolsPathBrowserButton.getText();
-                idfProjectGenerator.setIdfToolsPath(idfToolsPath);
-                checkValid();
-            }
-
-            public void insertUpdate(DocumentEvent e) {
-                this.handleChange();
-            }
-
-            public void removeUpdate(DocumentEvent e) {
-                this.handleChange();
-            }
-
-            public void changedUpdate(DocumentEvent e) {
-                this.handleChange();
-            }
+        bindDocChange(idfToolsPathBrowserButton, e -> {
+            idfToolsPath = idfToolsPathBrowserButton.getText();
+            idfProjectGenerator.setIdfToolsPath(idfToolsPath);
+            checkValid();
         });
         idfToolsPathBrowserButton.addActionListener(new ComponentWithBrowseButton.BrowseFolderActionListener<>(
                 idfToolsPathBrowserButton, null, descriptor, TextComponentAccessor.TEXT_FIELD_WHOLE_TEXT) {

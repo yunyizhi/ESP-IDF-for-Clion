@@ -7,7 +7,6 @@ import com.intellij.openapi.ui.ComboBox;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.ui.DocumentAdapter;
-import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.intellij.util.Consumer;
 import com.intellij.util.ui.JBUI;
@@ -18,6 +17,7 @@ import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.toolwindow.settings.SerialPortBox;
 import org.btik.espidf.toolwindow.settings.model.SerialPortInfo;
+import org.btik.espidf.ui.componets.GridPanel;
 import org.btik.espidf.util.EspIdfProjectUtil;
 import org.btik.espidf.util.UIUtils;
 import org.jetbrains.annotations.NotNull;
@@ -32,7 +32,6 @@ import java.util.Objects;
 
 import static org.btik.espidf.service.IdfEnvironmentService.*;
 import static org.btik.espidf.ui.componets.MouseHooks.mouseClicked;
-import static org.btik.espidf.util.UIUtils.createConstraints;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.SysConf.$sys;
 import static org.btik.espidf.util.UIUtils.i18nLabel;
@@ -58,35 +57,19 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
     }
 
     private void initUI() {
-        JPanel wrapper = new JPanel(new GridLayoutManager(6, 2, JBUI.insets(16, 16, 0, 16), -1, -1));
+        GridPanel wrapper = new GridPanel(new GridLayoutManager(6, 2, JBUI.insets(16, 16, 0, 16), -1, -1));
 
-        int rowIndex = 0;
-
-        wrapper.add(i18nLabel("idf.project.setting.port"), createConstraints(rowIndex, 0));
-        GridConstraints firstRowConstraints = createConstraints(rowIndex, 1);
-        firstRowConstraints.setFill(GridConstraints.FILL_HORIZONTAL);
-        firstRowConstraints.setHSizePolicy(GridConstraints.SIZEPOLICY_WANT_GROW);
-        wrapper.add(portField, firstRowConstraints);
+        wrapper.addNewFormRow("idf.project.setting.port", portField, true);
         portField.setEditable(true);
         UIUtils.setWidth(portField, 300);
-        rowIndex++;
-
-        wrapper.add(i18nLabel("idf.project.setting.monitor.baud"), createConstraints(rowIndex, 0));
-        wrapper.add(monitorBaud, createConstraints(rowIndex, 1));
-        rowIndex++;
-
-        wrapper.add(i18nLabel("idf.project.setting.upload.baud"), createConstraints(rowIndex, 0));
-        wrapper.add(uploadBaud, createConstraints(rowIndex, 1));
-        rowIndex++;
+        wrapper.addNewFormRow("idf.project.setting.monitor.baud", monitorBaud, false);
+        wrapper.addNewFormRow("idf.project.setting.upload.baud", uploadBaud, false);
         JLabel cmakeProfileLabel = i18nLabel("esp.idf.build.cmake.profile");
         cmakeProfileLabel.setToolTipText($i18n("esp.idf.build.cmake.profile.tooltip"));
-        wrapper.add(cmakeProfileLabel, createConstraints(rowIndex, 0));
-        wrapper.add(cmakeProfile, createConstraints(rowIndex, 1));
-        rowIndex++;
-
+        wrapper.addNewFormRow(cmakeProfileLabel, cmakeProfile, false);
         saveButton.setText($i18n("idf.project.setting.save"));
         saveButton.setEnabled(false);
-        wrapper.add(saveButton, createConstraints(rowIndex, 1));
+        wrapper.addCol(saveButton, 1);
 
         add(wrapper, BorderLayout.WEST);
 
@@ -195,17 +178,17 @@ public class EspIdfToolWindowSettingPanel extends JPanel {
     private void bindAction() {
 
         saveButton.addMouseListener(mouseClicked(e -> {
-                saveButton.setEnabled(false);
-                String port = portField.getPort();
-                if (!StringUtil.isEmpty(port)) {
-                    projectConfigModel.setPort(port);
-                }
-                setBaudStrFormObj(monitorBaud.getSelectedItem(), projectConfigModel::setMonitorBaud);
-                setBaudStrFormObj(uploadBaud.getSelectedItem(), projectConfigModel::setUploadBaud);
-                idfProjectConfigService.updateProjectConfig(projectConfigModel);
-                EspIdfProjectUtil.switchProfileTarget(project, projectConfigModel.getCmakeProfile());
+                    saveButton.setEnabled(false);
+                    String port = portField.getPort();
+                    if (!StringUtil.isEmpty(port)) {
+                        projectConfigModel.setPort(port);
+                    }
+                    setBaudStrFormObj(monitorBaud.getSelectedItem(), projectConfigModel::setMonitorBaud);
+                    setBaudStrFormObj(uploadBaud.getSelectedItem(), projectConfigModel::setUploadBaud);
+                    idfProjectConfigService.updateProjectConfig(projectConfigModel);
+                    EspIdfProjectUtil.switchProfileTarget(project, projectConfigModel.getCmakeProfile());
 
-            })
+                })
         );
 
         portField.addItemListener(e -> {

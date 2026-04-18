@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.List;
 import java.util.function.Predicate;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import static org.btik.espidf.service.IdfEnvironmentService.IDF_TOOLCHAIN_NAME_PREFIX;
@@ -40,9 +41,13 @@ public class ToolChainTool {
     }
 
     public static List<CPPToolchains.Toolchain> getFilteredToolchains(Predicate<CPPToolchains.Toolchain> filter) {
-        return ApplicationManager.getApplication().runReadAction((Computable<List<CPPToolchains.Toolchain>>)
+        return getFilteredToolchains(filter, Collectors.toList());
+    }
+
+    public static <R, A> R getFilteredToolchains(Predicate<CPPToolchains.Toolchain> filter, Collector<CPPToolchains.Toolchain, A, R> collector) {
+        return ApplicationManager.getApplication().runReadAction((Computable<R>)
                 () -> CPPToolchains.getInstance().getToolchains().stream()
-                        .filter(filter).collect(Collectors.toList())
+                        .filter(filter).collect(collector)
         );
     }
 

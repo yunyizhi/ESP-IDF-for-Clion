@@ -5,43 +5,19 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-public class IdfToolchain {
+public class IdfToolchain extends IdfInfo {
     private final CPPToolchains.Toolchain toolchain;
-    private final String name;
-    private final String idfVersion;
-    private final String idfPath;
-    private final String idfToolsPath;
     private final Map<String, String> env;
-    private String adfPath;
 
     public IdfToolchain(CPPToolchains.Toolchain toolchain, String idfVersion, String idfPath, String idfToolsPath, Map<String, String> env) {
+        super(toolchain.getName(), idfVersion, idfPath, idfToolsPath);
         this.toolchain = toolchain;
-        this.name = toolchain.getName();
-        this.idfVersion = idfVersion;
-        this.idfPath = idfPath;
-        this.idfToolsPath = idfToolsPath;
         this.env = env;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public String getIdfVersion() {
-        return idfVersion;
-    }
-
-    public String getIdfPath() {
-        return idfPath;
-    }
-
-    public String getIdfToolsPath() {
-        return idfToolsPath;
     }
 
     @Override
     public @NotNull String toString() {
-        return name;
+        return getName();
     }
 
     public CPPToolchains.Toolchain getToolchain() {
@@ -50,13 +26,5 @@ public class IdfToolchain {
 
     public Map<String, String> getEnv() {
         return env;
-    }
-
-    public String getAdfPath() {
-        return adfPath;
-    }
-
-    public void setAdfPath(String adfPath) {
-        this.adfPath = adfPath;
     }
 }

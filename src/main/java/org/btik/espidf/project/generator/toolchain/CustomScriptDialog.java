@@ -15,13 +15,14 @@ import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
 import java.awt.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
-import static org.btik.espidf.util.UIUtils.*;
 
 public class CustomScriptDialog extends DialogWrapper {
-    private TextFieldFileChooser scriptBrowserButton;
-    private JBTextField toolChainName;
+    private final TextFieldFileChooser scriptBrowserButton = new TextFieldFileChooser();
+    private final JBTextField toolChainName = new JBTextField();
 
     public CustomScriptDialog(Component parent, @NotNull String title) {
         super(parent, true);
@@ -33,16 +34,11 @@ public class CustomScriptDialog extends DialogWrapper {
     protected @Nullable JComponent createCenterPanel() {
         JBPanel<?> panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
         GridPanel gridPanel = new GridPanel(2, 2);
-        gridPanel.add(i18nLabel("idf.custom.script.path"));
-        scriptBrowserButton = new TextFieldFileChooser();
         scriptBrowserButton.addActionListener(null, FileChooserDescriptorFactory.singleFile().withTitle($i18n("idf.select.script.file")));
-        gridPanel.addGrow(scriptBrowserButton);
-        gridPanel.newRow();
-        gridPanel.add(i18nLabel("idf.toolchain.name"));
-        toolChainName = new JBTextField();
-        gridPanel.addGrow(toolChainName);
+        gridPanel.addNewFormRow("idf.custom.script.path", scriptBrowserButton, true);
+        gridPanel.addNewFormRow("idf.toolchain.name", toolChainName, true);
         panel.add(gridPanel, BorderLayout.WEST);
-        UIUtils.setWidth(panel, 300);
+        UIUtils.setWidth(gridPanel, 500);
         return panel;
     }
 
@@ -53,17 +49,22 @@ public class CustomScriptDialog extends DialogWrapper {
 
     @Override
     protected @Nullable ValidationInfo doValidate() {
-        if (StringUtils.isEmpty(getScriptPath())) {
+        String scriptPath = getScriptPath();
+        if (StringUtils.isEmpty(scriptPath)) {
             return new ValidationInfo($i18n("idf.custom.script.path.empty"), scriptBrowserButton);
+        }
+        Path folder = Path.of(scriptPath);
+        if (!Files.exists(folder)) {
+            return new ValidationInfo($i18n("idf.path.not.exist"), scriptBrowserButton);
         }
         return super.doValidate();
     }
 
     public String getScriptPath() {
-        return scriptBrowserButton != null ? scriptBrowserButton.getText() : null;
+        return scriptBrowserButton.getText();
     }
 
     public String getToolChainName() {
-        return toolChainName != null ? toolChainName.getText() : null;
+        return toolChainName.getText();
     }
 }

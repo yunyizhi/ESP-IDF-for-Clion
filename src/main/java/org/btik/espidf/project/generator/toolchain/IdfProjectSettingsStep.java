@@ -11,12 +11,12 @@ import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.platform.DirectoryProjectGenerator;
 import com.intellij.ui.AncestorListenerAdapter;
 import com.intellij.ui.components.JBPanel;
-import com.intellij.uiDesigner.core.GridConstraints;
 import com.intellij.uiDesigner.core.GridLayoutManager;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.conf.LastChosenIdfToolchain;
 import org.btik.espidf.service.IdfSysConfService;
+import org.btik.espidf.ui.componets.GridPanel;
 import org.btik.espidf.util.ToolChainTool;
 import org.btik.espidf.util.UIUtils;
 import org.jetbrains.annotations.NotNull;
@@ -76,14 +76,14 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
             idfPath.setText(idfToolchain.getIdfPath());
             String idfToolsPathValue = idfToolchain.getIdfToolsPath();
             if (StringUtils.isEmpty(idfToolsPathValue)) {
-                idfToolsPathValue = "not set default as:" + DEFAULT_IDF_TOOLS_PATH;
+                idfToolsPathValue = $i18n("idf.tools.path.not.set.default") + ' ' + DEFAULT_IDF_TOOLS_PATH;
             }
             idfToolsPath.setText(idfToolsPathValue);
             idfProjectGenerator.setIdfToolChian(idfToolchain);
         }));
 
         DefaultActionGroup actionGroup = new DefaultActionGroup();
-        actionGroup.add(new OpenEimDialogAction());
+        actionGroup.add(new OpenEimDialogAction(toolchainPanel));
         actionGroup.add(new OpenCustomScriptDialogAction(toolchainPanel));
         JButton newToolchainButton = new JButton($i18n("idf.common.new"));
         newToolchainButton.setToolTipText($i18n("idf.toolchain.new"));
@@ -98,30 +98,17 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
     @Override
     public JPanel createAdvancedSettings() {
         JBPanel<?> panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(5, 2);
-        JPanel wrapper = new JPanel(gridLayoutManager);
-        int rowIndex = 0;
+        GridPanel gridPanel = new GridPanel(5, 2);
 
         JPanel toolchainSelectorPanel = createToolchainSelectorPanel();
-        wrapper.add(i18nLabel("idf.env.type.tool.chian"), createConstraints(rowIndex, 0));
+        gridPanel.addNewFormRow("idf.env.type.tool.chian", toolchainSelectorPanel, true);
         initIdfTargets();
-        wrapper.add(toolchainSelectorPanel, createHCrowConstraints(rowIndex, 1));
-        rowIndex++;
-        wrapper.add(i18nLabel("idf.env.type.target"), createConstraints(rowIndex, 0));
-        initIdfTargets();
-        wrapper.add(idfTargets, createConstraints(rowIndex, 1));
-        rowIndex++;
-        wrapper.add(i18nLabel("idf.path"), createConstraints(rowIndex, 0));
-        wrapper.add(idfPath, createConstraints(rowIndex, 1));
-        rowIndex++;
-        wrapper.add(i18nLabel("idf.tools.path"), createConstraints(rowIndex, 0));
-        wrapper.add(idfToolsPath, createConstraints(rowIndex, 1));
-        rowIndex++;
-        GridConstraints targetTipCell = createConstraints(rowIndex, 0);
-        targetTipCell.setColSpan(2);
-        wrapper.add(i18nLabel("idf.env.type.target.tip"), targetTipCell);
+        gridPanel.addNewFormRow("idf.env.type.target", idfTargets, false);
+        gridPanel.addNewFormRow("idf.path", idfPath, false);
+        gridPanel.addNewFormRow("idf.tools.path", idfToolsPath, false);
+        gridPanel.add(i18nLabel("idf.env.type.target.tip"), 2);
 
-        panel.add(wrapper, BorderLayout.WEST);
+        panel.add(gridPanel, BorderLayout.WEST);
         panel.addAncestorListener(
                 new AncestorListenerAdapter() {
                     @Override
@@ -146,14 +133,25 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
         }
     }
 
-    static class OpenEimDialogAction extends AnAction {
-        public OpenEimDialogAction() {
+    class OpenEimDialogAction extends AnAction {
+        private final Component dialogParent;
+
+        public OpenEimDialogAction(Component dialogParent) {
             super($i18n("idf.env.type.tool.chian.eim"));
+            this.dialogParent = dialogParent;
         }
 
         @Override
         public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
-
+            EimDialog eimDialog = new EimDialog(dialogParent, $i18n("idf.create.toolchain.by.eim"));
+            eimDialog.show();
+            if (eimDialog.getExitCode() != EimDialog.OK_EXIT_CODE) {
+                return;
+            }
+            String scriptPath = eimDialog.getScriptPath();
+            String toolChainName = eimDialog.getToolChainName();
+            CPPToolchains.Toolchain toolchain = ToolChainTool.newEnvToolChain(scriptPath, toolChainName);
+            idfToolchainCombBox.selectToolchain(toolchain);
         }
     }
 
@@ -168,8 +166,11 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
 
         @Override
         public void actionPerformed(@NotNull AnActionEvent anActionEvent) {
-            CustomScriptDialog customScript = new CustomScriptDialog(dialogParent, "Custom Script");
+            CustomScriptDialog customScript = new CustomScriptDialog(dialogParent, $i18n("idf.create.toolchain.by.custom.script"));
             customScript.show();
+            if (customScript.getExitCode() != CustomScriptDialog.OK_EXIT_CODE) {
+                return;
+            }
             String scriptPath = customScript.getScriptPath();
             String toolChainName = customScript.getToolChainName();
             CPPToolchains.Toolchain toolchain = ToolChainTool.newEnvToolChain(scriptPath, toolChainName);
