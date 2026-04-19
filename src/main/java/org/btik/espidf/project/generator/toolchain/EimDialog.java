@@ -62,8 +62,9 @@ public class EimDialog extends DialogWrapper {
                 .withTitle($i18n("idf.select.eim.json.path"))
                 .withDescription($i18n("idf.select.eim.json.path.desc")));
         gridPanel.addNewFormRow("idf.eim.json.path", eimToolsFolderBrowserButton, true);
-        gridPanel.addNewFormRow("idf.toolchain.name", toolChainName, true);
         gridPanel.addNewFormRow("idf.framework", eimIdfItemInfoComboBox, true);
+        gridPanel.addNewFormRow("idf.toolchain.name", toolChainName, true);
+
         eimIdfItemInfoComboBox.setRenderer(new EimItemListCellRenderer());
         eimIdfItemInfoComboBox.setEditable(false);
         eimIdfItemInfoComboBox.setLightWeightPopupEnabled(true);

@@ -2,7 +2,7 @@
 
 这是一个非官方的ESP-IDF CLion插件。
 
-当前文档对应插件版本:0.7。对应clion为252/253/261版本。
+当前文档对应插件版本:0.8。对应clion为261版本。
 
 若无法升级搭配当前版本，可以升级clion版本再尝试。
 
@@ -30,7 +30,6 @@ release仓会出现预览版，插件市场一般需要两个工作日审核，�
 ## 项目创建向导
 
 本插件在clion新建项目选项中添加ESP-IDF选项。
-可以自动配置clion 的toolchain ,cmake profile,不用做额外配置。
 
 ![newProject.png](newProject.png)
 

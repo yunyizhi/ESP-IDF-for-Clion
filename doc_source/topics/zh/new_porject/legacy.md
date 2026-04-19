@@ -1,4 +1,4 @@
-# 新建项目
+# 旧版新建项目（0.7及以前）
 > 关于环境变量设置，
 > 本项目使用了clion从toolchain环境变量文件加载环境变量的能力，idf的export脚本会导出变量，一般不需要设置全局的环境变量。
 
@@ -14,7 +14,7 @@
 
 * ESP-IDF 工具安装器 安装
 
->可参考ESP-IDF教程[ESP-IDF 工具安装器](https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32/get-started/windows-setup.html#esp-idf)
+>可参考ESP-IDF教程[ESP-IDF 工具安装器](https://docs.espressif.com/projects/esp-idf/zh_CN/release-v5.5/esp32/get-started/windows-setup.html#esp-idf)
 
 在[该地址](https://dl.espressif.com/dl/esp-idf/)下载对应版本的ESP-IDF
 
@@ -26,7 +26,7 @@
 
 
 * 新建项目
-新建项目类型为ESP-IDF的项目，选择`Env Type` 为`ESP-IDF TOOL`
+  新建项目类型为ESP-IDF的项目，选择`Env Type` 为`ESP-IDF TOOL`
 
 ![win.png](win.png)
 
@@ -40,7 +40,7 @@
 ## Windows下源码安装
 
 >python git需要提前安装，python的版本可能随着idf版本支持度有所不同，比如在测试idf5.5.1的时候使用3.14存在问题使用3.12版本则可以。
-> 
+>
 > 目前依赖的python仅仅支持3.10, 3.11, 3.12, 3.13.在其他系统可能3.10也不支持参考[idf-im-ui/python版本](https://docs.espressif.com/projects/idf-im-ui/en/latest/prerequisites.html#python-version)
 
 ### 克隆代码
@@ -136,7 +136,7 @@ install.bat
 
 ### 安装具体依赖的组件
 需要手动安装一些组件，再使用install脚本。
-参考[Linux安装具体的组件](https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32/get-started/linux-macos-setup.html#linux)
+参考[Linux安装具体的组件](https://docs.espressif.com/projects/esp-idf/zh_CN/release-v5.5/esp32/get-started/linux-macos-setup.html#linux)
 
 以ubuntu为例
 ```bash
@@ -260,8 +260,8 @@ git clone --recursive https://github.com/espressif/esp-idf.git
 </tab>
     <tab title="从中国站直接下载">
 
- 以idf6.0为例，将idf6.0的release中附件esp-idf-v6.0.zip的url复制出<br>
- 然后替换`github.com` 到 `dl.espressif.cn/github_assets`
+以idf6.0为例，将idf6.0的release中附件esp-idf-v6.0.zip的url复制出<br>
+然后替换`github.com` 到 `dl.espressif.cn/github_assets`
 ```Bash
 mkdir -p ~/esp
 cd ~/esp

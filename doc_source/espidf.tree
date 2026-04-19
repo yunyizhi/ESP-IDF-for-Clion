@@ -7,7 +7,12 @@
                  start-page="home.md">
 
     <toc-element topic="home.md"/>
-    <toc-element topic="newProject.md"/>
+    <toc-element toc-title="新建项目">
+        <toc-element topic="windows.md"/>
+        <toc-element topic="linux.md"/>
+        <toc-element topic="macos.md"/>
+        <toc-element topic="legacy.md"/>
+    </toc-element>
     <toc-element topic="toolTree.md"/>
     <toc-element topic="settings.md"/>
     <toc-element topic="configUi.md"/>
