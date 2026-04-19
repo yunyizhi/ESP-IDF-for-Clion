@@ -22,6 +22,7 @@ import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_UNIX_TOOL
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET;
 import static org.btik.espidf.service.IdfEnvironmentService.*;
 import static org.btik.espidf.util.EnvironmentVarUtil.getIdfVersion;
+import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.util.ListCellRendererAttr.BLUE_ITALIC_SMALL_ATTRIBUTES;
 import static org.btik.espidf.util.ListCellRendererAttr.GRAY_ITALIC_SMALL_ATTRIBUTES;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
@@ -84,7 +85,7 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
 
     private IdfToolchain loadToolchain(CPPToolchains.Toolchain toolchain) {
         if (toolchainEnvMap.containsKey(toolchain)) {
-            return null;
+            return toolchainEnvMap.get(toolchain);
         }
         Map<String, String> rawEnv = toolChainEnvByComp(toolchain, IdfToolchainCombBox.this);
         String idfPath = rawEnv.get(IDF_PATH);
@@ -113,6 +114,13 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
             return;
         }
         IdfToolchain idfToolchain = loadToolchain(toolchain);
+        if (idfToolchain == null) {
+            JOptionPane.showMessageDialog(this,
+                    $i18nF("idf.is.not.esp.idf.tool.chain", toolchain.getEnvironment()),
+                    $i18nF("idf.is.not.esp.idf.tool.chain.title", toolchain.getName()),
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
         syncMapToItems();
         setSelectedItem(idfToolchain);
     }

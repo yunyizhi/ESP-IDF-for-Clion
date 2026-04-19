@@ -221,8 +221,6 @@ xxxxx
 
 打开ADF项目时选择刚才新建的Toolchain 然后将cmake输出路径改成 build文件夹。
 
-可使用命令树大部分节点，但`IDF Export Console` 不可使用。
-
 
 
 
