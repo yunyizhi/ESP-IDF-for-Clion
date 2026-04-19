@@ -1,9 +1,13 @@
 package org.btik.espidf.util;
 
+import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
 import com.intellij.notification.NotificationType;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
+import com.intellij.platform.ide.progress.ModalTaskOwner;
+import com.intellij.platform.ide.progress.TaskCancellation;
+import com.intellij.platform.ide.progress.TasksKt;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
@@ -19,6 +23,7 @@ import java.util.Objects;
 import static org.btik.espidf.service.IdfEnvironmentService.*;
 import static org.btik.espidf.service.IdfProjectConfigService.PORT_CONF_AUTO;
 import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.util.StringTools.safe2String;
 
 /**
@@ -94,6 +99,58 @@ public class EnvironmentVarUtil {
         Map<String, String> projectEnvs = buildProjectSettingToEnvs(projectConfig);
         environmentService.putTo(projectEnvs);
         return projectEnvs;
+    }
+
+    public static String findGitFullPath(Map<String, String> env) {
+        String path = env.get("PATH");
+        if (path == null) {
+            path = env.get("Path");
+        }
+        File gitFile = PathEnvironmentVariableUtil.findInPath("git", path, null);
+        return safe2String(gitFile, File::getPath);
+    }
+
+    public static String getIdfVersionByIdfPy(Map<String, String> env, ModalTaskOwner owner, String toolchainName) {
+        String idfPy = findIdfFullPath(env);
+        if (StringUtils.isEmpty(idfPy)) {
+            return null;
+        }
+        GeneralCommandLine readVersion = new GeneralCommandLine()
+                .withEnvironment(env)
+                .withExePath(idfPy)
+                .withParameters("--version");
+        return TasksKt.runWithModalProgressBlocking(owner, $i18nF("esp.idf.read.version", toolchainName),
+                TaskCancellation.nonCancellable(), (scope, continuation) ->
+                        CmdTaskExecutor.exeGetStdOut(readVersion, 60 * 1000));
+    }
+
+    public static String getIdfVersionByGit(Map<String, String> env, ModalTaskOwner owner, String toolchainName) {
+        String git = findGitFullPath(env);
+        if (StringUtils.isEmpty(git)) {
+            return null;
+        }
+        String idfPath = env.get(IDF_PATH);
+        GeneralCommandLine readVersion = new GeneralCommandLine()
+                .withEnvironment(env)
+                .withExePath(git)
+                .withParameters("--git-dir", Path.of(idfPath, ".git").toString())
+                .withParameters("--work-tree", idfPath)
+                .withParameters("describe", "--tags", "--dirty", "--match", "v*.*");
+        return TasksKt.runWithModalProgressBlocking(owner, $i18nF("esp.idf.read.version", toolchainName),
+                TaskCancellation.nonCancellable(), (scope, continuation) ->
+                        CmdTaskExecutor.exeGetStdOut(readVersion, 60 * 1000));
+    }
+
+    public static String getIdfVersion(Map<String, String> env, ModalTaskOwner owner, String toolchainName) {
+        String version = getIdfVersionByGit(env, owner, toolchainName);
+        if (StringUtils.isNotEmpty(version)) {
+            return version;
+        }
+        version = getIdfVersionByIdfPy(env, owner, toolchainName);
+        if (StringUtils.isEmpty(version)) {
+            version = "idf" + env.get(ESP_IDF_VERSION);
+        }
+        return version;
     }
 
     public static Map<String, String> buildProjectSettingToEnvs(@NotNull IdfProjectConfig projectConfig) {

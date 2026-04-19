@@ -61,7 +61,7 @@ public class EimDialog extends DialogWrapper {
         eimToolsFolderBrowserButton.addActionListener(null, FileChooserDescriptorFactory.singleFile().withFileFilter(file -> EIM_IDF_JSON.equals(file.getName()))
                 .withTitle($i18n("idf.select.eim.json.path"))
                 .withDescription($i18n("idf.select.eim.json.path.desc")));
-        gridPanel.addNewFormRow("idf.eim.tools.path", eimToolsFolderBrowserButton, true);
+        gridPanel.addNewFormRow("idf.eim.json.path", eimToolsFolderBrowserButton, true);
         gridPanel.addNewFormRow("idf.toolchain.name", toolChainName, true);
         gridPanel.addNewFormRow("idf.framework", eimIdfItemInfoComboBox, true);
         eimIdfItemInfoComboBox.setRenderer(new EimItemListCellRenderer());

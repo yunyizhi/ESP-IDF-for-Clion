@@ -1,18 +1,13 @@
 package org.btik.espidf.project.generator.toolchain;
 
-import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.platform.ide.progress.ModalTaskOwner;
-import com.intellij.platform.ide.progress.TaskCancellation;
-import com.intellij.platform.ide.progress.TasksKt;
 import com.intellij.ui.PopupMenuListenerAdapter;
 import com.intellij.ui.SimpleColoredComponent;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.util.ui.JBUI;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.apache.commons.lang3.StringUtils;
-import org.btik.espidf.util.CmdTaskExecutor;
-import org.btik.espidf.util.EnvironmentVarUtil;
 import org.btik.espidf.util.ToolChainTool;
 
 import javax.swing.*;
@@ -25,7 +20,7 @@ import java.util.stream.Collectors;
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET;
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET;
 import static org.btik.espidf.service.IdfEnvironmentService.*;
-import static org.btik.espidf.util.I18nMessage.$i18nF;
+import static org.btik.espidf.util.EnvironmentVarUtil.getIdfVersion;
 import static org.btik.espidf.util.ListCellRendererAttr.BLUE_ITALIC_SMALL_ATTRIBUTES;
 import static org.btik.espidf.util.ListCellRendererAttr.GRAY_ITALIC_SMALL_ATTRIBUTES;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
@@ -65,7 +60,7 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
         Set<CPPToolchains.Toolchain> envToolchains = ToolChainTool.getFilteredToolchains(
                 (toolchain) ->
                         StringUtils.isNotEmpty(toolchain.getEnvironment())
-                        && toolSetKind == toolchain.getToolSet().getKind(),
+                                && toolSetKind == toolchain.getToolSet().getKind(),
                 Collectors.toSet()
         );
         toolchainEnvMap.keySet().removeIf(toolchain -> !envToolchains.contains(toolchain));
@@ -96,13 +91,9 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
             envFileNotIdfToolchains.add(toolchain);
             return null;
         }
-
-        String versionStr = getVersion(rawEnv, toolchain.getName());
-        if (StringUtils.isEmpty(versionStr)) {
-            versionStr = "idf" + rawEnv.get(ESP_IDF_VERSION);
-        }
         String idfToolsPath = rawEnv.get(IDF_TOOLS_PATH);
-        IdfToolchain idfToolchain = new IdfToolchain(toolchain, versionStr, idfPath, idfToolsPath, rawEnv);
+        String version = getIdfVersion(rawEnv, ModalTaskOwner.component(this), toolchain.getName());
+        IdfToolchain idfToolchain = new IdfToolchain(toolchain, version, idfPath, idfToolsPath, rawEnv);
         String adfPath = rawEnv.get(ADF_PATH);
         if (StringUtils.isNotEmpty(adfPath)) {
             idfToolchain.setAdfPath(adfPath);
@@ -123,16 +114,6 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
         IdfToolchain idfToolchain = loadToolchain(toolchain);
         syncMapToItems();
         setSelectedItem(idfToolchain);
-    }
-
-    private String getVersion(Map<String, String> environments, String toolchainName) {
-        GeneralCommandLine readVersion = new GeneralCommandLine();
-        readVersion.withEnvironment(environments);
-        readVersion.setExePath(EnvironmentVarUtil.findIdfFullPath(environments));
-        readVersion.addParameters("--version");
-        return TasksKt.runWithModalProgressBlocking(ModalTaskOwner.component(this),  $i18nF("esp.idf.read.version", toolchainName), TaskCancellation.nonCancellable(),
-                (scope, continuation) -> CmdTaskExecutor.exeGetStdOut(readVersion, 60 * 1000));
-
     }
 
     public static class IdfInfoListCellRenderer implements ListCellRenderer<IdfInfo> {
