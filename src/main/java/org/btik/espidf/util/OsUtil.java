@@ -27,6 +27,10 @@ public class OsUtil {
         String IDF_PY_COMP_WORDBREAKS = "IDF_PY_COMP_WORDBREAKS";
 
         String COMP_WORDBREAKS = "COMP_WORDBREAKS";
+
+        String GIT = "git";
+
+        String WIN_GIT_EXE = "git.exe";
     }
 
     public final static boolean IS_WINDOWS = OS.CURRENT == OS.Windows;
@@ -46,5 +50,9 @@ public class OsUtil {
 
     public static String getIdfExe() {
         return IS_WINDOWS ? Const.WIN_IDF_EXE : Const.IDF_EXE;
+    }
+
+    public static String getGitExe() {
+        return IS_WINDOWS ? Const.WIN_GIT_EXE : Const.GIT;
     }
 }

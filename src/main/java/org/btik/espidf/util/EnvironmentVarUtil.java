@@ -106,7 +106,7 @@ public class EnvironmentVarUtil {
         if (path == null) {
             path = env.get("Path");
         }
-        File gitFile = PathEnvironmentVariableUtil.findInPath("git", path, null);
+        File gitFile = PathEnvironmentVariableUtil.findInPath(OsUtil.getGitExe(), path, null);
         return safe2String(gitFile, File::getPath);
     }
 

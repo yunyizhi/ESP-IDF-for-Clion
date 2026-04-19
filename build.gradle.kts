@@ -2,7 +2,7 @@ import java.io.File
 
 plugins {
     id("java")
-    id("org.jetbrains.intellij.platform") version "2.7.0"
+    id("org.jetbrains.intellij.platform") version "2.14.0"
 }
 
 group = "org.btik"

@@ -9,9 +9,11 @@
 
 ### 首次新建项目通过EIM创建工具链
 * 选择新建方式为EIM
+
     ![toolchain_by_eim.png](toolchain_by_eim.png)
 
 * 选择eim_idf.json 文件 并选择具体esp-idf，至于工具链名称默认会生成，也可以自定义
+
 ![select_eim.png](select_eim.png)
 确认后则可以新建一个工具链
 

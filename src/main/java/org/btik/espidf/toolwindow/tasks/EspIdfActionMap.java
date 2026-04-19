@@ -114,7 +114,7 @@ public class EspIdfActionMap {
                     "Please use 'IDF Console' action to open a CMD terminal first, " +
                     "then manually run: " + envFile);
         }
-        if ((!fileNameLower.endsWith(".ps1") || (!fileNameLower.endsWith(".powershell")))) {
+        if ((!fileNameLower.endsWith(".ps1") && (!fileNameLower.endsWith(".powershell")))) {
             throw new IllegalArgumentException("Unsupported script type: " + envFile);
         }
     }
