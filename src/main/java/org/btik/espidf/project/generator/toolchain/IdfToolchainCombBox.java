@@ -5,6 +5,7 @@ import com.intellij.platform.ide.progress.ModalTaskOwner;
 import com.intellij.ui.PopupMenuListenerAdapter;
 import com.intellij.ui.SimpleColoredComponent;
 import com.intellij.ui.SimpleTextAttributes;
+import com.intellij.util.ui.JBInsets;
 import com.intellij.util.ui.JBUI;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.apache.commons.lang3.StringUtils;
@@ -133,7 +134,7 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
 
             SimpleColoredComponent primary = new SimpleColoredComponent();
             primary.setOpaque(false); // 透明背景，继承 panel 背景
-            primary.setIpad(JBUI.emptyInsets());
+            primary.setIpad(IS_WINDOWS ? new JBInsets(2, 0, 2, 0) : JBUI.emptyInsets());
             primary.append(idfInfo.getName(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
             primary.append(" ", SimpleTextAttributes.REGULAR_ATTRIBUTES);
             primary.append(idfInfo.getIdfVersion(), BLUE_ITALIC_SMALL_ATTRIBUTES);

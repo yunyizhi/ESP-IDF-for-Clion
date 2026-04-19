@@ -14,6 +14,7 @@ import com.intellij.ui.SimpleColoredComponent;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBTextField;
+import com.intellij.util.ui.JBInsets;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.ui.componets.GridPanel;
@@ -35,6 +36,7 @@ import static org.btik.espidf.ui.componets.SelectedItemListener.selectedListener
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.util.ListCellRendererAttr.GRAY_ITALIC_SMALL_ATTRIBUTES;
+import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
 public class EimDialog extends DialogWrapper {
     private static final String EIM_IDF_JSON = "eim_idf.json";
@@ -58,7 +60,9 @@ public class EimDialog extends DialogWrapper {
     protected @Nullable JComponent createCenterPanel() {
         JBPanel<?> panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
         GridPanel gridPanel = new GridPanel(3, 2);
-        eimToolsFolderBrowserButton.addActionListener(null, FileChooserDescriptorFactory.singleFile().withFileFilter(file -> EIM_IDF_JSON.equals(file.getName()))
+        eimToolsFolderBrowserButton.addActionListener(null, FileChooserDescriptorFactory.singleFile()
+                .withExtensionFilter("json")
+                .withFileFilter(file -> EIM_IDF_JSON.equals(file.getName()))
                 .withTitle($i18n("idf.select.eim.json.path"))
                 .withDescription($i18n("idf.select.eim.json.path.desc")));
         gridPanel.addNewFormRow("idf.eim.json.path", eimToolsFolderBrowserButton, true);
@@ -69,12 +73,12 @@ public class EimDialog extends DialogWrapper {
         eimIdfItemInfoComboBox.setEditable(false);
         eimIdfItemInfoComboBox.setLightWeightPopupEnabled(true);
         bindDocChange(eimToolsFolderBrowserButton, e -> refreshIdfs());
-        eimIdfItemInfoComboBox.addItemListener(selectedListener(e ->{
+        eimIdfItemInfoComboBox.addItemListener(selectedListener(e -> {
             Object item = e.getItem();
-            if (!(item instanceof EimIdfItemInfo eimIdfItemInfo)){
+            if (!(item instanceof EimIdfItemInfo eimIdfItemInfo)) {
                 return;
             }
-            if (StringUtils.isEmpty(toolChainName.getText())){
+            if (StringUtils.isEmpty(toolChainName.getText())) {
                 toolChainName.setText("ESP-IDF " + eimIdfItemInfo.name());
             }
         }));
@@ -175,7 +179,7 @@ public class EimDialog extends DialogWrapper {
 
             SimpleColoredComponent primary = new SimpleColoredComponent();
             primary.setOpaque(false); // 透明背景，继承 panel 背景
-            primary.setIpad(JBUI.emptyInsets());
+            primary.setIpad(IS_WINDOWS ? new JBInsets(2, 0, 2, 0) : JBUI.emptyInsets());
             primary.append(idfInfo.name(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
             SimpleColoredComponent secondary = new SimpleColoredComponent();
             secondary.setOpaque(false);

@@ -49,7 +49,6 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
     private static final String IDF_ENV_JSON = "idf-env.json";
 
 
-    private JBPanel<?> panel;
     private String idfToolsPath;
     private TextFieldWithBrowseButton idfToolsPathBrowserButton;
 
@@ -92,7 +91,7 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
 
     @Override
     public JPanel createAdvancedSettings() {
-        panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
+        JBPanel<?> panel = new JBPanel<>(new VerticalFlowLayout(0, 2));
         GridPanel gridPanel = new GridPanel(3, 2);
         initIdfPathBrowser();
         gridPanel.addNewFormRow("idf.tools.path.title", idfToolsPathBrowserButton, true);
