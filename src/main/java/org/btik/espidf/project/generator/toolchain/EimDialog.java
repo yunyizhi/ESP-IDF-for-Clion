@@ -14,9 +14,9 @@ import com.intellij.ui.SimpleColoredComponent;
 import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.ui.components.JBTextField;
-import com.intellij.util.ui.JBInsets;
 import com.intellij.util.ui.JBUI;
 import org.apache.commons.lang3.StringUtils;
+import org.btik.espidf.ui.componets.DisabledEditor;
 import org.btik.espidf.ui.componets.GridPanel;
 import org.btik.espidf.ui.componets.TextFieldFileChooser;
 import org.btik.espidf.util.UIUtils;
@@ -36,7 +36,6 @@ import static org.btik.espidf.ui.componets.SelectedItemListener.selectedListener
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.util.ListCellRendererAttr.GRAY_ITALIC_SMALL_ATTRIBUTES;
-import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
 public class EimDialog extends DialogWrapper {
     private static final String EIM_IDF_JSON = "eim_idf.json";
@@ -70,7 +69,8 @@ public class EimDialog extends DialogWrapper {
         gridPanel.addNewFormRow("idf.toolchain.name", toolChainName, true);
 
         eimIdfItemInfoComboBox.setRenderer(new EimItemListCellRenderer());
-        eimIdfItemInfoComboBox.setEditable(false);
+        eimIdfItemInfoComboBox.setEditable(true);
+        eimIdfItemInfoComboBox.setEditor(new DisabledEditor());
         eimIdfItemInfoComboBox.setLightWeightPopupEnabled(true);
         bindDocChange(eimToolsFolderBrowserButton, e -> refreshIdfs());
         eimIdfItemInfoComboBox.addItemListener(selectedListener(e -> {
@@ -179,7 +179,7 @@ public class EimDialog extends DialogWrapper {
 
             SimpleColoredComponent primary = new SimpleColoredComponent();
             primary.setOpaque(false); // 透明背景，继承 panel 背景
-            primary.setIpad(IS_WINDOWS ? new JBInsets(2, 0, 2, 0) : JBUI.emptyInsets());
+            primary.setIpad(JBUI.emptyInsets());
             primary.append(idfInfo.name(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
             SimpleColoredComponent secondary = new SimpleColoredComponent();
             secondary.setOpaque(false);

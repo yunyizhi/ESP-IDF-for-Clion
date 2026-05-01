@@ -3,18 +3,18 @@ package org.btik.espidf.project.generator.idfenv;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.SimpleColoredComponent;
 import com.intellij.ui.SimpleTextAttributes;
-import com.intellij.util.ui.JBInsets;
 import com.intellij.util.ui.JBUI;
+import org.btik.espidf.ui.componets.DisabledEditor;
 
 import javax.swing.*;
 import java.awt.*;
 
 import static org.btik.espidf.util.ListCellRendererAttr.GRAY_ITALIC_SMALL_ATTRIBUTES;
-import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
 
 public class IdfEnvComboBox extends ComboBox<IdfEnvConf> {
     public IdfEnvComboBox() {
-        setEditable(false);
+        setEditable(true);
+        setEditor(new DisabledEditor());
         setRenderer(new IdfEnvCellRenderer());
 
     }
@@ -36,7 +36,7 @@ public class IdfEnvComboBox extends ComboBox<IdfEnvConf> {
 
             SimpleColoredComponent primary = new SimpleColoredComponent();
             primary.setOpaque(false); // 透明背景，继承 panel 背景
-            primary.setIpad(IS_WINDOWS ? new JBInsets(2, 0, 2, 0) : JBUI.emptyInsets());
+            primary.setIpad(JBUI.emptyInsets());
             primary.append(idfEnvConf.getPath(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
             SimpleColoredComponent secondary = new SimpleColoredComponent();
             secondary.setOpaque(false);

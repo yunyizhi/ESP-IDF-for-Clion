@@ -16,6 +16,7 @@
 * 选择eim_idf.json 文件 并选择具体esp-idf，至于工具链名称默认会生成，也可以自定义
 
 ![select_eim.png](select_eim.png)
+
 确认后则可以新建一个工具链
 
 ## 源码安装
@@ -114,6 +115,7 @@ pip install xxx  --only-binary=:all:
 ### 制作自定义脚本
 
 1.在桌面找到打开对应idf命令行的脚本
+
  ![legacy_offline_active.png](legacy_offline_active.png)
 
 2.右键其中cmd脚本
@@ -139,4 +141,4 @@ C:\WINDOWS\system32\cmd.exe /k ""D:\Espressif\idf_cmd_init.bat" esp-idf-542f7c53
 
 ![custom_sh-name.png](custom_sh-name.png)
 
-给工具栏取名，即可新建toolchain,便可以此新建idf项目
+给工具链取名，即可新建toolchain,便可以此新建idf项目

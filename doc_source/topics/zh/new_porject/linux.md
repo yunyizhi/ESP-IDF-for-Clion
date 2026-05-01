@@ -15,6 +15,7 @@
 * 选择eim_idf.json 文件 并选择具体esp-idf，至于工具链名称默认会生成，也可以自定义
 
 ![select_eim.png](select_eim.png)
+
 确认后则可以新建一个工具链
 
 ## 源码安装
@@ -50,11 +51,11 @@ git clone -b release/v6.0 --recursive https://github.com/espressif/esp-idf.git
 </tab>
 <tab title="从中国站直接下载">
 <code-block>
-# 以idf6.0为例，将idf6.0的release中附件esp-idf-v6.0.zip的url复制出
+# 以idf6.0.1为例，将idf6.0.1的release中附件esp-idf-v6.0.1.zip的url复制出
 # 然后替换`github.com` 到 `dl.espressif.cn/github_assets`
 cd ~/
-wget https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v6.0/esp-idf-v6.0.zip
-unzip esp-idf-v6.0.zip
+wget https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v6.0.1/esp-idf-v6.0.1.zip
+unzip esp-idf-v6.0.1.zip
 </code-block>
 </tab>
 </tabs>
@@ -64,15 +65,16 @@ unzip esp-idf-v6.0.zip
 
 <tabs>
     <tab title="直接安装">
+
 ```bash
-cd ~/esp-idf-v6.0
+cd ~/esp-idf-v6.0.1
 ./install.sh
 ```
 </tab>
 <tab title="使用中国站(乐鑫中国站和python阿里源)">
 
 ```bash
-cd ~/esp-idf-v6.0
+cd ~/esp-idf-v6.0.1
 export IDF_GITHUB_ASSETS="dl.espressif.cn/github_assets"
 export PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
 export PIP_TRUSTED_HOST=mirrors.aliyun.com
@@ -86,26 +88,21 @@ export PIP_TRUSTED_HOST=mirrors.aliyun.com
 安装过程中会创建一个虚拟环境，然后pip安装一些依赖，直接安装可能遇到编译失败，
 可以新开一个终端，加载虚拟环境的active 文件,再设置python镜像环境变量，仅仅安装二进制文件
 
-以ubuntu24为例 
-
-<tabs>
-    <tab title="直接手动安装二进制">
-```bash
-source ~/.espressif/python_env/idf6.0_py3.12_env/bin/activate
-pip install xxx --only-binary=:all:
-```
-</tab>
-<tab title="使用阿里源镜像">
-```bash
-export PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
-export PIP_TRUSTED_HOST=mirrors.aliyun.com
-source ~/.espressif/python_env/idf6.0_py3.12_env/bin/activate
-pip install xxx  --only-binary=:all:
-```
-</tab>
-</tabs>
 
 ### 新建项目 {id="create_by_src"}
 
+有以下两种方法新建项目
+
+#### 使用自定义脚本创建工具链
+
+安装完成之后选择以自定义脚本方式选择export.sh创建工具链，可以在创建工具链时自定义工具链名称
+
+
+![new_script.png](new_script.png)
+
+#### 或者使用旧版创建方式 {id="#2"}
+
 ![src_old_new.png](src_old_new.png)
+
+会自动生成一个工具链，需要后续自己重命名，以便区分不同版本
 
