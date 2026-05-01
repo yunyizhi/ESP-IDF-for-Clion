@@ -1,0 +1,117 @@
+<!DOCTYPE html SYSTEM "about:legacy-compat">
+<html lang="en-US" data-preset="contrast" data-primary-color="#307FFF"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="UTF-8"><meta name="robots" content="noindex"><meta name="built-on" content="2026-05-01T23:45:20.240299504"><title>旧版新建项目（0.7及以前） | ESP-IDF for Clion 文档</title><script type="application/json" id="virtual-toc-data">[{"id":"clion","level":0,"title":"首次使用clion注意事项","anchor":"#clion"},{"id":"windows-esp-idf","level":0,"title":"windows离线ESP-IDF","anchor":"#windows-esp-idf"},{"id":"windows","level":0,"title":"Windows下源码安装","anchor":"#windows"},{"id":"linux","level":0,"title":"Linux源码安装","anchor":"#linux"},{"id":"macos","level":0,"title":"Macos源码安装","anchor":"#macos"},{"id":"toolchain","level":0,"title":"重命名Toolchain","anchor":"#toolchain"}]</script><script type="application/json" id="topic-shortcuts"></script><link href="https://resources.jetbrains.com/writerside/apidoc/6.27.0-b1031/app.css" rel="stylesheet"><meta name="msapplication-TileColor" content="#000000"><link rel="apple-touch-icon" sizes="180x180" href="https://jetbrains.com/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="32x32" href="https://jetbrains.com/favicon-32x32.png"><link rel="icon" type="image/png" sizes="16x16" href="https://jetbrains.com/favicon-16x16.png"><meta name="msapplication-TileImage" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-144x144.png"><meta name="msapplication-square70x70logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-70x70.png"><meta name="msapplication-square150x150logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-150x150.png"><meta name="msapplication-wide310x150logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-310x150.png"><meta name="msapplication-square310x310logo" content="https://resources.jetbrains.com/storage/ui/favicons/mstile-310x310.png"><meta name="image" content=""><!-- Open Graph --><meta property="og:title" content="旧版新建项目（0.7及以前） | ESP-IDF for Clion 文档"><meta property="og:description" content=""><meta property="og:image" content=""><meta property="og:site_name" content="ESP-IDF for Clion 文档 Help"><meta property="og:type" content="website"><meta property="og:locale" content="en_US"><meta property="og:url" content="writerside-documentation/legacy.html"><!-- End Open Graph --><!-- Twitter Card --><meta name="twitter:card" content="summary_large_image"><meta name="twitter:site" content=""><meta name="twitter:title" content="旧版新建项目（0.7及以前） | ESP-IDF for Clion 文档"><meta name="twitter:description" content=""><meta name="twitter:creator" content=""><meta name="twitter:image:src" content=""><!-- End Twitter Card --><!-- Schema.org WebPage --><script type="application/ld+json">{
+    "@context": "http://schema.org",
+    "@type": "WebPage",
+    "@id": "writerside-documentation/legacy.html#webpage",
+    "url": "writerside-documentation/legacy.html",
+    "name": "旧版新建项目（0.7及以前） | ESP-IDF for Clion 文档",
+    "description": "",
+    "image": "",
+    "inLanguage":"en-US"
+}</script><!-- End Schema.org --><!-- Schema.org WebSite --><script type="application/ld+json">{
+    "@type": "WebSite",
+    "@id": "writerside-documentation/#website",
+    "url": "writerside-documentation/",
+    "name": "ESP-IDF for Clion 文档 Help"
+}</script><!-- End Schema.org --></head><body data-id="legacy" data-main-title="旧版新建项目（0.7及以前）" data-article-props="{&quot;seeAlsoStyle&quot;:&quot;links&quot;}" data-template="article" data-breadcrumbs="新建项目"><div class="wrapper"><main class="panel _main"><header class="panel__header"><div class="container"><h3>ESP-IDF for Clion 文档  Help</h3><div class="panel-trigger"></div></div></header><section class="panel__content"><div class="container"><article class="article" data-shortcut-switcher="inactive"><h1 data-toc="legacy" id="legacy.md">旧版新建项目（0.7及以前）</h1><aside class="prompt" data-type="tip" data-title="" id="-whjqi_3"><p id="-whjqi_11">关于环境变量设置， 本项目使用了clion从toolchain环境变量文件加载环境变量的能力，idf的export脚本会导出变量，一般不需要设置全局的环境变量。</p></aside><aside class="prompt" data-type="tip" data-title="" id="-whjqi_4"><p id="-whjqi_12">关于中国下载站:本篇涉及idf安装方式均可完全走乐鑫在中国下载站以及python组件使用中国国内镜像源。若出现下载问题，请注意 <span class="control" id="-whjqi_13">完全使用中国站(乐鑫中国站和python阿里源)</span> 这个选项 当然python也可设置其他国内源如阿里源。</p></aside><section class="chapter"><h2 id="clion" data-toc="clion">首次使用clion注意事项</h2><p id="-whjqi_14">如果首次使用clion,第一次新建当前项目的时候，会弹出一个选择Toolchain的窗口，这个时候不要选择， 本插件初始化项目的时候会自动新建属于IDF的Toolchain并创建对应cmake profile选中它。 如果出现该弹窗，待<code class="code" id="-whjqi_15">Set Target</code>任务执行完成关掉即可。</p></section><section class="chapter"><h2 id="windows-esp-idf" data-toc="windows-esp-idf">windows离线ESP-IDF</h2><ul class="list _bullet" id="-whjqi_16"><li class="list__item" id="-whjqi_27"><p id="-whjqi_28">ESP-IDF 工具安装器 安装</p></li></ul><aside class="prompt" data-type="tip" data-title="" id="-whjqi_17"><p id="-whjqi_29">可参考ESP-IDF教程<a href="https://docs.espressif.com/projects/esp-idf/zh_CN/release-v5.5/esp32/get-started/windows-setup.html#esp-idf" id="-whjqi_30" data-external="true" rel="noopener noreferrer" target="_blank">ESP-IDF 工具安装器</a></p></aside><p id="-whjqi_18">在<a href="https://dl.espressif.com/dl/esp-idf/" id="-whjqi_31" data-external="true" rel="noopener noreferrer" target="_blank">该地址</a>下载对应版本的ESP-IDF</p><figure id="-whjqi_19"><img alt="idf_dl.png" src="images/idf_dl.png" title="idf_dl.png" width="1326" height="955"></figure><p id="-whjqi_20">选择一个 <code class="code" id="-whjqi_32">Offline Installer(离线安装器)</code> ，无需使用加速器。</p><p id="-whjqi_21">下载完成按向导安装，可以勾选附加的驱动。</p><ul class="list _bullet" id="-whjqi_22"><li class="list__item" id="-whjqi_33"><p id="-whjqi_34">新建项目 新建项目类型为ESP-IDF的项目，选择<code class="code" id="-whjqi_35">Env Type</code> 为<code class="code" id="-whjqi_36">ESP-IDF TOOL</code></p></li></ul><figure id="-whjqi_23"><img alt="win.png" src="images/win.png" title="win.png" width="1003" height="818"></figure><p id="-whjqi_24">再选择上一步离线包安装的路径如: <code class="code" id="-whjqi_37">D:\Espressif</code>。</p><p id="-whjqi_25">选择正确会自己加载已安装的<code class="code" id="-whjqi_38">ESP-IDF</code>框架。</p><p id="-whjqi_26">然后创建项目即可。</p></section><section class="chapter"><h2 id="windows" data-toc="windows">Windows下源码安装</h2><aside class="prompt" data-type="tip" data-title="" id="-whjqi_39"><p id="-whjqi_44">python git需要提前安装，python的版本可能随着idf版本支持度有所不同，比如在测试idf5.5.1的时候使用3.14存在问题使用3.12版本则可以。</p><p id="-whjqi_45">目前依赖的python仅仅支持3.10, 3.11, 3.12, 3.13.在其他系统可能3.10也不支持参考<a href="https://docs.espressif.com/projects/idf-im-ui/en/latest/prerequisites.html#python-version" id="-whjqi_46" data-external="true" rel="noopener noreferrer" target="_blank">idf-im-ui/python版本</a></p></aside><section class="chapter"><h3 id="-whjqi_40" data-toc="-whjqi_40">克隆代码</h3><p id="-whjqi_47">在一个没有空格路径下打开<code class="code" id="-whjqi_50">cmd</code>执行以下命令(powershell设置环境变量的方式不同)</p><aside class="prompt" data-type="tip" data-title="" id="-whjqi_48"><p id="-whjqi_51">git需要自行安装</p></aside><div class="tabs" id="-whjqi_49" data-anchors="[-whjqi_52,-whjqi_53,-whjqi_54]"><div class="tabs__content" data-gtm="tab" id="-whjqi_52" data-title="clone代码"><div class="code-block" data-lang="bash" data-title="Bash">
+git clone --recursive https://github.com/espressif/esp-idf.git
+</div></div><div class="tabs__content" data-gtm="tab" id="-whjqi_53" data-title="通过http代理 clone代码"><p id="-whjqi_56">以本机运行代理软件http代理场景为例</p><div class="code-block" data-lang="bash" data-title="Bash">
+:: 设置 HTTP 代理
+set http_proxy=http://127.0.0.1:7890
+:: 设置 HTTPS 代理
+set https_proxy=http://127.0.0.1:7890
+
+git clone --recursive https://github.com/espressif/esp-idf.git
+</div></div><div class="tabs__content" data-gtm="tab" id="-whjqi_54" data-title="乐鑫中国站下载全量源码(含子模块)"><p id="-whjqi_58">以idf6.0为例，将idf6.0的release中附件esp-idf-v6.0.zip的url复制出， <br> 然后替换<code class="code" id="-whjqi_63">github.com</code> 到 <code class="code" id="-whjqi_64">dl.espressif.cn/github_assets</code></p><p id="-whjqi_59">得到其乐鑫中国站下载地址如下:</p><p id="-whjqi_60"><code class="code" id="-whjqi_65">https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v6.0/esp-idf-v6.0.zip</code></p><p id="-whjqi_61">可用浏览器下载，后解压到一个没有空格的目录</p></div></div></section><section class="chapter"><h3 id="-whjqi_41" data-toc="-whjqi_41">切换到一个具体的稳定版本(可选)</h3><aside class="prompt" data-type="tip" data-title="" id="-whjqi_66"><p id="-whjqi_69">使用中国站下载源码包已经是具体版本了无需进行这一步</p></aside><p id="-whjqi_67">例如<code class="code" id="-whjqi_70">v6.0</code>标签</p><div class="code-block" data-lang="bash">
+cd esp-idf
+git checkout v6.0
+git submodule update --init --recursive
+
+</div></section><section class="chapter"><h3 id="-whjqi_42" data-toc="-whjqi_42">安装</h3><p id="-whjqi_71">安装会下载一些东西,根据需要选择后续是否使用镜像站</p><p id="-whjqi_72">命令行进入源码目录，然后执行以下操作</p><div class="tabs" id="-whjqi_73" data-anchors="[-whjqi_74,-whjqi_75,-whjqi_76]"><div class="tabs__content" data-gtm="tab" id="-whjqi_74" data-title="直接安装"><div class="code-block" data-lang="bash" data-title="Bash">
+install.bat
+</div></div><div class="tabs__content" data-gtm="tab" id="-whjqi_75" data-title="安装设置使用乐鑫下载站"><div class="code-block" data-lang="bash" data-title="Bash">
+set IDF_GITHUB_ASSETS=dl.espressif.com/github_assets
+install.bat
+</div></div><div class="tabs__content" data-gtm="tab" id="-whjqi_76" data-title="完全使用中国站(乐鑫中国站和python阿里源)"><div class="code-block" data-lang="bash" data-title="Bash">
+set IDF_GITHUB_ASSETS=dl.espressif.cn/github_assets
+set PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
+set PIP_TRUSTED_HOST=mirrors.aliyun.com
+install.bat
+</div></div></div></section><section class="chapter"><h3 id="-whjqi_43" data-toc="-whjqi_43">新建项目</h3><p id="-whjqi_80">并将Env Type 选为<code class="code" id="-whjqi_84">ESP-IDF</code></p><figure id="-whjqi_81"><img alt="win_source.png" src="images/win_source.png" title="win_source.png" width="802" height="651"></figure><p id="-whjqi_82">再选择对应的源码路径export.bat和export.ps1所在目录。</p><p id="-whjqi_83">设置对应target,然后新建项目。</p></section></section><section class="chapter"><h2 id="linux" data-toc="linux">Linux源码安装</h2><section class="chapter"><h3 id="-whjqi_85" data-toc="-whjqi_85">安装具体依赖的组件</h3><p id="-whjqi_89">需要手动安装一些组件，再使用install脚本。 参考<a href="https://docs.espressif.com/projects/esp-idf/zh_CN/release-v5.5/esp32/get-started/linux-macos-setup.html#linux" id="-whjqi_92" data-external="true" rel="noopener noreferrer" target="_blank">Linux安装具体的组件</a></p><p id="-whjqi_90">以ubuntu为例</p><div class="code-block" data-lang="bash">
+sudo apt update
+sudo apt-get install git wget flex bison gperf python3 python3-pip python3-venv cmake ninja-build ccache libffi-dev libssl-dev dfu-util libusb-1.0-0
+</div></section><section class="chapter"><h3 id="-whjqi_86" data-toc="-whjqi_86">克隆代码</h3><div class="tabs" id="-whjqi_93" data-anchors="[-whjqi_95,-whjqi_96,-whjqi_97]"><div class="tabs__content" data-gtm="tab" id="-whjqi_95" data-title="clone代码"><div class="code-block" data-lang="none" data-title="None">
+mkdir -p ~/esp
+cd ~/esp
+git clone --recursive https://github.com/espressif/esp-idf.git
+</div></div><div class="tabs__content" data-gtm="tab" id="-whjqi_96" data-title="通过HTTP代理克隆"><div class="code-block" data-lang="none" data-title="None">
+# 很多时候代理软件可能只能在windows和macos上安装，在将代理软件的局域网模式打开，防火墙要运行应用程序过防火墙。
+# 然后在linux的终端上设置为其局域网具体地址
+mkdir -p ~/esp
+cd ~/esp
+# 设置 HTTP 代理
+export http_proxy=http://192.168.137.1:7890
+# 设置 HTTPS 代理
+export https_proxy=http://192.168.137.1:7890
+git clone --recursive https://github.com/espressif/esp-idf.git
+</div></div><div class="tabs__content" data-gtm="tab" id="-whjqi_97" data-title="从中国站直接下载"><div class="code-block" data-lang="none" data-title="None">
+# 以idf6.0为例，将idf6.0的release中附件esp-idf-v6.0.zip的url复制出
+# 然后替换`github.com` 到 `dl.espressif.cn/github_assets`
+mkdir -p ~/esp
+cd ~/esp
+wget https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v6.0/esp-idf-v6.0.zip
+unzip esp-idf-v6.0.zip
+mv esp-idf-v6.0/ esp-idf
+</div></div></div><section class="chapter"><h4 id="-whjqi_94" data-toc="-whjqi_94">切换到一个具体的稳定版本(可选)</h4><aside class="prompt" data-type="tip" data-title="" id="-whjqi_101"><p id="-whjqi_104">使用中国站下载源码包已经是具体版本了无需进行这一步</p></aside><p id="-whjqi_102">例如<code class="code" id="-whjqi_105">v6.0</code>标签</p><div class="code-block" data-lang="bash">
+cd esp-idf
+git checkout v6.0
+git submodule update --init --recursive
+
+</div></section></section><section class="chapter"><h3 id="-whjqi_87" data-toc="-whjqi_87">安装</h3><p id="-whjqi_106">安装会下载一些东西,根据需要选择后续是否使用镜像站</p><div class="tabs" id="-whjqi_107" data-anchors="[-whjqi_108,-whjqi_109,-whjqi_110]"><div class="tabs__content" data-gtm="tab" id="-whjqi_108" data-title="直接安装"><div class="code-block" data-lang="bash" data-title="Bash">
+cd ~/esp/esp-idf
+./install.sh
+</div></div><div class="tabs__content" data-gtm="tab" id="-whjqi_109" data-title="安装设置使用乐鑫下载站"><div class="code-block" data-lang="bash" data-title="Bash">
+cd ~/esp/esp-idf
+export IDF_GITHUB_ASSETS=&quot;dl.espressif.com/github_assets&quot;
+./install.sh
+</div></div><div class="tabs__content" data-gtm="tab" id="-whjqi_110" data-title="完全使用中国站(乐鑫中国站和python阿里源)"><div class="code-block" data-lang="bash" data-title="Bash">
+cd ~/esp/esp-idf
+export IDF_GITHUB_ASSETS=&quot;dl.espressif.cn/github_assets&quot;
+export PIP_INDEX_URL=https://mirrors.aliyun.com/pypi/simple/
+export PIP_TRUSTED_HOST=mirrors.aliyun.com
+./install.sh
+</div></div></div></section><section class="chapter"><h3 id="-whjqi_88" data-toc="-whjqi_88">新建项目</h3><p id="-whjqi_114">安装完成之后创建<code class="code" id="-whjqi_117">ESP-IDF</code>项目时选择源码路径下<code class="code" id="-whjqi_118">export.sh</code>所在的目录。</p><p id="-whjqi_115">设置对应target,然后新建项目。</p><figure id="-whjqi_116"><img alt="linux_new.png" src="images/linux_new.png" title="linux_new.png" width="803" height="687"></figure></section></section><section class="chapter"><h2 id="macos" data-toc="macos">Macos源码安装</h2><aside class="prompt" data-type="tip" data-title="" id="-whjqi_119"><p id="-whjqi_124">这里使用m4测试成功</p></aside><section class="chapter"><h3 id="-whjqi_120" data-toc="-whjqi_120">安装具体依赖的组件</h3><p id="-whjqi_125">需要手动安装一些组件。 参考<a href="https://docs.espressif.com/projects/esp-idf/zh_CN/latest/esp32/get-started/linux-macos-setup.html#macos" id="-whjqi_127" data-external="true" rel="noopener noreferrer" target="_blank">macos安装具体的组件</a></p><aside class="prompt" data-type="tip" data-title="" id="-whjqi_126"><p id="-whjqi_128">这里m4使用HomeBrew安装具体组件测试成功, <code class="code" id="-whjqi_129">ccache</code>也进行了安装</p></aside></section><section class="chapter"><h3 id="-whjqi_121" data-toc="-whjqi_121">克隆代码</h3><div class="tabs" id="-whjqi_130" data-anchors="[-whjqi_131,-whjqi_132,-whjqi_133]"><div class="tabs__content" data-gtm="tab" id="-whjqi_131" data-title="clone代码"><div class="code-block" data-lang="none" data-title="None">
+mkdir -p ~/esp
+cd ~/esp
+git clone --recursive https://github.com/espressif/esp-idf.git
+</div></div><div class="tabs__content" data-gtm="tab" id="-whjqi_132" data-title="通过HTTP代理克隆"><div class="code-block" data-lang="bash" data-title="Bash">
+mkdir -p ~/esp
+cd ~/esp
+export http_proxy=http://127.0.0.1:7890
+export https_proxy=http://127.0.0.1:7890
+git clone --recursive https://github.com/espressif/esp-idf.git
+</div></div><div class="tabs__content" data-gtm="tab" id="-whjqi_133" data-title="从中国站直接下载"><p id="-whjqi_136">以idf6.0为例，将idf6.0的release中附件esp-idf-v6.0.zip的url复制出<br> 然后替换<code class="code" id="-whjqi_139">github.com</code> 到 <code class="code" id="-whjqi_140">dl.espressif.cn/github_assets</code></p><div class="code-block" data-lang="bash" data-title="Bash">
+mkdir -p ~/esp
+cd ~/esp
+curl -O  https://dl.espressif.cn/github_assets/espressif/esp-idf/releases/download/v6.0/esp-idf-v6.0.zip
+unzip esp-idf-v6.0.zip
+mv esp-idf-v6.0/ esp-idf
+</div></div></div></section><section class="chapter"><h3 id="-whjqi_122" data-toc="-whjqi_122">切换到一个具体的稳定版本(可选)</h3><aside class="prompt" data-type="tip" data-title="" id="-whjqi_141"><p id="-whjqi_144">使用中国站下载源码包已经是具体版本了无需进行这一步</p></aside><p id="-whjqi_142">例如<code class="code" id="-whjqi_145">v6.0</code>标签</p><div class="code-block" data-lang="bash">
+cd esp-idf
+git checkout v6.0
+git submodule update --init --recursive
+
+</div></section><section class="chapter"><h3 id="-whjqi_123" data-toc="-whjqi_123">安装</h3><p id="-whjqi_146">安装会下载一些东西,根据需要选择后续是否使用镜像站</p><div class="tabs" id="-whjqi_147" data-anchors="[-whjqi_150,-whjqi_151,-whjqi_152]"><div class="tabs__content" data-gtm="tab" id="-whjqi_150" data-title="直接安装"><div class="code-block" data-lang="bash" data-title="Bash">
+cd ~/esp/esp-idf
+./install.sh
+</div></div><div class="tabs__content" data-gtm="tab" id="-whjqi_151" data-title="安装设置使用乐鑫下载站"><div class="code-block" data-lang="bash" data-title="Bash">
+cd ~/esp/esp-idf
+export IDF_GITHUB_ASSETS=&quot;dl.espressif.com/github_assets&quot;
+./install.sh
+</div></div><div class="tabs__content" data-gtm="tab" id="-whjqi_152" data-title="完全使用中国站(乐鑫中国站和python阿里源)"><div class="code-block" data-lang="bash" data-title="Bash">
+cd ~/esp/esp-idf
+export IDF_GITHUB_ASSETS=&quot;dl.espressif.cn/github_assets&quot;
+export PIP_INDEX_URL=https://mirrors.aliyun.com/simple
+export PIP_TRUSTED_HOST=mirrors.aliyun.com
+./install.sh
+</div></div></div><p> 安装完成之后创建`ESP-IDF`项目时选择源码路径下`export.sh`所在的目录。 </p><p id="-whjqi_148">设置对应target,然后新建项目。</p><figure id="-whjqi_149"><img alt="macos_new.png" src="images/macos_new.png" title="macos_new.png" width="800" height="650"></figure></section></section><section class="chapter"><h2 id="toolchain" data-toc="toolchain">重命名Toolchain</h2><p id="-whjqi_156">生成的Toolchain名称前缀为<code class="code" id="-whjqi_158">EspIdfAutoGen</code> ，目前本插件不依赖Toolchain名称，可以重命名。 重命名后，已经配置过的项目需要在cmake profile处重新指定对应名称即可。</p><figure id="-whjqi_157"><img alt="toolchains" src="images/toolchains.png" title="toolchains" width="1044" height="560"></figure></section><div class="last-modified">19 四月 2026</div><div data-feedback-placeholder="true"></div><div class="navigation-links _bottom"><a href="macos.html" class="navigation-links__prev">MacOs下新建项目</a><a href="tooltree.html" class="navigation-links__next">快捷命令树</a></div></article><div id="disqus_thread"></div></div></section></main></div><script src="https://resources.jetbrains.com/writerside/apidoc/6.27.0-b1031/app.js"></script></body></html>
