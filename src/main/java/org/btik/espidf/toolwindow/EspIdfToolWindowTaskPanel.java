@@ -164,7 +164,7 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
         FileDocumentManager docManager = FileDocumentManager.getInstance();
         Document document = docManager.getCachedDocument(xmlVirtual);
         if (document != null) {
-            docManager.saveDocument(document);
+            ApplicationManager.getApplication().runWriteAction(() -> docManager.saveDocument(document));
         }
 
         ApplicationManager.getApplication().invokeLater(() -> {
