@@ -41,3 +41,7 @@ bin/
 
 ### Mac OS ###
 .DS_Store
+
+# Vite frontend
+web-size/node_modules/
+src/main/resources/web/

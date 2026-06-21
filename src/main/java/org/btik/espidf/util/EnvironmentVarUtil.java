@@ -76,6 +76,9 @@ public class EnvironmentVarUtil {
         String idfFullPath = findIdfFullPath(path);
         if (StringUtils.isEmpty(idfFullPath)) {
             String idfPath = env.get("IDF_PATH");
+            if (StringUtils.isEmpty(idfPath)) {
+                return null;
+            }
             Path idfPy = Path.of(idfPath, "tools", OsUtil.Const.IDF_EXE);
             File file = idfPy.toFile();
             if (file.exists()) {

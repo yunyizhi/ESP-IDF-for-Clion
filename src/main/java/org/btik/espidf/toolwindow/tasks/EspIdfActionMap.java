@@ -1,24 +1,42 @@
 package org.btik.espidf.toolwindow.tasks;
 
+import com.intellij.execution.ExecutionException;
 import com.intellij.execution.ExecutionManager;
 import com.intellij.execution.RunManager;
 import com.intellij.execution.RunnerAndConfigurationSettings;
+import com.intellij.execution.configurations.PtyCommandLine;
 import com.intellij.execution.executors.DefaultRunExecutor;
 import com.intellij.execution.runners.ExecutionEnvironmentBuilder;
 import com.intellij.ide.BrowserUtil;
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.sh.run.ShConfigurationType;
 import com.intellij.sh.run.ShRunConfiguration;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
+import org.btik.espidf.command.IdfConsoleRunProfile;
+import org.btik.espidf.command.ProcessEventAdaptor;
+import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.service.IdfEnvironmentService;
+import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskActionNode;
+import org.btik.espidf.toolwindow.tasks.web.SizeAnalysisFileType;
+import org.btik.espidf.toolwindow.tasks.web.SizeAnalysisVirtualFile;
+import org.btik.espidf.util.CmdTaskExecutor;
+import org.btik.espidf.util.EnvironmentVarUtil;
 import org.btik.espidf.util.I18nMessage;
+import org.jetbrains.ide.BuiltInServerManager;
 
+import java.net.URLEncoder;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
@@ -37,6 +55,7 @@ public class EspIdfActionMap {
         actionMap.put("idf.export.console", EspIdfActionMap::exportConsole);
         actionMap.put("open.component.registry", EspIdfActionMap::openComponentRegistry);
         actionMap.put("idf.rebuild.all.env.cache", EspIdfActionMap::reBuildAllIdfEnvCache);
+        actionMap.put("idf.size.analysis", EspIdfActionMap::sizeAnalysis);
     }
 
     private static void reBuildAllIdfEnvCache(EspIdfTaskActionNode espIdfTaskActionNode, Project project) {
@@ -119,6 +138,60 @@ public class EspIdfActionMap {
         }
     }
 
+
+    private static void sizeAnalysis(EspIdfTaskActionNode actionNode, Project project) {
+        IdfEnvironmentService environmentService = project.getService(IdfEnvironmentService.class);
+        IdfProjectConfigService projectConfigService = project.getService(IdfProjectConfigService.class);
+        String cmakeBuildDir = projectConfigService.getCmakeBuildDir();
+        Map<String, String> environments = environmentService.getEnvironments();
+        String idfFullPath = EnvironmentVarUtil.findIdfFullPath(environments);
+        if (EnvironmentVarUtil.checkIdfPyNotFound(idfFullPath, project)) {
+            return;
+        }
+
+        String basePath = project.getBasePath();
+        String outputFile = Paths.get(basePath, cmakeBuildDir, "size_out.json").toString();
+
+        var commandLine = new PtyCommandLine()
+                .withEnvironment(environments)
+                .withExePath(idfFullPath)
+                .withWorkDirectory(basePath)
+                .withCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")))
+                .withParameters("-B", cmakeBuildDir, "size", "--format", "raw", "--output-file", outputFile);
+
+        IdfConsoleRunProfile runProfile = new IdfConsoleRunProfile(
+                actionNode.getDisplayName(), EspIdfIcon.IDF_16_16, commandLine);
+
+        try {
+            CmdTaskExecutor.execute(project, runProfile,
+                    new ProcessEventAdaptor().withProcessTerminatedCb((event) -> {
+                        Path outputPath = Path.of(outputFile);
+                        if (event.getExitCode() == 0 && Files.exists(outputPath)) {
+                            ApplicationManager.getApplication().invokeLater(() -> {
+                                I18nMessage.NOTIFICATION_GROUP.createNotification(
+                                        $i18n("esp.idf.size.analysis"),
+                                        $i18n("esp.idf.size.analysis.complete"),
+                                        NotificationType.INFORMATION).notify(project);
+
+                                int port = BuiltInServerManager.getInstance().getPort();
+                                String url = "http://localhost:" + port + "/esp-idf-size-analysis/?path=" +
+                                        URLEncoder.encode(outputFile, StandardCharsets.UTF_8);
+                                openPreviewInEditor(project, url, cmakeBuildDir);
+                            });
+                        }
+                    }));
+        } catch (ExecutionException e) {
+            I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.failed"),
+                    e.getMessage(),
+                    NotificationType.ERROR).notify(project);
+        }
+    }
+
+    private static void openPreviewInEditor(Project project, String url, String cmakeBuildDir) {
+        String fileName = "Size-Analysis [" + cmakeBuildDir + "]." + SizeAnalysisFileType.DEFAULT_EXTENSION;
+        SizeAnalysisVirtualFile virtualFile = new SizeAnalysisVirtualFile(fileName, url, project.getBasePath());
+        FileEditorManager.getInstance(project).openFile(virtualFile, true);
+    }
 
     public static void exec(EspIdfTaskActionNode actionNode, Project project) {
         BiConsumer<EspIdfTaskActionNode, Project> action = actionMap.get(actionNode.getId());

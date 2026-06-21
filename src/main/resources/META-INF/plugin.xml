@@ -59,6 +59,8 @@ Enables <a href="https://docs.espressif.com/projects/esp-idf/">ESP-IDF(Espressif
         />
         <postStartupActivity implementation="org.btik.espidf.state.EspIdfProjectManagerListener"/>
         <runLineMarkerContributor language="XML" implementationClass="org.btik.espidf.toolwindow.tasks.line.marker.EspCustomRunLineMarkerContributor"/>
+        <httpRequestHandler implementation="org.btik.espidf.toolwindow.tasks.web.EspIdfHttpHandler"/>
+        <fileEditorProvider implementation="org.btik.espidf.toolwindow.tasks.web.SizeAnalysisPreviewEditorProvider"/>
     </extensions>
     <projectListeners>
         <listener topic="com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspaceListener"

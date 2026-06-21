@@ -123,3 +123,38 @@ tasks.register("updateDocs") {
 
     dependsOn("unzipWebHelpAndPreserveXsd", "actuallyUnzipWebHelp")
 }
+
+// ---------- Vite Frontend Build ----------
+val webSizeDir = layout.projectDirectory.dir("web-size")
+val npmCommand = if (System.getProperty("os.name").lowercase().contains("win")) "npm.cmd" else "npm"
+
+tasks.register<Exec>("webSizeInstall") {
+    group = "web"
+    description = "Run npm install in web-size/"
+    workingDir = webSizeDir.asFile
+    commandLine(npmCommand, "install")
+    inputs.file(webSizeDir.file("package.json"))
+    outputs.dir(webSizeDir.dir("node_modules"))
+}
+
+tasks.register<Exec>("webSizeBuild") {
+    group = "web"
+    description = "Build Vue frontend with Vite"
+    dependsOn("webSizeInstall")
+    workingDir = webSizeDir.asFile
+    commandLine(npmCommand, "run", "build")
+    inputs.dir(webSizeDir.dir("src"))
+    inputs.file(webSizeDir.file("index.html"))
+    inputs.file(webSizeDir.file("vite.config.js"))
+    outputs.dir(layout.projectDirectory.dir("src/main/resources/web"))
+}
+
+tasks.named("processResources") {
+    dependsOn("webSizeBuild")
+}
+
+tasks.register<Delete>("webSizeClean") {
+    group = "web"
+    description = "Clean Vite build output"
+    delete(layout.projectDirectory.dir("src/main/resources/web"))
+}
