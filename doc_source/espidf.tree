@@ -13,7 +13,9 @@
         <toc-element topic="macos.md"/>
         <toc-element topic="legacy.md"/>
     </toc-element>
-    <toc-element topic="toolTree.md"/>
+    <toc-element topic="toolTree.md">
+        <toc-element topic="size_analysis.md"/>
+    </toc-element>
     <toc-element topic="settings.md"/>
     <toc-element topic="configUi.md"/>
     <toc-element topic="openIdfProject.md"/>
