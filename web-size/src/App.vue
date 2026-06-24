@@ -17,11 +17,38 @@
       <a-spin v-if="!data && !error" :loading="true" class="loading" />
       <div v-else-if="error" class="error">{{ t('error') }}: {{ error }}<br /><small>{{ t('errorHint') }}</small></div>
       <template v-else>
-        <SizeCharts v-if="!drillTarget" :sections="allSections()" :mem-types="data.memory_types" :dark="dark" />
-        <SectionsTable v-if="!drillTarget" :sections="allSections()" @drill="drillTarget=$event" />
-        <ArchiveDetail v-if="drillTarget && !drillArchive && !drillObj" :section="drillTarget" :archives="archivesOf(drillTarget)" :dark="dark" @back="drillTarget=null" @drill="drillArchive=$event" />
-        <ObjectFileDetail v-if="drillTarget && drillArchive && !drillObj" :section="drillTarget" :archive="drillArchive" :dark="dark" @back="drillArchive=null" @drill="drillObj=$event" />
-        <SymbolDetail v-if="drillTarget && drillArchive && drillObj" :section="drillTarget" :archive="drillArchive" :obj-file="drillObj" :dark="dark" @back="drillObj=null" />
+        <!-- 顶层：图表 + 库统计表格 -->
+        <SizeCharts v-if="!drillArchive" :sections="allSections()" :mem-types="data.memory_types" :dark="dark" />
+
+        <ArchiveTable
+          v-if="!drillArchive && !drillObj"
+          :archives="allArchives()"
+          :mem-types="memTypes"
+          :total-firmware-size="data.image_size"
+          @drill="drillArchive = $event"
+        />
+
+        <!-- 下钻第一级：库 → 目标文件列表 -->
+        <ObjectFileDetail
+          v-if="drillArchive && !drillObj"
+          :archive="drillArchive"
+          :mem-types="memTypes"
+          :obj-files="objectFilesOf(drillArchive.key)"
+          :dark="dark"
+          @back="drillArchive = null"
+          @drill="drillObj = $event"
+        />
+
+        <!-- 下钻第二级：目标文件 → 符号列表 -->
+        <SymbolDetail
+          v-if="drillArchive && drillObj"
+          :archive="drillArchive"
+          :obj-file="drillObj"
+          :mem-types="memTypes"
+          :symbols="symbolsOf(drillArchive.key, drillObj.key)"
+          :dark="dark"
+          @back="drillObj = null"
+        />
       </template>
     </main>
   </a-config-provider>
@@ -35,20 +62,20 @@ import { i18n, t } from './i18n'
 import { fmtBytes } from './utils'
 import { useData } from './useData'
 import SizeCharts from './components/SizeCharts.vue'
-import SectionsTable from './components/SectionsTable.vue'
-import ArchiveDetail from './components/ArchiveDetail.vue'
+import ArchiveTable from './components/ArchiveTable.vue'
 import ObjectFileDetail from './components/ObjectFileDetail.vue'
 import SymbolDetail from './components/SymbolDetail.vue'
-import type { SectionInfo, ArchiveInfo, ObjFileInfo } from './useData'
+import type { ArchiveAggInfo, ObjFileAggInfo } from './useData'
 
 const props = defineProps<{ settings: { lang?: string; dark?: boolean } }>()
 
-const { data, error, allSections, archivesOf } = useData()
-const drillTarget = ref<SectionInfo | null>(null)
-const drillArchive = ref<ArchiveInfo | null>(null)
-const drillObj = ref<ObjFileInfo | null>(null)
+const { data, error, allSections, allArchives, objectFilesOf, symbolsOf, memoryTypeKeys } = useData()
+const drillArchive = ref<ArchiveAggInfo | null>(null)
+const drillObj = ref<ObjFileAggInfo | null>(null)
 const dark = ref(false)
 const arcoLocale = computed(() => i18n.lang === 'zh' ? zhCN : enUS)
+
+const memTypes = computed(() => memoryTypeKeys())
 
 function toggleDark() {
   dark.value = !dark.value
@@ -75,7 +102,4 @@ body { background: var(--color-bg-1); color: var(--color-text-1); transition: ba
 .container { max-width: 1300px; margin: 0 auto; padding: 16px 20px; }
 .loading { display: flex; justify-content: center; padding: 80px 0; }
 .error { text-align: center; padding: 60px; color: rgb(var(--danger-6)); }
-.panel { margin-bottom: 16px; box-shadow: none; background: var(--color-bg-2); border-color: var(--color-border-2); }
-.panel :deep(.arco-card-body) { padding: 12px; }
-.total-text { font-size: 13px; color: var(--color-text-3); }
 </style>

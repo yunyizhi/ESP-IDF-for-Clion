@@ -15,6 +15,10 @@ const messages: Record<string, Record<string, string>> = {
     topLibs: 'Top库', back: '返回', usage: '使用率',
     sectionTree: '内存分布', memUsage: '内存块用量', used: '已用',
     distTree: '分布', top10: 'Top 10', symbol: '符号',
+    // 新增翻译键
+    allLibraries: '库用量统计', searchArchives: '搜索库名称...',
+    objFiles: '目标文件', searchObjFiles: '搜索文件名...',
+    symbolDetail: '符号详情',
   },
   en: {
     title: 'ESP-IDF Size Analysis', target: 'Target', totalFirmware: 'Total Firmware',
@@ -26,6 +30,10 @@ const messages: Record<string, Record<string, string>> = {
     topLibs: 'Top Libs', back: 'Back', usage: 'Usage',
     sectionTree: 'Memory Layout', memUsage: 'Memory Usage', used: 'Used',
     distTree: 'Distribution', top10: 'Top 10', symbol: 'Symbol',
+    // New keys
+    allLibraries: 'Library Usage', searchArchives: 'Search library...',
+    objFiles: 'Object Files', searchObjFiles: 'Search file...',
+    symbolDetail: 'Symbols',
   },
 }
 
