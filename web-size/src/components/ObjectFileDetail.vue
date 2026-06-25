@@ -81,4 +81,5 @@ const chartItems = computed(() => props.objFiles.map(o => ({ name: o.abbrev, siz
 .panel :deep(.arco-card-body) { padding: 12px; }
 .total-text { font-size: 13px; color: var(--color-text-3); }
 .dim { color: var(--color-text-4); }
+.search-input { margin-bottom: 12px; max-width: 360px; }
 </style>

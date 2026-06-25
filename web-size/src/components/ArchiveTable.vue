@@ -68,4 +68,5 @@ const filtered = computed(() => {
 .panel { margin-bottom: 16px; box-shadow: none; background: var(--color-bg-2); border-color: var(--color-border-2); }
 .panel :deep(.arco-card-body) { padding: 12px; }
 .dim { color: var(--color-text-4); }
+.search-input { margin-bottom: 12px; max-width: 360px; }
 </style>

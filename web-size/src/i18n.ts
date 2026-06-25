@@ -20,6 +20,8 @@ const messages: Record<string, Record<string, string>> = {
     searchObjFiles: '搜索文件名...',
     // 符号
     symbol: '符号',
+    searchSymbols: '搜索符号...',
+    distCol: '区域/段分布',
   },
   en: {
     title: 'ESP-IDF Size Analysis', target: 'Target', totalFirmware: 'Total Size',
@@ -36,6 +38,8 @@ const messages: Record<string, Record<string, string>> = {
     searchObjFiles: 'Search file...',
     // Symbols
     symbol: 'Symbol',
+    searchSymbols: 'Search symbol...',
+    distCol: 'Region/Section',
   },
 }
 

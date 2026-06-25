@@ -40,6 +40,7 @@ export interface SymbolAggInfo {
   abbrev: string
   totalSize: number
   memSizes: Record<string, number> // 每个内存区域的大小
+  mtSections: Record<string, Record<string, number>> // 内存区域 → 段名 → 大小
 }
 
 /** 跨所有内存区域聚合后的目标文件信息 */
@@ -134,14 +135,17 @@ export function useData() {
       objFileMap: Record<string, {
         abbrev: string
         memSizes: Record<string, number>
-        symMap: Record<string, Record<string, number>> // symKey → { memType → size }
-        symAbbrevMap: Record<string, string>           // symKey → abbrev
+        symMap: Record<string, {
+          memSizes: Record<string, number>                  // memType → size
+          mtSections: Record<string, Record<string, number>> // memType → sectionName → size
+        }>
+        symAbbrevMap: Record<string, string>                // symKey → abbrev
       }>
     }> = {}
 
     for (const [mt, mtInfo] of Object.entries(memTypes) as [string, any][]) {
       const sections = mtInfo.sections || {}
-      for (const [, sec] of Object.entries(sections) as [string, any][]) {
+      for (const [sn, sec] of Object.entries(sections) as [string, any][]) {
         const archives = sec.archives || {}
         for (const [ak, arch] of Object.entries(archives) as [string, any][]) {
           // 初始化库条目
@@ -168,11 +172,14 @@ export function useData() {
             const symbols = obj.symbols || {}
             for (const [sk, sym] of Object.entries(symbols) as [string, any][]) {
               if (!archiveMap[ak].objFileMap[ok].symMap[sk]) {
-                archiveMap[ak].objFileMap[ok].symMap[sk] = {}
+                archiveMap[ak].objFileMap[ok].symMap[sk] = { memSizes: {}, mtSections: {} }
                 archiveMap[ak].objFileMap[ok].symAbbrevMap[sk] = sym.abbrev_name || sk
               }
-              archiveMap[ak].objFileMap[ok].symMap[sk][mt] =
-                (archiveMap[ak].objFileMap[ok].symMap[sk][mt] || 0) + (sym.size || 0)
+              const symEntry = archiveMap[ak].objFileMap[ok].symMap[sk]
+              const symSize = sym.size || 0
+              symEntry.memSizes[mt] = (symEntry.memSizes[mt] || 0) + symSize
+              if (!symEntry.mtSections[mt]) symEntry.mtSections[mt] = {}
+              symEntry.mtSections[mt][sn] = (symEntry.mtSections[mt][sn] || 0) + symSize
             }
           }
         }
@@ -187,8 +194,9 @@ export function useData() {
             .map(([sk, sv]) => ({
               key: sk,
               abbrev: ov.symAbbrevMap[sk] || sk,
-              totalSize: Object.values(sv).reduce((a, b) => a + b, 0),
-              memSizes: { ...sv },
+              totalSize: Object.values(sv.memSizes).reduce((a, b) => a + b, 0),
+              memSizes: { ...sv.memSizes },
+              mtSections: { ...sv.mtSections },
             }))
             .sort((a, b) => b.totalSize - a.totalSize)
 
