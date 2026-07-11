@@ -12,7 +12,7 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.jetbrains.cidr.cpp.cmake.CMakeSettings;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
-import org.apache.commons.collections.CollectionUtils;
+import org.btik.espidf.util.CollectionUtils;
 import org.btik.espidf.conf.IdfProjectConfig;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;

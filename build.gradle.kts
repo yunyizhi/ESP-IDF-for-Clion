@@ -2,10 +2,16 @@ import java.io.File
 
 plugins {
     id("java")
-    id("org.jetbrains.intellij.platform") version "2.14.0"
+    id("org.jetbrains.intellij.platform") version "2.18.1"
 }
 
 group = "org.btik"
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
 
 repositories {
     maven {
@@ -24,15 +30,17 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.20.0")
     implementation("com.fazecast:jSerialComm:2.11.4")
     intellijPlatform {
-        clion("2026.1") { useInstaller = false }
+        clion("262-EAP-SNAPSHOT") { useInstaller = false }
         bundledPlugins(
             "com.intellij.clion",
-            "com.intellij.clion.cmake",
+            "com.intellij.cmake",
             "com.intellij.clion.embedded",
             "com.jetbrains.sh",
             "org.jetbrains.plugins.terminal",
-            "com.intellij.nativeDebug"
+            "com.intellij.nativeDebug",
+            "com.intellij.mcpServer"
         )
+        bundledModule("com.intellij.modules.jcef")
         pluginVerifier()
     }
 }

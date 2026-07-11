@@ -1,6 +1,6 @@
 package org.btik.espidf.toolwindow.kconfig.model;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.btik.espidf.util.CollectionUtils;
 
 import java.util.List;
 import java.util.Map;

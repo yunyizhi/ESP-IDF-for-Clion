@@ -6,7 +6,7 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.icons.AllIcons;
-import org.apache.commons.collections.CollectionUtils;
+import org.btik.espidf.util.CollectionUtils;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.toolwindow.kconfig.model.*;
 import org.btik.espidf.util.TreeUtils;

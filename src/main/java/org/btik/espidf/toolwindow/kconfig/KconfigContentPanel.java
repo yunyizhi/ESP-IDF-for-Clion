@@ -1,6 +1,6 @@
 package org.btik.espidf.toolwindow.kconfig;
 
-import org.apache.commons.collections.CollectionUtils;
+import org.btik.espidf.util.CollectionUtils;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigSetCommand;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigStatus;

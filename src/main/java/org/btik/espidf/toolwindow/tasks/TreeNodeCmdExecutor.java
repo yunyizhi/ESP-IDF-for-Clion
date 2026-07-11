@@ -48,6 +48,10 @@ public class TreeNodeCmdExecutor {
     private static final ConcurrentHashMap<String, MonitorProcessHandler> monitorProcessHandlers = new ConcurrentHashMap<>();
 
     public static void execute(EspIdfTaskCommandNode commandNode, @NotNull Project project) {
+        execute(commandNode, project, null);
+    }
+
+    public static void execute(EspIdfTaskCommandNode commandNode, @NotNull Project project, ProcessListener listener) {
         Map<String, String> envsWithProjectSettings = getEnvsWithProjectSettings(project);
         String port = envsWithProjectSettings.get(ESP_PORT);
         if (port == null) {
@@ -72,12 +76,12 @@ public class TreeNodeCmdExecutor {
         idfConsoleRunProfile.setUseOutFilter(commandNode.isOutFilter());
 
         if (!commandNode.isRequestPort()) {
-            execTask(commandNode.isUseMonitor(), port, project, idfConsoleRunProfile, null);
+            execTask(commandNode.isUseMonitor(), port, project, idfConsoleRunProfile, listener);
             return;
         }
         MonitorProcessHandler aliveHandler = monitorProcessHandlers.get(port);
         if (aliveHandler == null || (!aliveHandler.getProcess().isAlive())) {
-            execTask(commandNode.isUseMonitor(), port, project, idfConsoleRunProfile, null);
+            execTask(commandNode.isUseMonitor(), port, project, idfConsoleRunProfile, listener);
             return;
         }
         // 等待关停后拉起新任务
@@ -87,7 +91,7 @@ public class TreeNodeCmdExecutor {
                             $i18nF("esp.idf.monitor.task.auto.stop.msg", aliveHandler.getTaskRawName(), commandNode.getDisplayName(), finalPort),
                             NotificationType.INFORMATION).notify(project);
                     ApplicationManager.getApplication().invokeLater(() ->
-                            execTask(commandNode.isUseMonitor(), finalPort, project, idfConsoleRunProfile, null));
+                            execTask(commandNode.isUseMonitor(), finalPort, project, idfConsoleRunProfile, listener));
                 }
         ));
         // 关停带monitor的同端口任务
@@ -160,6 +164,10 @@ public class TreeNodeCmdExecutor {
     }
 
     public static void executeAsCommand(LocalExecNode commandNode, @NotNull Project project) {
+        executeAsCommand(commandNode, project, null);
+    }
+
+    public static void executeAsCommand(LocalExecNode commandNode, @NotNull Project project, ProcessListener listener) {
         PtyCommandLine commandLine = new PtyCommandLine();
 
         commandLine.setWorkDirectory(project.getBasePath());
@@ -189,7 +197,7 @@ public class TreeNodeCmdExecutor {
         }
         try {
             CmdTaskExecutor.execute(project, new IdfConsoleRunProfile(commandNode.getDisplayName(),
-                    EspIdfIcon.IDF_16_16, commandLine), null);
+                    EspIdfIcon.IDF_16_16, commandLine), listener);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
@@ -211,8 +219,12 @@ public class TreeNodeCmdExecutor {
     }
 
     public static void execute(LocalExecNode commandNode, @NotNull Project project) {
+        execute(commandNode, project, null);
+    }
+
+    public static void execute(LocalExecNode commandNode, @NotNull Project project, ProcessListener listener) {
         if (!commandNode.isUseTerminal()) {
-            executeAsCommand(commandNode, project);
+            executeAsCommand(commandNode, project, listener);
             return;
         }
         String basePath = project.getBasePath();
@@ -262,6 +274,10 @@ public class TreeNodeCmdExecutor {
     }
 
     public static void execute(RawCommandNode commandNode, @NotNull Project project) {
+        execute(commandNode, project, null);
+    }
+
+    public static void execute(RawCommandNode commandNode, @NotNull Project project, ProcessListener listener) {
         PtyCommandLine commandLine = new PtyCommandLine();
         commandLine.setExePath(getCmdEnv());
         commandLine.setWorkDirectory(project.getBasePath());
@@ -273,7 +289,7 @@ public class TreeNodeCmdExecutor {
         }
         try {
             CmdTaskExecutor.execute(project, new IdfConsoleRunProfile(commandNode.getDisplayName(),
-                    EspIdfIcon.IDF_16_16, commandLine), null);
+                    EspIdfIcon.IDF_16_16, commandLine), listener);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }

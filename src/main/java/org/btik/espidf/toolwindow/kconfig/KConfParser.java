@@ -3,7 +3,7 @@ package org.btik.espidf.toolwindow.kconfig;
 import com.google.gson.*;
 import com.google.gson.stream.JsonReader;
 import com.intellij.openapi.diagnostic.Logger;
-import org.apache.commons.collections.CollectionUtils;
+import org.btik.espidf.util.CollectionUtils;
 import org.btik.espidf.toolwindow.common.NodeModel;
 import org.btik.espidf.toolwindow.kconfig.model.ConfModel;
 import org.btik.espidf.toolwindow.kconfig.model.KconfigType;

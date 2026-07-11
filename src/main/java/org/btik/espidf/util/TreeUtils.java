@@ -1,8 +1,6 @@
 package org.btik.espidf.util;
 
 
-import org.apache.commons.collections.CollectionUtils;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiConsumer;
