@@ -9,7 +9,6 @@ import com.intellij.mcpserver.McpToolDescriptor;
 import com.intellij.mcpserver.McpToolSchema;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
-import io.modelcontextprotocol.kotlin.sdk.types.ToolAnnotations;
 import kotlin.coroutines.Continuation;
 import kotlinx.serialization.json.JsonElement;
 import kotlinx.serialization.json.JsonElementKt;
@@ -41,7 +40,7 @@ import java.util.Set;
 public class EspIdfRunTaskMcpTool implements McpTool {
 
     private static final McpToolCategory CATEGORY =
-            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false);
+            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks");
 
     private static final JsonObject EMPTY_JSON = new JsonObject(new LinkedHashMap<>());
 
@@ -63,13 +62,11 @@ public class EspIdfRunTaskMcpTool implements McpTool {
                 new LinkedHashMap<>(), Set.of(), new LinkedHashMap<>(), McpToolSchema.DEFAULT_DEFINITIONS_PATH);
         this.descriptor = new McpToolDescriptor(
                 "espidf_run_task",
-                $i18n("espidf.mcp.run.task.name"),
                 $i18n("espidf.mcp.run.task.desc"),
                 CATEGORY,
                 "espidf_run_task",
                 inputSchema,
-                outputSchema,
-                new ToolAnnotations());
+                outputSchema);
     }
 
     private static JsonElement stringProperty(String description) {

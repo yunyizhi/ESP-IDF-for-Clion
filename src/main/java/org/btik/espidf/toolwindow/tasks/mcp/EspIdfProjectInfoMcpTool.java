@@ -10,7 +10,6 @@ import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Computable;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
-import io.modelcontextprotocol.kotlin.sdk.types.ToolAnnotations;
 import kotlin.coroutines.Continuation;
 import kotlinx.serialization.json.JsonElement;
 import kotlinx.serialization.json.JsonElementKt;
@@ -42,7 +41,7 @@ import static org.btik.espidf.util.I18nMessage.$i18nF;
 public class EspIdfProjectInfoMcpTool implements McpTool {
 
     private static final McpToolCategory CATEGORY =
-            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false);
+            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks");
 
     private static final JsonObject EMPTY_JSON = new JsonObject(new LinkedHashMap<>());
 
@@ -55,13 +54,11 @@ public class EspIdfProjectInfoMcpTool implements McpTool {
                 properties, Set.of(), new LinkedHashMap<>(), McpToolSchema.DEFAULT_DEFINITIONS_PATH);
         this.descriptor = new McpToolDescriptor(
                 "espidf_get_project_info",
-                $i18n("espidf.mcp.project.info.name"),
                 $i18n("espidf.mcp.project.info.desc"),
                 CATEGORY,
                 "espidf_get_project_info",
                 schema,
-                schema,
-                new ToolAnnotations());
+                schema);
     }
 
     @Override

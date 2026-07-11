@@ -5,7 +5,6 @@ import com.intellij.mcpserver.McpToolCallResult;
 import com.intellij.mcpserver.McpToolCategory;
 import com.intellij.mcpserver.McpToolDescriptor;
 import com.intellij.mcpserver.McpToolSchema;
-import io.modelcontextprotocol.kotlin.sdk.types.ToolAnnotations;
 import kotlin.coroutines.Continuation;
 import kotlinx.serialization.json.JsonObject;
 import org.jetbrains.annotations.NotNull;
@@ -23,7 +22,7 @@ import static org.btik.espidf.util.I18nMessage.$i18n;
 public class EspIdfListTasksMcpTool implements McpTool {
 
     private static final McpToolCategory CATEGORY =
-            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false);
+            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks");
 
     private static final JsonObject EMPTY_JSON = new JsonObject(new LinkedHashMap<>());
 
@@ -36,13 +35,11 @@ public class EspIdfListTasksMcpTool implements McpTool {
                 new LinkedHashMap<>(), Set.of(), new LinkedHashMap<>(), McpToolSchema.DEFAULT_DEFINITIONS_PATH);
         this.descriptor = new McpToolDescriptor(
                 "espidf_list_tasks",
-                $i18n("espidf.mcp.list.tasks.name"),
                 $i18n("espidf.mcp.list.tasks.desc"),
                 CATEGORY,
                 "espidf_list_tasks",
                 schema,
-                schema,
-                new ToolAnnotations());
+                schema);
     }
 
     @Override
