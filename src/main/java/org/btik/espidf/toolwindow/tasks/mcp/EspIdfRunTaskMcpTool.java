@@ -99,7 +99,7 @@ public class EspIdfRunTaskMcpTool implements McpTool {
             return McpToolCallResult.Companion.error(
                     $i18n("espidf.mcp.run.task.missing.param"), EMPTY_JSON);
         }
-        EspIdfTaskTreeNode node = registry.lookup(task);
+        EspIdfTaskTreeNode node = registry.lookup(project, task);
         if (node == null) {
             return McpToolCallResult.Companion.error(
                     $i18nF("espidf.mcp.run.task.unknown", task), EMPTY_JSON);

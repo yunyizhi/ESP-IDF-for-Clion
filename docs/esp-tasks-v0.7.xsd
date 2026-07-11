@@ -34,6 +34,21 @@
 
     <!-- 🏁 根元素 -->
     <xs:element name="esp-tasks" type="tns:EspTasksType">
+        <xs:annotation>
+            <xs:documentation>
+                <p>
+                    Each task is identified by its unique <code>@name</code> (there is no <code>id</code> attribute
+                    in this schema). When exposed through the MCP task tools, a task's identifier is derived as
+                    <code>c.</code> + name, where any whitespace character in the name is replaced with
+                    <code>-</code> (e.g. name "Build Flash" becomes id "c.Build-Flash").
+                </p>
+                <p>
+                    每个任务以唯一的 <code>@name</code> 作为标识（本 schema 没有 <code>id</code> 属性）。通过 MCP 任务工具暴露时，
+                    任务标识推导为 <code>c.</code> + name，其中 name 中的空白字符会被替换为 <code>-</code>
+                    （例如 name 为 "Build Flash" 时，id 为 "c.Build-Flash"）。
+                </p>
+            </xs:documentation>
+        </xs:annotation>
         <!-- ✅ 全局约束：所有子元素的 @name 必须唯一 -->
         <xs:unique name="UniqueCommandName">
             <xs:selector xpath="*"/>

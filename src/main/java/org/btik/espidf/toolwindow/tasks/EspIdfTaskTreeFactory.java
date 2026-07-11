@@ -145,6 +145,8 @@ public class EspIdfTaskTreeFactory {
         taskTreeNode.setToolTip(getI18n(toolTip));
         taskTreeNode.setId(element.getAttribute(ID));
         taskTreeNode.setIcon(element.getAttribute(ICON));
+        // mcp 属性缺省视为 true（暴露给 MCP）；仅 mcp="false" 才屏蔽
+        taskTreeNode.setMcp(!"false".equalsIgnoreCase(element.getAttribute(MCP)));
         return new NodeModel<>(new DefaultMutableTreeNode(taskTreeNode), element);
     }
 
@@ -174,6 +176,14 @@ public class EspIdfTaskTreeFactory {
                     $i18nF("idf.xml.load.failed", ESP_TASKS_ROOT), NotificationType.ERROR).notify(null);
             return List.of();
         }
+        return loadCustomTaskFromElement(documentElement);
+    }
+
+    /**
+     * 从已解析的根元素构建自定义任务树。不弹通知，供调用方在实时文档（编辑器未保存内容）
+     * 解析失败时自行决定回退策略，避免用户正在输入导致 XML 暂不完整时产生噪音通知。
+     */
+    public static @NotNull List<DefaultMutableTreeNode> loadCustomTaskFromElement(@NotNull Element documentElement) {
         List<DefaultMutableTreeNode> defaultMutableTreeNodes = new ArrayList<>();
         eachChildrenElement(documentElement, (child) -> {
             String type = child.getTagName();

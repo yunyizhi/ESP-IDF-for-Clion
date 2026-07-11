@@ -24,6 +24,8 @@ public interface TreeXmlMeta {
 
     String TOOL_TIP = "toolTip";
 
+    String MCP = "mcp";
+
 
     String COMMAND_TAG = "command";
 

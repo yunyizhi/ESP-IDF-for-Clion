@@ -23,8 +23,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 
-import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.ESP_CUSTOM_TASKS_XML_UNIX_TEMPLATE;
-import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.ESP_CUSTOM_TASKS_XML_WIN_TEMPLATE;
+import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.*;
 import static org.btik.espidf.ui.componets.MouseHooks.mouseClicked;
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
@@ -110,7 +109,7 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
             return;
         }
         Path baseDir = Path.of(basePath);
-        File taskXml = baseDir.resolve("esp_custom_tasks.xml").toFile();
+        File taskXml = baseDir.resolve(ESP_CUSTOM_TASKS_XML).toFile();
         if (!taskXml.exists()) {
             return;
         }
@@ -142,7 +141,7 @@ public class EspIdfToolWindowTaskPanel extends JScrollPane {
         clearCustomTask();
 
         Path baseDir = Path.of(basePath);
-        File taskXml = baseDir.resolve(TreeXmlMeta.ESP_CUSTOM_TASKS_XML).toFile();
+        File taskXml = baseDir.resolve(ESP_CUSTOM_TASKS_XML).toFile();
         if (!taskXml.exists()) {
             I18nMessage.NOTIFICATION_GROUP.createNotification($i18n("action.exec.failed"),
                     $i18n("action.exec.task.xml.notfound"),

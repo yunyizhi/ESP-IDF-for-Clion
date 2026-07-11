@@ -14,8 +14,8 @@
             <command name="Full Clean" value="fullclean" icon="ij:AllIcons.General.Delete" toolTip="${idf.tip.full.clean}" />
             <console-command name="Menu Config" value="menuconfig" />
             <console-command name="IDF Console" value="" />
-            <action name="IDF Export Console" id="idf.export.console" />
-            <action name="Size Analysis" id="idf.size.analysis" icon="ij:AllIcons.General.Web" />
+            <action name="IDF Export Console" id="idf.export.console" mcp="false" />
+            <action name="Size Analysis" id="idf.size.analysis" icon="ij:AllIcons.General.Web" toolTip="${esp.idf.size.analysis.tip}" />
 
         </folder>
         <folder name="Miscellaneous">
@@ -25,6 +25,7 @@
             <action name="Rebuild All EnvVars Caches" toolTip="${esp.idf.rebuild.envs}" id="idf.rebuild.all.env.cache" icon="ij:AllIcons.Actions.Refresh" />
             <command name="Erase" value="erase-flash" request-port="true" />
             <command name="Size" value="size"/>
+            <command name="Efuse Summary" value="efuse-summary" request-port="true" toolTip="${esp.idf.efuse.summary.tip}" />
             <action name="ESP Component Registry" id="open.component.registry" icon="ij:AllIcons.General.Web" />
         </folder>
         <folder name="Help">
@@ -32,7 +33,7 @@
         </folder>
         <folder name="Custom Tasks" id="custom.tasks.folder" toolTip="${esp.idf.task.tree.custom.tasks}">
             <action name="Load Custom Tasks" id="idf.custom.tasks.load" icon="ij:AllIcons.Actions.Refresh"
-                    toolTip="${esp.idf.task.custom.tasks.load.from.xml}"/>
+                    toolTip="${esp.idf.task.custom.tasks.load.from.xml}" mcp="false" />
         </folder>
     </tree>
 </taskTree>
