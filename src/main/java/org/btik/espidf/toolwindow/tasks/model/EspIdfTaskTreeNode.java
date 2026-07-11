@@ -18,6 +18,8 @@ public class EspIdfTaskTreeNode {
 
     protected String toolTip;
 
+    protected boolean mcp = true;
+
     public EspIdfTaskTreeNode(String displayName) {
         String i18nName = EspIdfTaskTreeFactory.getI18n(displayName);
         if (StringUtils.isEmpty(i18nName)) {
@@ -52,6 +54,14 @@ public class EspIdfTaskTreeNode {
 
     public void setToolTip(String toolTip) {
         this.toolTip = toolTip;
+    }
+
+    public boolean isMcp() {
+        return mcp;
+    }
+
+    public void setMcp(boolean mcp) {
+        this.mcp = mcp;
     }
 
     @Override

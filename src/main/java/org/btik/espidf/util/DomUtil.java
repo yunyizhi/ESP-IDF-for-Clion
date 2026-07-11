@@ -4,6 +4,7 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.DocumentBuilder;
@@ -12,6 +13,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -52,6 +54,17 @@ public class DomUtil {
     public static Document parse(File xmlFile) throws ParserConfigurationException, IOException, SAXException {
         DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
         return builder.parse(xmlFile);
+    }
+
+    /**
+     * 将 xml 字符串内容解析为 dom 对象（用于读取编辑器内尚未落盘的实时文档）。
+     *
+     * @param xmlContent xml 文本
+     * @return dom 对象
+     */
+    public static Document parseXml(String xmlContent) throws ParserConfigurationException, IOException, SAXException {
+        DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+        return builder.parse(new InputSource(new StringReader(xmlContent)));
     }
 
     /**

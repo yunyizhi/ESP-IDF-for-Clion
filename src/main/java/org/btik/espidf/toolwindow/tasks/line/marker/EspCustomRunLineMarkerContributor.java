@@ -3,6 +3,8 @@ package org.btik.espidf.toolwindow.tasks.line.marker;
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.xml.XmlFile;
 import com.intellij.psi.xml.XmlTag;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.service.IdfProjectConfigService;
@@ -14,6 +16,8 @@ import org.btik.espidf.toolwindow.tasks.model.LocalExecNode;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -32,9 +36,14 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
         if (!(element instanceof XmlTag xmlTag)) {
             return null;
         }
-        String fileName = xmlTag.getContainingFile().getName();
-        if (!TreeXmlMeta.ESP_CUSTOM_TASKS_XML.equals(fileName)) {
+        PsiFile containingFile = xmlTag.getContainingFile();
+        if (!TreeXmlMeta.ESP_CUSTOM_TASKS_XML.equals(containingFile.getName())) {
             return null;
+        }
+        // 文件变化时清理已删除/重命名任务的缓存，避免内存积压（按修改戳去重，仅扫描一次）
+        if (containingFile instanceof XmlFile xmlFile) {
+            xmlTag.getProject().getService(IdfProjectConfigService.class)
+                    .syncRunInfoCache(containingFile.getModificationStamp(), () -> collectValidNames(xmlFile));
         }
         String tagName = xmlTag.getName();
         return switch (tagName) {
@@ -124,6 +133,28 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
             updater.accept(xmlMarkerAction.getNode());
         }
         return info;
+    }
+
+    /**
+     * 收集自定义任务文件中当前仍然存在的任务名（command / console-command / exec）。
+     * 用于清理缓存中已被删除或重命名的任务条目。
+     */
+    private static Set<String> collectValidNames(@NotNull XmlFile xmlFile) {
+        Set<String> names = new HashSet<>();
+        XmlTag root = xmlFile.getRootTag();
+        if (root == null) {
+            return names;
+        }
+        for (XmlTag tag : root.getSubTags()) {
+            String tagName = tag.getName();
+            if (COMMAND_TAG.equals(tagName) || CONSOLE_COMMAND.equals(tagName) || LOCAL_EXEC.equals(tagName)) {
+                String name = getAttribute(tag, NAME);
+                if (StringUtils.isNotEmpty(name)) {
+                    names.add(name);
+                }
+            }
+        }
+        return names;
     }
 
     private Info getConsoleInfo(XmlTag xmlTag) {

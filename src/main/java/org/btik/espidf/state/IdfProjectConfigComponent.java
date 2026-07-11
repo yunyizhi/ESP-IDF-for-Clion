@@ -23,6 +23,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * @author lustre
@@ -41,7 +43,10 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     private final HashMap<String, IdfProfileInfo> idfProfileInfoMap = new HashMap<>();
     private List<IdfProfileInfo> currentInfo;
 
-    private final HashMap<String, RunLineMarkerContributor.Info> lineMarkerRunInfoCache = new HashMap<>();
+    private final Map<String, RunLineMarkerContributor.Info> lineMarkerRunInfoCache = new ConcurrentHashMap<>();
+
+    /** 上次同步 line marker 缓存时自定义任务文件的修改戳，用于避免逐元素重复全量扫描。 */
+    private volatile long lineMarkerRunInfoCacheStamp = -1;
 
     public IdfProjectConfigComponent(Project project) {
         this.project = project;
@@ -181,6 +186,18 @@ public class IdfProjectConfigComponent implements PersistentStateComponent<IdfPr
     @Override
     public void putRunInfo(@NotNull String name, RunLineMarkerContributor.Info info) {
         lineMarkerRunInfoCache.put(name, info);
+    }
+
+    @Override
+    public void syncRunInfoCache(long modificationStamp, @NotNull Supplier<Set<String>> validNamesSupplier) {
+        // 文件未变化则无需重新扫描（getSlowInfo 会对每个元素调用，靠修改戳去重）
+        if (modificationStamp == lineMarkerRunInfoCacheStamp) {
+            return;
+        }
+        lineMarkerRunInfoCacheStamp = modificationStamp;
+        Set<String> validNames = validNamesSupplier.get();
+        // 清除文件中已不存在的任务缓存，防止删除/重命名任务后缓存只增不减
+        lineMarkerRunInfoCache.keySet().removeIf(name -> !validNames.contains(name));
     }
 
 }
