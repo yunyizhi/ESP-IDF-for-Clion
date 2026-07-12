@@ -7,8 +7,12 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.ComboBox;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.VerticalFlowLayout;
+import com.intellij.notification.NotificationType;
+import com.intellij.icons.AllIcons;
 import com.intellij.platform.DirectoryProjectGenerator;
+import com.intellij.platform.ide.progress.ModalTaskOwner;
 import com.intellij.ui.AncestorListenerAdapter;
 import com.intellij.ui.components.JBPanel;
 import com.intellij.uiDesigner.core.GridLayoutManager;
@@ -16,6 +20,7 @@ import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.conf.LastChosenIdfToolchain;
 import org.btik.espidf.service.IdfSysConfService;
+import org.btik.espidf.service.IdfToolchainCacheService;
 import org.btik.espidf.ui.componets.GridPanel;
 import org.btik.espidf.util.ToolChainTool;
 import org.btik.espidf.util.UIUtils;
@@ -29,6 +34,7 @@ import static org.btik.espidf.service.IdfEnvironmentService.DEFAULT_IDF_TOOLS_PA
 import static org.btik.espidf.ui.componets.MouseHooks.mouseClicked;
 import static org.btik.espidf.ui.componets.SelectedItemListener.selectedListener;
 import static org.btik.espidf.util.I18nMessage.$i18n;
+import static org.btik.espidf.util.I18nMessage.NOTIFICATION_GROUP;
 import static org.btik.espidf.util.SysConf.$sys;
 import static org.btik.espidf.util.UIUtils.*;
 
@@ -64,7 +70,7 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
     }
 
     private JPanel createToolchainSelectorPanel() {
-        GridLayoutManager gridLayoutManager = new GridLayoutManager(1, 2);
+        GridLayoutManager gridLayoutManager = new GridLayoutManager(1, 3);
         JPanel toolchainPanel = new JPanel(gridLayoutManager);
         idfToolchainCombBox = new IdfToolchainCombBox();
         UIUtils.setWidth(idfToolchainCombBox, 250);
@@ -87,10 +93,15 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
         actionGroup.add(new OpenCustomScriptDialogAction(toolchainPanel));
         JButton newToolchainButton = new JButton($i18n("idf.common.new"));
         newToolchainButton.setToolTipText($i18n("idf.toolchain.new"));
+        JButton rebuildCacheButton = new JButton();
+        rebuildCacheButton.setIcon(AllIcons.Actions.Rebuild);
+        rebuildCacheButton.setToolTipText($i18n("idf.toolchain.cache.rebuild.tip"));
         toolchainPanel.add(idfToolchainCombBox, createHCrowConstraints(0, 0));
         toolchainPanel.add(newToolchainButton, createConstraints(0, 1));
+        toolchainPanel.add(rebuildCacheButton, createConstraints(0, 2));
         newToolchainButton.addMouseListener(mouseClicked(
                 e -> showPop(newToolchainButton, "", actionGroup)));
+        rebuildCacheButton.addActionListener(e -> rebuildToolchainCache(rebuildCacheButton));
         return toolchainPanel;
     }
 
@@ -131,6 +142,26 @@ public class IdfProjectSettingsStep<T> extends ProjectSettingsStepBase<T> {
         } else {
             idfToolchainCombBox.load();
         }
+    }
+
+    private void rebuildToolchainCache(Component owner) {
+        int result = Messages.showYesNoDialog(
+                owner,
+                $i18n("idf.toolchain.cache.rebuild.confirm.msg"),
+                $i18n("idf.toolchain.cache.rebuild.confirm.title"),
+                Messages.getQuestionIcon());
+        if (result != Messages.YES) {
+            return;
+        }
+        IdfToolchainCacheService cacheService = ApplicationManager.getApplication().getService(IdfToolchainCacheService.class);
+        // 仅重建插件级工具链缓存，不修改任何已打开项目的环境变量
+        cacheService.rebuildAll(ModalTaskOwner.component(owner));
+        // 重建后刷新下拉框展示（重新从缓存加载版本与路径）
+        idfToolchainCombBox.reload();
+        NOTIFICATION_GROUP.createNotification(
+                $i18n("idf.toolchain.cache.rebuild.ok"),
+                $i18n("idf.toolchain.cache.rebuild.ok.msg"),
+                NotificationType.INFORMATION).notify(null);
     }
 
     class OpenEimDialogAction extends AnAction {
