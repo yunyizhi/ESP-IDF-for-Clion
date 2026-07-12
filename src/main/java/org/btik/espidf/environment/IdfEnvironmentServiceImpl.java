@@ -8,8 +8,11 @@ import com.jetbrains.cidr.cpp.cmake.workspace.CMakeProfileInfo;
 import com.jetbrains.cidr.cpp.cmake.workspace.CMakeWorkspace;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.apache.commons.lang3.StringUtils;
+import org.btik.espidf.conf.IdfToolchainCacheEntry;
+import org.btik.espidf.conf.IdfToolchainCacheManager;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
+import org.btik.espidf.service.IdfToolchainCacheService;
 import org.btik.espidf.state.model.IdfProfileInfo;
 import org.btik.espidf.util.EnvironmentVarUtil;
 import org.jetbrains.annotations.NotNull;
@@ -92,6 +95,12 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
         if (env != null) {
             return env;
         }
+        // 尝试插件级持久化缓存：命中且激活脚本未变化则直接复用，避免再次执行激活脚本
+        Map<String, String> cached = tryLoadFromCache(environment);
+        if (cached != null) {
+            envFile2Envs.put(environment, cached);
+            return cached;
+        }
         return generateEnvironment(toolchain);
     }
 
@@ -114,9 +123,45 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
 
     private Map<String, String> generateEnvironment(CPPToolchains.Toolchain toolchain) {
         Map<String, String> rawEnv = toolChainEnvByProj(toolchain, project);
-        rawEnv = sanitizeEnv(rawEnv);
-        envFile2Envs.put(toolchain.getEnvironment(), rawEnv);
-        return rawEnv;
+        // 写入插件级持久化缓存（存原始 env，读取方自行 sanitize），供后续会话复用，避免重复执行激活脚本
+        putToCache(toolchain, rawEnv);
+        Map<String, String> cleanEnv = sanitizeEnv(rawEnv);
+        envFile2Envs.put(toolchain.getEnvironment(), cleanEnv);
+        return cleanEnv;
+    }
+
+    /** 从持久化缓存读取已缓存的 env（脚本未变化且存在有效 env 时返回，否则 null）。 */
+    private Map<String, String> tryLoadFromCache(String environment) {
+        String stamp = IdfToolchainCacheManager.computeStamp(environment);
+        if (stamp == null) {
+            return null;
+        }
+        IdfToolchainCacheEntry entry = ApplicationManager.getApplication()
+                .getService(IdfToolchainCacheService.class).get(environment, stamp);
+        if (entry == null || entry.getEnv() == null) {
+            return null;
+        }
+        // 缓存中存的是原始 env，按现有行为 sanitize 后再使用
+        return sanitizeEnv(entry.getEnv());
+    }
+
+    private void putToCache(CPPToolchains.Toolchain toolchain, Map<String, String> rawEnv) {
+        String environment = toolchain.getEnvironment();
+        String stamp = IdfToolchainCacheManager.computeStamp(toolchain.getEnvironment());
+        if (stamp == null) {
+            return;
+        }
+        IdfToolchainCacheEntry entry = new IdfToolchainCacheEntry();
+        entry.setIdf(true);
+        entry.setEnvFile(environment);
+        entry.setStamp(stamp);
+        entry.setEnv(rawEnv);
+        entry.setName(toolchain.getName());
+        entry.setIdfVersion(rawEnv.get(ESP_IDF_VERSION), false);
+        entry.setIdfPath(rawEnv.get(IDF_PATH));
+        entry.setIdfToolsPath(rawEnv.get(IDF_TOOLS_PATH));
+        entry.setAdfPath(rawEnv.get(ADF_PATH));
+        ApplicationManager.getApplication().getService(IdfToolchainCacheService.class).put(entry);
     }
 
     @Override
@@ -215,10 +260,8 @@ public class IdfEnvironmentServiceImpl implements IdfEnvironmentService {
     @Override
     public void fixEnvironmentsCache() {
         eachIdfToolChain((toolchain -> {
-            String environment = toolchain.getEnvironment();
-            if (!envFile2Envs.containsKey(environment)) {
-                generateEnvironment(toolchain);
-            }
+            // 先尝试内存与持久化缓存，未命中再执行激活脚本，避免重复实读
+            getEnvOfToolChain(toolchain);
             return true;
         }));
     }

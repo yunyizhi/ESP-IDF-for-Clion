@@ -1,5 +1,6 @@
 package org.btik.espidf.project.generator.toolchain;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.platform.ide.progress.ModalTaskOwner;
 import com.intellij.ui.PopupMenuListenerAdapter;
@@ -8,6 +9,9 @@ import com.intellij.ui.SimpleTextAttributes;
 import com.intellij.util.ui.JBUI;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import org.apache.commons.lang3.StringUtils;
+import org.btik.espidf.conf.IdfToolchainCacheEntry;
+import org.btik.espidf.conf.IdfToolchainCacheManager;
+import org.btik.espidf.service.IdfToolchainCacheService;
 import org.btik.espidf.ui.componets.DisabledEditor;
 import org.btik.espidf.util.ToolChainTool;
 
@@ -20,13 +24,11 @@ import java.util.stream.Collectors;
 
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_UNIX_TOOLSET;
 import static com.jetbrains.cidr.cpp.toolchains.CPPToolSet.Kind.SYSTEM_WINDOWS_TOOLSET;
-import static org.btik.espidf.service.IdfEnvironmentService.*;
 import static org.btik.espidf.util.EnvironmentVarUtil.getIdfVersion;
 import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.util.ListCellRendererAttr.BLUE_ITALIC_SMALL_ATTRIBUTES;
 import static org.btik.espidf.util.ListCellRendererAttr.GRAY_ITALIC_SMALL_ATTRIBUTES;
 import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
-import static org.btik.espidf.util.ToolChainTool.toolChainEnvByComp;
 
 public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
 
@@ -35,7 +37,7 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
     private static final HashSet<CPPToolchains.Toolchain> envFileNotIdfToolchains = new HashSet<>();
 
     public IdfToolchainCombBox() {
-        setRenderer(new IdfInfoListCellRenderer());
+        setRenderer(new IdfToolchainListCellRenderer());
         setEditable(true);
         setEditor(new DisabledEditor());
         setLightWeightPopupEnabled(true);
@@ -70,6 +72,12 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
         toolchainEnvMap.forEach((toolchain, toolchainInfo) -> addItem(toolchainInfo));
     }
 
+    public void reload() {
+        toolchainEnvMap.clear();
+        envFileNotIdfToolchains.clear();
+        load();
+    }
+
     public void load() {
         final var toolSetKind = IS_WINDOWS ? SYSTEM_WINDOWS_TOOLSET : SYSTEM_UNIX_TOOLSET;
         List<CPPToolchains.Toolchain> envToolchains = ToolChainTool.getFilteredToolchains(
@@ -88,19 +96,47 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
         if (toolchainEnvMap.containsKey(toolchain)) {
             return toolchainEnvMap.get(toolchain);
         }
-        Map<String, String> rawEnv = toolChainEnvByComp(toolchain, IdfToolchainCombBox.this);
-        String idfPath = rawEnv.get(IDF_PATH);
-        if (StringUtils.isEmpty(idfPath)) {
+        // 先尝试插件级持久化缓存：命中且激活脚本未变化则直接复用，避免执行脚本与读取版本
+        String envFile = toolchain.getEnvironment();
+        String stamp = IdfToolchainCacheManager.computeStamp(envFile);
+        IdfToolchainCacheService cacheService = ApplicationManager.getApplication().getService(IdfToolchainCacheService.class);
+        // stamp 为 null 表示无法校验新鲜度（脚本缺失/异常），此时不使用缓存，强制走实读
+        boolean cacheable = stamp != null;
+        if (cacheable) {
+            IdfToolchainCacheEntry cached = cacheService.get(envFile, stamp);
+            if (cached != null) {
+                if (!cached.isIdf()) {
+                    envFileNotIdfToolchains.add(toolchain);
+                    return null;
+                }
+                IdfToolchain idfToolchain = new IdfToolchain(toolchain, cached.getIdfVersion(),
+                        cached.getIdfPath(), cached.getIdfToolsPath(),
+                        cached.getEnv() == null ? new HashMap<>() : cached.getEnv());
+                idfToolchain.setAdfPath(cached.getAdfPath());
+                if (!cached.isHasSubVersion()) {
+                    String version = getIdfVersion(cached.getEnv(), ModalTaskOwner.component(this), toolchain.getName());
+                    idfToolchain.setIdfVersion(version);
+                    cached.setIdfVersion(version, true);
+                    cacheService.put(cached);
+                }
+                toolchainEnvMap.put(toolchain, idfToolchain);
+                return idfToolchain;
+            }
+        }
+
+        // 缓存未命中：交由缓存管理器读取激活脚本并构建/写入缓存
+        IdfToolchainCacheEntry built = cacheService.buildAndCache(toolchain, ModalTaskOwner.component(this));
+        if (built == null) {
+            return null;
+        }
+        if (!built.isIdf()) {
             envFileNotIdfToolchains.add(toolchain);
             return null;
         }
-        String idfToolsPath = rawEnv.get(IDF_TOOLS_PATH);
-        String version = getIdfVersion(rawEnv, ModalTaskOwner.component(this), toolchain.getName());
-        IdfToolchain idfToolchain = new IdfToolchain(toolchain, version, idfPath, idfToolsPath, rawEnv);
-        String adfPath = rawEnv.get(ADF_PATH);
-        if (StringUtils.isNotEmpty(adfPath)) {
-            idfToolchain.setAdfPath(adfPath);
-        }
+        IdfToolchain idfToolchain = new IdfToolchain(toolchain, built.getIdfVersion(),
+                built.getIdfPath(), built.getIdfToolsPath(),
+                built.getEnv() == null ? new HashMap<>() : built.getEnv());
+        idfToolchain.setAdfPath(built.getAdfPath());
         toolchainEnvMap.put(toolchain, idfToolchain);
         return idfToolchain;
     }
@@ -126,10 +162,10 @@ public class IdfToolchainCombBox extends ComboBox<IdfToolchain> {
         setSelectedItem(idfToolchain);
     }
 
-    public static class IdfInfoListCellRenderer implements ListCellRenderer<IdfInfo> {
+    public static class IdfToolchainListCellRenderer implements ListCellRenderer<IdfToolchain> {
 
         @Override
-        public Component getListCellRendererComponent(JList<? extends IdfInfo> list, IdfInfo idfInfo, int index, boolean isSelected, boolean cellHasFocus) {
+        public Component getListCellRendererComponent(JList<? extends IdfToolchain> list, IdfToolchain idfInfo, int index, boolean isSelected, boolean cellHasFocus) {
             if (idfInfo == null) {
                 return new JPanel(new BorderLayout());
             }

@@ -34,7 +34,7 @@ import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.ESP_CUSTOM_TASKS_XML;
 public final class EspIdfCustomTasksService {
 
     /** 自定义任务标识前缀，用于与内置任务区分。 */
-    public static final String PREFIX = "c.";
+    public static final String PREFIX = "custom:";
 
     private final Project project;
 

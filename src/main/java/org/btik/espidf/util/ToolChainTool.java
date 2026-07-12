@@ -57,7 +57,7 @@ public class ToolChainTool {
         if (activeProfiles.isEmpty()) {
             return null;
         }
-        CMakeSettings.Profile currentProfile = activeProfiles.get(0);
+        CMakeSettings.Profile currentProfile = activeProfiles.getFirst();
         return CPPToolchains.getInstance()
                 .getToolchainByNameOrDefault(currentProfile.getToolchainName());
     }
@@ -114,8 +114,8 @@ public class ToolChainTool {
                 new HashMap<>());
     }
 
-    public static Map<String, String> toolChainEnvByComp(CPPToolchains.Toolchain toolchain, Component component) {
-        return TasksKt.runWithModalProgressBlocking(ModalTaskOwner.component(component),
+    public static Map<String, String> toolChainEnvByOwner(CPPToolchains.Toolchain toolchain, ModalTaskOwner owner) {
+        return TasksKt.runWithModalProgressBlocking(owner,
                 $i18nF("esp.idf.read.envs", toolchain.getName()),
                 TaskCancellation.nonCancellable(), (scope, continuation) -> {
                     try {
@@ -124,6 +124,10 @@ public class ToolChainTool {
                         throw new RuntimeException(e);
                     }
                 });
+    }
+
+    public static Map<String, String> toolChainEnvByComp(CPPToolchains.Toolchain toolchain, Component component) {
+        return toolChainEnvByOwner(toolchain, ModalTaskOwner.component(component));
     }
 
 
