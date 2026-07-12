@@ -2,6 +2,7 @@ package org.btik.espidf.toolwindow.tasks.mcp;
 
 import com.intellij.mcpserver.McpCallInfoKt;
 import com.intellij.mcpserver.McpTool;
+import com.intellij.mcpserver.impl.util.Schema_utilKt;
 import com.intellij.mcpserver.McpToolCallResult;
 import com.intellij.mcpserver.McpToolCategory;
 import com.intellij.mcpserver.McpToolDescriptor;
@@ -12,7 +13,6 @@ import kotlin.coroutines.Continuation;
 import kotlinx.serialization.json.JsonElement;
 import kotlinx.serialization.json.JsonElementKt;
 import kotlinx.serialization.json.JsonObject;
-import kotlinx.serialization.json.JsonPrimitive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -38,10 +38,11 @@ public class EspIdfListTasksMcpTool implements McpTool {
 
     public EspIdfListTasksMcpTool(@NotNull EspIdfTasksMcpRegistry registry) {
         this.registry = registry;
+        String projectPathParam = Schema_utilKt.getProjectPathParameterName();
         Map<String, JsonElement> properties = new LinkedHashMap<>();
-        properties.put("project", stringProperty($i18n("espidf.mcp.list.tasks.param.project")));
+        properties.put(projectPathParam, stringProperty($i18n("espidf.mcp.common.param.projectPath")));
         McpToolSchema schema = McpToolSchema.Companion.ofPropertiesMap(
-                properties, Set.of(), new LinkedHashMap<>(), McpToolSchema.DEFAULT_DEFINITIONS_PATH);
+                properties, Set.of(projectPathParam), new LinkedHashMap<>(), McpToolSchema.DEFAULT_DEFINITIONS_PATH);
         this.descriptor = new McpToolDescriptor(
                 "espidf_list_tasks",
                 $i18n("espidf.mcp.list.tasks.name"),
@@ -61,7 +62,11 @@ public class EspIdfListTasksMcpTool implements McpTool {
     @Override
     public Object call(@NotNull JsonObject input,
                        @Nullable Continuation<? super McpToolCallResult> continuation) {
-        Project project = resolveProject(input, continuation);
+        Project project = resolveProject(continuation);
+        if (project == null) {
+            return McpToolCallResult.Companion.error(
+                    $i18n("espidf.mcp.list.tasks.no.project"), EMPTY_JSON);
+        }
         StringBuilder sb = new StringBuilder();
         sb.append($i18n("espidf.mcp.list.tasks.header")).append("\n\n");
         for (EspIdfTasksMcpRegistry.Entry e : registry.getEntries(project)) {
@@ -79,21 +84,10 @@ public class EspIdfListTasksMcpTool implements McpTool {
         return McpToolCallResult.Companion.text(sb.toString(), EMPTY_JSON);
     }
 
-    private static @Nullable Project resolveProject(@NotNull JsonObject input,
-                                                    @Nullable Continuation<? super McpToolCallResult> continuation) {
-        String hint = readString(input, "project");
-        Project contextProject = McpCallInfoKt.getProjectOrNull(
+    private static @Nullable Project resolveProject(@Nullable Continuation<? super McpToolCallResult> continuation) {
+        return McpCallInfoKt.getProjectOrNull(
                 continuation != null ? continuation.getContext()
                         : kotlin.coroutines.EmptyCoroutineContext.INSTANCE);
-        return McpProjectResolver.resolve(hint, contextProject);
-    }
-
-    private static @Nullable String readString(@NotNull JsonObject input, @NotNull String key) {
-        JsonElement e = input.get(key);
-        if (!(e instanceof JsonPrimitive p) || !p.isString()) {
-            return null;
-        }
-        return p.getContent();
     }
 
     private static JsonElement stringProperty(String description) {

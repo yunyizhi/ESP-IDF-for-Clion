@@ -3,6 +3,7 @@ package org.btik.espidf.toolwindow.tasks.mcp;
 import com.intellij.execution.process.ProcessListener;
 import com.intellij.mcpserver.McpCallInfoKt;
 import com.intellij.mcpserver.McpTool;
+import com.intellij.mcpserver.impl.util.Schema_utilKt;
 import com.intellij.mcpserver.McpToolCallResult;
 import com.intellij.mcpserver.McpToolCategory;
 import com.intellij.mcpserver.McpToolDescriptor;
@@ -52,11 +53,12 @@ public class EspIdfRunTaskMcpTool implements McpTool {
 
     public EspIdfRunTaskMcpTool(@NotNull EspIdfTasksMcpRegistry registry) {
         this.registry = registry;
+        String projectPathParam = Schema_utilKt.getProjectPathParameterName();
         Map<String, JsonElement> properties = new LinkedHashMap<>();
         properties.put("task", stringProperty($i18n("espidf.mcp.run.task.param.task")));
-        properties.put("project", stringProperty($i18n("espidf.mcp.run.task.param.project")));
+        properties.put(projectPathParam, stringProperty($i18n("espidf.mcp.common.param.projectPath")));
         McpToolSchema inputSchema = McpToolSchema.Companion.ofPropertiesMap(
-                properties, Set.of("task"), new LinkedHashMap<>(), McpToolSchema.DEFAULT_DEFINITIONS_PATH);
+                properties, Set.of("task", projectPathParam), new LinkedHashMap<>(), McpToolSchema.DEFAULT_DEFINITIONS_PATH);
         // 输出 schema 必须宽松：工具返回的结构化内容（EMPTY_JSON）不含 task 等属性，
         // 若复用含 required 的输入 schema，服务端会对输出做校验并报错。
         McpToolSchema outputSchema = McpToolSchema.Companion.ofPropertiesMap(
@@ -87,13 +89,8 @@ public class EspIdfRunTaskMcpTool implements McpTool {
     @Override
     public Object call(@NotNull JsonObject input,
                        @Nullable Continuation<? super McpToolCallResult> continuation) {
-        Project project = resolveProject(input, continuation);
+        Project project = resolveProject(continuation);
         if (project == null) {
-            String hint = readString(input, "project");
-            if (StringUtils.isNotEmpty(hint)) {
-                return McpToolCallResult.Companion.error(
-                        $i18nF("espidf.mcp.run.task.unknown.project", hint), EMPTY_JSON);
-            }
             return McpToolCallResult.Companion.error(
                     $i18n("espidf.mcp.run.task.no.project"), EMPTY_JSON);
         }
@@ -155,13 +152,10 @@ public class EspIdfRunTaskMcpTool implements McpTool {
         }
     }
 
-    private static @Nullable Project resolveProject(@NotNull JsonObject input,
-                                                    @Nullable Continuation<? super McpToolCallResult> continuation) {
-        String hint = readString(input, "project");
-        Project contextProject = McpCallInfoKt.getProjectOrNull(
+    private static @Nullable Project resolveProject(@Nullable Continuation<? super McpToolCallResult> continuation) {
+        return McpCallInfoKt.getProjectOrNull(
                 continuation != null ? continuation.getContext()
                         : kotlin.coroutines.EmptyCoroutineContext.INSTANCE);
-        return McpProjectResolver.resolve(hint, contextProject);
     }
 
     private static @Nullable String readString(@NotNull JsonObject input, @NotNull String key) {

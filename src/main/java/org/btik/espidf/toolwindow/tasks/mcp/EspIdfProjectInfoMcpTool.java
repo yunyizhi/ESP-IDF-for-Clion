@@ -2,6 +2,7 @@ package org.btik.espidf.toolwindow.tasks.mcp;
 
 import com.intellij.mcpserver.McpCallInfoKt;
 import com.intellij.mcpserver.McpTool;
+import com.intellij.mcpserver.impl.util.Schema_utilKt;
 import com.intellij.mcpserver.McpToolCallResult;
 import com.intellij.mcpserver.McpToolCategory;
 import com.intellij.mcpserver.McpToolDescriptor;
@@ -49,10 +50,11 @@ public class EspIdfProjectInfoMcpTool implements McpTool {
     private final McpToolDescriptor descriptor;
 
     public EspIdfProjectInfoMcpTool() {
+        String projectPathParam = Schema_utilKt.getProjectPathParameterName();
         Map<String, JsonElement> properties = new LinkedHashMap<>();
-        properties.put("project", stringProperty($i18n("espidf.mcp.project.info.param.project")));
+        properties.put(projectPathParam, stringProperty($i18n("espidf.mcp.common.param.projectPath")));
         McpToolSchema schema = McpToolSchema.Companion.ofPropertiesMap(
-                properties, Set.of(), new LinkedHashMap<>(), McpToolSchema.DEFAULT_DEFINITIONS_PATH);
+                properties, Set.of(projectPathParam), new LinkedHashMap<>(), McpToolSchema.DEFAULT_DEFINITIONS_PATH);
         this.descriptor = new McpToolDescriptor(
                 "espidf_get_project_info",
                 $i18n("espidf.mcp.project.info.name"),
@@ -72,13 +74,8 @@ public class EspIdfProjectInfoMcpTool implements McpTool {
     @Override
     public Object call(@NotNull JsonObject input,
                        @Nullable Continuation<? super McpToolCallResult> continuation) {
-        Project project = resolveProject(input, continuation);
+        Project project = resolveProject(continuation);
         if (project == null) {
-            String hint = readString(input, "project");
-            if (StringUtils.isNotEmpty(hint)) {
-                return McpToolCallResult.Companion.error(
-                        $i18nF("espidf.mcp.project.info.unknown.project", hint), EMPTY_JSON);
-            }
             return McpToolCallResult.Companion.error(
                     $i18n("espidf.mcp.project.info.no.project"), EMPTY_JSON);
         }
@@ -147,21 +144,10 @@ public class EspIdfProjectInfoMcpTool implements McpTool {
         return StringUtils.isEmpty(v) ? "-" : v;
     }
 
-    private static @Nullable Project resolveProject(@NotNull JsonObject input,
-                                                    @Nullable Continuation<? super McpToolCallResult> continuation) {
-        String hint = readString(input, "project");
-        Project contextProject = McpCallInfoKt.getProjectOrNull(
+    private static @Nullable Project resolveProject(@Nullable Continuation<? super McpToolCallResult> continuation) {
+        return McpCallInfoKt.getProjectOrNull(
                 continuation != null ? continuation.getContext()
                         : kotlin.coroutines.EmptyCoroutineContext.INSTANCE);
-        return McpProjectResolver.resolve(hint, contextProject);
-    }
-
-    private static @Nullable String readString(@NotNull JsonObject input, @NotNull String key) {
-        JsonElement e = input.get(key);
-        if (!(e instanceof JsonPrimitive p) || !p.isString()) {
-            return null;
-        }
-        return p.getContent();
     }
 
     private static JsonElement stringProperty(String description) {
