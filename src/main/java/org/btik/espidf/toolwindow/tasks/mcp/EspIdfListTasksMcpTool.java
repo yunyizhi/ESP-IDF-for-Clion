@@ -75,6 +75,9 @@ public class EspIdfListTasksMcpTool implements McpTool {
                 sb.append("  (").append($i18n("espidf.mcp.list.tasks.display")).append(' ')
                         .append(e.displayName()).append(')');
             }
+            if (e.useMonitor()) {
+                sb.append("  [").append($i18n("espidf.mcp.list.tasks.monitor.hint")).append(']');
+            }
             sb.append('\n');
             sb.append("    ").append(e.description()).append('\n');
         }

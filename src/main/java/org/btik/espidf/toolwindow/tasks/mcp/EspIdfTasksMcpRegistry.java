@@ -37,7 +37,8 @@ public final class EspIdfTasksMcpRegistry {
             @NotNull String id,
             @NotNull String displayName,
             @NotNull String description,
-            @NotNull String path) {
+            @NotNull String path,
+            boolean useMonitor) {
     }
 
     /** 默认任务树（来自 defaultTree.xml），构建一次后不可变。 */
@@ -114,7 +115,17 @@ public final class EspIdfTasksMcpRegistry {
         if (!path.isEmpty()) {
             targetRegistry.putIfAbsent(keyPrefix + path.toLowerCase(Locale.ROOT), node);
         }
-        targetEntries.add(new Entry(key, node.getDisplayName(), describe(node), path));
+        targetEntries.add(new Entry(key, node.getDisplayName(), describe(node), path, isUseMonitor(node)));
+    }
+
+    /**
+     * 判断节点是否为「使用 monitor（串口监视）」的任务（对应 XML 中的 use-monitor 属性）。
+     * 这类任务通常长时间运行，无法像普通命令那样等待其结束；
+     * 调用方可通过 {@code espidf_run_task} 的 {@code monitorWaitSeconds} 参数采集一段时间的日志。
+     */
+    public static boolean isUseMonitor(@Nullable EspIdfTaskTreeNode node) {
+        return node instanceof EspIdfTaskCommandNode
+                && ((EspIdfTaskCommandNode) node).isUseMonitor();
     }
 
     /**

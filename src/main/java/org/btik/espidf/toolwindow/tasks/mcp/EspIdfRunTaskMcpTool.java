@@ -56,6 +56,7 @@ public class EspIdfRunTaskMcpTool implements McpTool {
         String projectPathParam = Schema_utilKt.getProjectPathParameterName();
         Map<String, JsonElement> properties = new LinkedHashMap<>();
         properties.put("task", stringProperty($i18n("espidf.mcp.run.task.param.task")));
+        properties.put("monitorWaitSeconds", integerProperty($i18n("espidf.mcp.run.task.param.monitorWaitSeconds")));
         properties.put(projectPathParam, stringProperty($i18n("espidf.mcp.common.param.projectPath")));
         McpToolSchema inputSchema = McpToolSchema.Companion.ofPropertiesMap(
                 properties, Set.of("task", projectPathParam), new LinkedHashMap<>(), McpToolSchema.DEFAULT_DEFINITIONS_PATH);
@@ -77,6 +78,13 @@ public class EspIdfRunTaskMcpTool implements McpTool {
     private static JsonElement stringProperty(String description) {
         Map<String, JsonElement> m = new LinkedHashMap<>();
         m.put("type", JsonElementKt.JsonPrimitive("string"));
+        m.put("description", JsonElementKt.JsonPrimitive(description));
+        return new JsonObject(m);
+    }
+
+    private static JsonElement integerProperty(String description) {
+        Map<String, JsonElement> m = new LinkedHashMap<>();
+        m.put("type", JsonElementKt.JsonPrimitive("integer"));
         m.put("description", JsonElementKt.JsonPrimitive(description));
         return new JsonObject(m);
     }
@@ -105,13 +113,33 @@ public class EspIdfRunTaskMcpTool implements McpTool {
                     $i18nF("espidf.mcp.run.task.unknown", task), EMPTY_JSON);
         }
         try {
-            boolean longRunning = node instanceof EspIdfTaskCommandNode
-                    && ((EspIdfTaskCommandNode) node).isUseMonitor();
+            boolean useMonitor = EspIdfTasksMcpRegistry.isUseMonitor(node);
+            Integer monitorWaitSeconds = readInt(input, "monitorWaitSeconds");
             boolean capturable = node instanceof EspIdfTaskCommandNode
                     || node instanceof LocalExecNode
                     || node instanceof RawCommandNode;
 
-            if (!capturable || longRunning) {
+            // 监控类任务：若传入 monitorWaitSeconds，则在指定秒数内采集串口日志后返回
+            if (useMonitor && monitorWaitSeconds != null && monitorWaitSeconds > 0) {
+                String basePath = StringUtils.defaultString(project.getBasePath());
+                String id = node.getId();
+                String uniqueName = StringUtils.isNotEmpty(id) ? sanitize(id) : sanitize(node.getDisplayName());
+                String key = basePath + "::" + uniqueName;
+                ProcessListener listener = McpTaskOutputCollector.register(key);
+                ApplicationManager.getApplication().invokeLater(() -> executeTask(project, node, listener));
+
+                McpTaskOutputCollector.McpTaskOutput out =
+                        McpTaskOutputCollector.await(key, monitorWaitSeconds * 1000L);
+                if (out == null) {
+                    return McpToolCallResult.Companion.text(
+                            $i18nF("espidf.mcp.run.task.no.output", node.getDisplayName()), EMPTY_JSON);
+                }
+                String header = $i18nF("espidf.mcp.run.task.monitor.captured",
+                        node.getDisplayName(), monitorWaitSeconds);
+                return McpToolCallResult.Companion.text(header + out.text, EMPTY_JSON);
+            }
+
+            if (!capturable || useMonitor) {
                 ApplicationManager.getApplication().invokeLater(() -> executeTask(project, node, null));
                 return McpToolCallResult.Companion.text(
                         $i18nF("espidf.mcp.run.task.triggered", node.getDisplayName()),
@@ -164,6 +192,22 @@ public class EspIdfRunTaskMcpTool implements McpTool {
             return null;
         }
         return p.getContent();
+    }
+
+    private static @Nullable Integer readInt(@NotNull JsonObject input, @NotNull String key) {
+        JsonElement e = input.get(key);
+        if (!(e instanceof JsonPrimitive p)) {
+            return null;
+        }
+        String content = p.getContent();
+        if (content == null || content.isEmpty()) {
+            return null;
+        }
+        try {
+            return Integer.parseInt(content.trim());
+        } catch (NumberFormatException ex) {
+            return null;
+        }
     }
 
     private static String sanitize(String raw) {
