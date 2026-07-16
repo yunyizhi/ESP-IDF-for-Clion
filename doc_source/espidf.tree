@@ -24,4 +24,5 @@
     <toc-element topic="profiles.md"/>
     <toc-element topic="toolchain.md"/>
     <toc-element topic="adf.md"/>
+    <toc-element topic="mcp.md"/>
 </instance-profile>
