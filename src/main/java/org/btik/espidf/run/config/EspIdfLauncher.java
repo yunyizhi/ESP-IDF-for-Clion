@@ -48,6 +48,8 @@ import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
 
+import static org.btik.espidf.util.I18nMessage.$i18n;
+
 /**
  * @author lustre
  * @since 2024/9/2 23:05
@@ -60,9 +62,17 @@ public class EspIdfLauncher<T> extends CLionLauncher {
         this.debugRunConfig = debugRunConfig;
     }
 
+    /**
+     * ESP-IDF 调试通过 idf.py openocd + GDB 远程连接完成，宿主机上没有可执行文件，
+     * 因此不存在可用于 CLion 调试 Profile 的 {@link CPPEnvironment}。
+     * <p>
+     * CLion 的 {@code CidrDebugProfileGroup} 在收集 Profile 时会调用本方法，
+     * 此处必须抛出 {@link ExecutionException} 而非 {@link UnsupportedOperationException}，
+     * 前者会被 CLion 捕获并以 debug 级别记录,后者会作为未处理异常上报。
+     */
     @Override
-    public @NotNull Pair<File, CPPEnvironment> getRunFileAndEnvironment() {
-        throw new UnsupportedOperationException();
+    public @NotNull Pair<File, CPPEnvironment> getRunFileAndEnvironment() throws ExecutionException {
+        throw new ExecutionException($i18n("esp.idf.debugging.run.file.not.supported"));
     }
 
     @Override
