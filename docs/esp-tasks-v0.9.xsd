@@ -350,9 +350,10 @@
     <xs:complexType name="ExecType">
         <xs:complexContent>
             <xs:extension base="tns:BaseCommandType">
-                <xs:sequence>
+                <!-- args 与 env 是相互独立的可选子元素，允许任意顺序书写 -->
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
                     <!-- 可选的 args 子元素 -->
-                    <xs:element name="args" type="xs:string" minOccurs="0" maxOccurs="1">
+                    <xs:element name="args" type="xs:string">
                         <xs:annotation>
                             <xs:documentation>
                                 <p>Command-line arguments for the executable. Can be specified as a child element.</p>
@@ -360,7 +361,7 @@
                             </xs:documentation>
                         </xs:annotation>
                     </xs:element>
-                    <xs:element name="env" type="tns:EnvVarsType" minOccurs="0" maxOccurs="1">
+                    <xs:element name="env" type="tns:EnvVarsType">
                         <xs:annotation>
                             <xs:documentation>
                                 <p>Extended environment variables written as a child element: a variable list where
@@ -371,7 +372,7 @@
                             </xs:documentation>
                         </xs:annotation>
                     </xs:element>
-                </xs:sequence>
+                </xs:choice>
                 <xs:attribute name="path" type="xs:string" use="optional">
                     <xs:annotation>
                         <xs:documentation>
