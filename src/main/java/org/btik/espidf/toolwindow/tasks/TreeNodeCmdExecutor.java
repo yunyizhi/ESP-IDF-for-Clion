@@ -28,6 +28,7 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -53,6 +54,7 @@ public class TreeNodeCmdExecutor {
 
     public static void execute(EspIdfTaskCommandNode commandNode, @NotNull Project project, ProcessListener listener) {
         Map<String, String> envsWithProjectSettings = getEnvsWithProjectSettings(project);
+        envsWithProjectSettings.putAll(commandNode.getEnvVars());
         String port = envsWithProjectSettings.get(ESP_PORT);
         if (port == null) {
             port = PORT_CONF_AUTO;
@@ -132,6 +134,7 @@ public class TreeNodeCmdExecutor {
         runConfiguration.setExecuteScriptFile(false);
         runConfiguration.setInterpreterPath(getCmdEnv());
         Map<String, String> environments = getEnvsWithProjectSettings(project);
+        environments.putAll(commandNode.getEnvVars());
         String command = commandNode.getCommand();
         if (IS_WINDOWS) {
             StringBuilder envPrefixBuilder = new StringBuilder();
@@ -171,8 +174,13 @@ public class TreeNodeCmdExecutor {
         PtyCommandLine commandLine = new PtyCommandLine();
 
         commandLine.setWorkDirectory(project.getBasePath());
+        Map<String, String> environments = new HashMap<>();
         if (commandNode.isUseIdfEnv()) {
-            commandLine.withEnvironment(getEnvsWithProjectSettings(project));
+            environments.putAll(getEnvsWithProjectSettings(project));
+        }
+        environments.putAll(commandNode.getEnvVars());
+        if (!environments.isEmpty()) {
+            commandLine.withEnvironment(environments);
         }
         try {
             Charset charset = Charset.forName(commandNode.getEncoding());
@@ -203,8 +211,7 @@ public class TreeNodeCmdExecutor {
         }
     }
 
-    private static String buildPowershellEnv(@NotNull Project project) {
-        Map<String, String> environments = getEnvsWithProjectSettings(project);
+    private static String buildPowershellEnv(Map<String, String> environments) {
         StringBuilder envPrefixBuilder = new StringBuilder();
         diffWithSystem(environments).forEach((key, value) -> {
             envPrefixBuilder.append(POWER_SHELL_ENV_PREFIX).append(key).append("=");
@@ -241,8 +248,13 @@ public class TreeNodeCmdExecutor {
         String execPath = commandNode.getPath();
         if (IS_WINDOWS) {
             StringBuilder cmdPrefixBuilder = new StringBuilder();
+            Map<String, String> environments = new HashMap<>();
             if (commandNode.isUseIdfEnv()) {
-                cmdPrefixBuilder.append(buildPowershellEnv(project));
+                environments.putAll(getEnvsWithProjectSettings(project));
+            }
+            environments.putAll(commandNode.getEnvVars());
+            if (!environments.isEmpty()) {
+                cmdPrefixBuilder.append(buildPowershellEnv(environments));
             }
             if (StringTools.appendNotEmpty(cmdPrefixBuilder, execPath)) {
                 cmdPrefixBuilder.append(" ");
@@ -252,10 +264,17 @@ public class TreeNodeCmdExecutor {
         } else {
             if (commandNode.isUseIdfEnv()) {
                 Map<String, String> environments = getEnvsWithProjectSettings(project);
+                environments.putAll(commandNode.getEnvVars());
                 // setEnvData 暂未兼容COMP_WORDBREAKS生成语句 先舍弃
                 environments.remove(IDF_PY_COMP_WORDBREAKS);
                 environments.remove(COMP_WORDBREAKS);
                 runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, false));
+            } else if (!commandNode.getEnvVars().isEmpty()) {
+                Map<String, String> environments = new HashMap<>(commandNode.getEnvVars());
+                environments.remove(IDF_PY_COMP_WORDBREAKS);
+                environments.remove(COMP_WORDBREAKS);
+                // 仅追加自定义变量时保留父进程环境
+                runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, true));
             }
 
             String bin = "";
@@ -281,7 +300,9 @@ public class TreeNodeCmdExecutor {
         PtyCommandLine commandLine = new PtyCommandLine();
         commandLine.setExePath(getCmdEnv());
         commandLine.setWorkDirectory(project.getBasePath());
-        commandLine.withEnvironment(getEnvsWithProjectSettings(project));
+        Map<String, String> environments = getEnvsWithProjectSettings(project);
+        environments.putAll(commandNode.getEnvVars());
+        commandLine.withEnvironment(environments);
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
         commandLine.addParameters(getCmdArg(), commandNode.getCommand());
         if (IS_WINDOWS) {

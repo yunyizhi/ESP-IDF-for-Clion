@@ -3,6 +3,8 @@ package org.btik.espidf.toolwindow.tasks.model;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.toolwindow.tasks.EspIdfTaskTreeFactory;
 
+import java.util.Map;
+
 import static org.btik.espidf.util.I18nMessage.$i18n;
 
 /**
@@ -19,6 +21,11 @@ public class EspIdfTaskTreeNode {
     protected String toolTip;
 
     protected boolean mcp = true;
+
+    /**
+     * 拓展环境变量，执行时会覆盖同名的环境变量
+     */
+    protected Map<String, String> envVars = Map.of();
 
     public EspIdfTaskTreeNode(String displayName) {
         String i18nName = EspIdfTaskTreeFactory.getI18n(displayName);
@@ -62,6 +69,14 @@ public class EspIdfTaskTreeNode {
 
     public void setMcp(boolean mcp) {
         this.mcp = mcp;
+    }
+
+    public Map<String, String> getEnvVars() {
+        return envVars;
+    }
+
+    public void setEnvVars(Map<String, String> envVars) {
+        this.envVars = envVars == null ? Map.of() : envVars;
     }
 
     @Override

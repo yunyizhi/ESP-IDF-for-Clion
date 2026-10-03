@@ -32,16 +32,18 @@ import static org.btik.espidf.util.StringTools.safe2String;
  */
 public class EnvironmentVarUtil {
     public static Map<String, String> parseEnv(String text) {
-        String[] lines = text.split("\n");
         var env = new HashMap<String, String>();
-        for (String line : lines) {
-            if (!line.isEmpty()) {
-                int pos = line.indexOf('=');
-                if (pos <= 0) {
-                    throw new RuntimeException("malformed:" + line);
-                }
-                env.put(line.substring(0, pos), line.substring(pos + 1));
+        for (String rawLine : text.split("\r?\n")) {
+            // 子标签内容通常带缩进，逐行 trim 并跳过空行，避免缩进污染变量名/空行触发解析失败
+            String line = rawLine.trim();
+            if (line.isEmpty()) {
+                continue;
             }
+            int pos = line.indexOf('=');
+            if (pos <= 0) {
+                throw new RuntimeException("malformed:" + rawLine);
+            }
+            env.put(line.substring(0, pos).trim(), line.substring(pos + 1));
         }
         return env;
     }

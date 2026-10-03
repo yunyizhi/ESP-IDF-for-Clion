@@ -57,6 +57,11 @@ public interface TreeXmlMeta {
 
     String EXEC_WITH_IDF_ENV = "idf-env";
 
+    /**
+     * 拓展环境变量，可作为行内属性，也可作为子标签，每行一个 key=value
+     */
+    String ENV = "env";
+
     String ESP_CUSTOM_TASKS_XML = "esp_custom_tasks.xml";
 
     String ESP_CUSTOM_TASKS_XML_WIN_TEMPLATE = "esp_custom_tasks_windows.xml";

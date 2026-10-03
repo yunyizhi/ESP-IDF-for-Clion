@@ -1,10 +1,12 @@
 package org.btik.espidf.toolwindow.tasks;
 
 import com.intellij.notification.NotificationType;
+import com.intellij.openapi.diagnostic.Logger;
 import org.apache.commons.lang3.StringUtils;
 import org.btik.espidf.toolwindow.common.NodeModel;
 import org.btik.espidf.toolwindow.tasks.model.*;
 import org.btik.espidf.util.DomUtil;
+import org.btik.espidf.util.EnvironmentVarUtil;
 import org.jetbrains.annotations.NotNull;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -15,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.*;
@@ -28,6 +31,7 @@ import static org.btik.espidf.util.OsUtil.IS_WINDOWS;
  * @since 2024/2/18 15:16
  */
 public class EspIdfTaskTreeFactory {
+    private static final Logger LOG = Logger.getInstance(EspIdfTaskTreeFactory.class);
     private static final HashMap<String, Function<Element, NodeModel<Element>>> factories = new HashMap<>();
 
     static {
@@ -147,7 +151,34 @@ public class EspIdfTaskTreeFactory {
         taskTreeNode.setIcon(element.getAttribute(ICON));
         // mcp 属性缺省视为 true（暴露给 MCP）；仅 mcp="false" 才屏蔽
         taskTreeNode.setMcp(!"false".equalsIgnoreCase(element.getAttribute(MCP)));
+        taskTreeNode.setEnvVars(parseEnv(element));
         return new NodeModel<>(new DefaultMutableTreeNode(taskTreeNode), element);
+    }
+
+    /**
+     * 解析拓展环境变量。行内属性 {@code env} 与子标签 {@code <env>} 均支持，
+     * 变量列表每行只写一个 {@code key=value}，子标签会在同名时覆盖属性。
+     */
+    private static Map<String, String> parseEnv(Element element) {
+        Map<String, String> envVars = new HashMap<>();
+        putEnv(element.getAttribute(ENV), envVars);
+        Element envTag = getFirstElementByName(element, ENV);
+        if (envTag != null) {
+            putEnv(envTag.getTextContent(), envVars);
+        }
+        return envVars;
+    }
+
+    private static void putEnv(String text, Map<String, String> envVars) {
+        if (StringUtils.isBlank(text)) {
+            return;
+        }
+        try {
+            envVars.putAll(EnvironmentVarUtil.parseEnv(text));
+        } catch (RuntimeException e) {
+            // 格式非法时忽略该来源，避免阻断整个任务树加载，格式问题由 xsd 在编辑器中提示
+            LOG.warn("Malformed extended environment variables: " + text, e);
+        }
     }
 
     public static String getI18n(String rawName) {

@@ -1,6 +1,7 @@
 package org.btik.espidf.toolwindow.tasks.line.marker;
 
 import com.intellij.execution.lineMarker.RunLineMarkerContributor;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
@@ -13,10 +14,13 @@ import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskCommandNode;
 import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskConsoleCommandNode;
 import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskTreeNode;
 import org.btik.espidf.toolwindow.tasks.model.LocalExecNode;
+import org.btik.espidf.util.EnvironmentVarUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -25,6 +29,8 @@ import static org.btik.espidf.toolwindow.tasks.TreeXmlMeta.*;
 import static org.btik.espidf.util.XmlPsiTool.*;
 
 public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor {
+
+    private static final Logger LOG = Logger.getInstance(EspCustomRunLineMarkerContributor.class);
 
     @Override
     public @Nullable Info getInfo(@NotNull PsiElement element) {
@@ -69,6 +75,7 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
 
         boolean useIdfEnv = getBoolAttribute(xmlTag, EXEC_WITH_IDF_ENV);
         String encoding = getAttribute(xmlTag, EXEC_ENCODING);
+        Map<String, String> envVars = parseEnv(xmlTag);
         return getCacheOrNewInfo(name,
                 () -> {
                     LocalExecNode localExecNode = new LocalExecNode(name, path, args);
@@ -77,6 +84,7 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
                     }
                     localExecNode.setUseTerminal(useTerminal);
                     localExecNode.setUseIdfEnv(useIdfEnv);
+                    localExecNode.setEnvVars(envVars);
                     return new XmlMarkerAction(localExecNode, xmlTag.getProject());
                 },
                 (oldNode) -> {
@@ -85,6 +93,7 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
                         localExecNode.setArgs(args);
                         localExecNode.setUseTerminal(useTerminal);
                         localExecNode.setUseIdfEnv(useIdfEnv);
+                        localExecNode.setEnvVars(envVars);
                         if (StringUtils.isNotEmpty(encoding)) {
                             localExecNode.setEncoding(encoding);
                         }
@@ -104,11 +113,13 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
         boolean useMonitor = getBoolAttribute(xmlTag, USE_MONITOR);
         boolean requestPort = getBoolAttribute(xmlTag, REQUEST_PORT, useMonitor);
         boolean useFilter = getBoolAttribute(xmlTag, CONSOLE_FILTER);
+        Map<String, String> envVars = parseEnv(xmlTag);
 
         return getCacheOrNewInfo(name, () -> {
             EspIdfTaskCommandNode espIdfTaskTreeNode = new EspIdfTaskCommandNode(name, value, useFilter);
             espIdfTaskTreeNode.setUseMonitor(useMonitor);
             espIdfTaskTreeNode.setRequestPort(requestPort);
+            espIdfTaskTreeNode.setEnvVars(envVars);
             return new XmlMarkerAction(espIdfTaskTreeNode, xmlTag.getProject());
         }, (oldNode) -> {
             if (oldNode instanceof EspIdfTaskCommandNode espIdfTaskTreeNode) {
@@ -116,6 +127,7 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
                 espIdfTaskTreeNode.setOutFilter(useFilter);
                 espIdfTaskTreeNode.setUseMonitor(useMonitor);
                 espIdfTaskTreeNode.setRequestPort(requestPort);
+                espIdfTaskTreeNode.setEnvVars(envVars);
             }
         }, xmlTag.getProject());
     }
@@ -167,13 +179,42 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
             return null;
         }
 
+        Map<String, String> envVars = parseEnv(xmlTag);
         return getCacheOrNewInfo(name,
-                () -> new XmlMarkerAction(new EspIdfTaskConsoleCommandNode(name, value, true), xmlTag.getProject()),
+                () -> {
+                    EspIdfTaskConsoleCommandNode commandNode = new EspIdfTaskConsoleCommandNode(name, value, true);
+                    commandNode.setEnvVars(envVars);
+                    return new XmlMarkerAction(commandNode, xmlTag.getProject());
+                },
                 (oldNode) -> {
                     if (oldNode instanceof EspIdfTaskConsoleCommandNode commandNode) {
                         commandNode.setCommand(value);
+                        commandNode.setEnvVars(envVars);
                     }
                 }, xmlTag.getProject());
+    }
+
+    /**
+     * 解析拓展环境变量：行内属性 {@code env} 与子标签 {@code <env>} 均支持，
+     * 变量列表每行只写一个 {@code key=value}，子标签会在同名时覆盖属性。
+     */
+    private static Map<String, String> parseEnv(@NotNull XmlTag xmlTag) {
+        Map<String, String> envVars = new HashMap<>();
+        putEnv(getAttribute(xmlTag, ENV), envVars);
+        putEnv(getSubTagTrimmedText(xmlTag, ENV, false), envVars);
+        return envVars;
+    }
+
+    private static void putEnv(String text, Map<String, String> envVars) {
+        if (StringUtils.isBlank(text)) {
+            return;
+        }
+        try {
+            envVars.putAll(EnvironmentVarUtil.parseEnv(text));
+        } catch (RuntimeException e) {
+            // 格式非法时忽略该来源，避免阻断运行图标生成，格式问题由 xsd 在编辑器中提示
+            LOG.warn("Malformed extended environment variables: " + text, e);
+        }
     }
 
 }
