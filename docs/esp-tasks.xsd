@@ -42,19 +42,48 @@
                 </xs:documentation>
             </xs:annotation>
         </xs:attribute>
+        <xs:attribute name="profile" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    <p>Name(s) of named profiles applied to this task, separated by whitespace. Anonymous profiles are
+                        always applied.
+                    </p>
+                    <p>本任务应用的有名 Profile（可多个，空白分隔）。匿名 Profile 始终生效。</p>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
     </xs:complexType>
 
     <!-- 🏁 根元素 -->
     <xs:element name="esp-tasks" type="tns:EspTasksType">
-        <!-- ✅ 全局约束：所有子元素的 @name 必须唯一 -->
+        <!-- ✅ 约束：任务名（command/console-command/exec）之间必须唯一 -->
         <xs:unique name="UniqueCommandName">
-            <xs:selector xpath="*"/>
+            <xs:selector xpath="tns:command|tns:console-command|tns:exec"/>
+            <xs:field xpath="@name"/>
+        </xs:unique>
+        <!-- ✅ 约束：命名 profile 之间必须唯一（与任务名互不影响） -->
+        <xs:unique name="UniqueProfileName">
+            <xs:selector xpath="tns:profile"/>
             <xs:field xpath="@name"/>
         </xs:unique>
     </xs:element>
 
     <xs:complexType name="EspTasksType">
         <xs:sequence>
+            <!-- 变量组 Profile：匿名时全局导入，命名时由任务的 profile 属性引用 -->
+            <xs:element name="profile" type="tns:ProfileType" minOccurs="0" maxOccurs="unbounded">
+                <xs:annotation>
+                    <xs:documentation>
+                        <p>A variable profile. Without <code>@name</code> it is anonymous and imported globally for
+                            every task; with a <code>@name</code> it applies only to tasks that reference it via their
+                            <code>profile</code> attribute.
+                        </p>
+                        <p>变量组 Profile：不带 <code>@name</code> 时为匿名，对所有任务全局导入；
+                            带 <code>@name</code> 时仅对通过 <code>profile</code> 属性引用它的任务生效。
+                        </p>
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
             <xs:choice maxOccurs="unbounded" minOccurs="0">
                 <xs:element name="command" type="tns:CommandType">
                     <xs:annotation>
@@ -104,14 +133,24 @@
         </xs:restriction>
     </xs:simpleType>
 
-    <!-- 🔧 拓展环境变量类型：变量列表，每行仅一个 key=value，行内属性与子标签共用 -->
+    <!-- 🔧 拓展环境变量类型：变量列表，每行仅一个 key=value，行内属性、子标签与变量组共用 -->
     <xs:simpleType name="EnvVarsType">
         <xs:annotation>
             <xs:documentation>
                 <p>Extended environment variable list. The list is written one variable per line, so every line must
                     contain exactly one <code>key=value</code> pair (blank leading/trailing lines are ignored).
+                    A variable defined here can be expanded in task <code>value</code>/<code>args</code> with
+                    <code>${env:key}</code>.
+                </p>
+                <p>Values may append to an existing variable via <code>${env:key}</code>, e.g.
+                    <code>PATH=/opt/x:${env:PATH}</code>. Inside a value only <code>${env:key}</code> is expanded;
+                    macros like <code>${v:key}</code> are NOT processed here and are kept literally.
                 </p>
                 <p>拓展环境变量列表。列表按行书写，每行只能有一个变量，写作 <code>key=value</code>（首尾的空行会被忽略）。
+                    在任务的 <code>value</code>/<code>args</code> 中可用 <code>${env:key}</code> 展开。
+                </p>
+                <p>值里可用 <code>${env:key}</code> 追加现有变量，如 <code>PATH=/opt/x:${env:PATH}</code>。
+                    值内只解析 <code>${env:key}</code>；<code>${v:key}</code> 等宏在此不处理、原样保留。
                 </p>
             </xs:documentation>
         </xs:annotation>
@@ -119,6 +158,61 @@
             <xs:pattern value="\s*[^=\r\n]+=[^\r\n]*(\r?\n\s*[^=\r\n]+=[^\r\n]*)*\s*"/>
         </xs:restriction>
     </xs:simpleType>
+
+    <!-- 🔧 替换宏类型：变量列表，每行仅一个 key=value，通过 ${v:key} 在任务文本中展开 -->
+    <xs:simpleType name="MacrosType">
+        <xs:annotation>
+            <xs:documentation>
+                <p>Replacement macro list. Same syntax as extended environment variables: one <code>key=value</code>
+                    per line. A macro is expanded in task <code>value</code>/<code>args</code> with
+                    <code>${v:key}</code>.
+                </p>
+                <p>替换宏列表。写法与拓展环境变量一致：每行一个 <code>key=value</code>。在任务的
+                    <code>value</code>/<code>args</code> 中用 <code>${v:key}</code> 展开。
+                </p>
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:pattern value="\s*[^=\r\n]+=[^\r\n]*(\r?\n\s*[^=\r\n]+=[^\r\n]*)*\s*"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <!-- 🧩 变量组 Profile：包含拓展环境变量（envs）与替换宏（macros），匿名时全局导入 -->
+    <xs:complexType name="ProfileType">
+        <xs:sequence>
+            <xs:element name="envs" type="tns:EnvVarsType" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        <p>Extended environment variables: write the variable list directly, one <code>key=value</code>
+                            per line. Injected into the process environment and expandable with <code>${env:key}</code>.
+                        </p>
+                        <p>拓展环境变量：直接写变量列表，每行一个 <code>key=value</code>。注入进程环境，
+                            并可用 <code>${env:key}</code> 展开。
+                        </p>
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+            <xs:element name="macros" type="tns:MacrosType" minOccurs="0" maxOccurs="1">
+                <xs:annotation>
+                    <xs:documentation>
+                        <p>Replacement macros: write the macro list directly, one <code>key=value</code> per line,
+                            expandable with <code>${v:key}</code>.
+                        </p>
+                        <p>替换宏：直接写宏列表，每行一个 <code>key=value</code>，可用 <code>${v:key}</code> 展开。
+                        </p>
+                    </xs:documentation>
+                </xs:annotation>
+            </xs:element>
+        </xs:sequence>
+        <xs:attribute name="name" type="xs:string" use="optional">
+            <xs:annotation>
+                <xs:documentation>
+                    <p>Profile name. Omit to make it anonymous, which is imported globally for every task.</p>
+                    <p>Profile 名称。省略即为匿名，对所有任务全局导入。</p>
+                </xs:documentation>
+            </xs:annotation>
+        </xs:attribute>
+    </xs:complexType>
 
     <!-- 🧩 command 继承 BaseCommandType -->
     <xs:complexType name="CommandType">

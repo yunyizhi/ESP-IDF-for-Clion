@@ -14,6 +14,7 @@ import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskCommandNode;
 import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskConsoleCommandNode;
 import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskTreeNode;
 import org.btik.espidf.toolwindow.tasks.model.LocalExecNode;
+import org.btik.espidf.toolwindow.tasks.model.Profiles;
 import org.btik.espidf.util.EnvironmentVarUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -69,16 +70,21 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
         boolean useTerminal = getBoolAttribute(xmlTag, USE_TERMINAL);
         String argsBySubTag = getSubTagTrimmedText(xmlTag, EXEC_ARGS, useTerminal);
         String args = argsBySubTag == null ? getAttribute(xmlTag, EXEC_ARGS) : argsBySubTag;
-        if (StringUtils.isEmpty(path) && StringUtils.isEmpty(args)) {
-            return null;
-        }
 
         boolean useIdfEnv = getBoolAttribute(xmlTag, EXEC_WITH_IDF_ENV);
         String encoding = getAttribute(xmlTag, EXEC_ENCODING);
-        Map<String, String> envVars = parseEnv(xmlTag);
+        ResolvedVars vars = resolveVars(xmlTag);
+        Map<String, String> envVars = vars.env();
+        Map<String, String> macros = vars.macros();
+        String resolvedPath = EnvironmentVarUtil.substitutePartial(path, envVars, macros);
+        String resolvedArgs = EnvironmentVarUtil.substitutePartial(args, envVars, macros);
+        if (StringUtils.isEmpty(resolvedPath) && StringUtils.isEmpty(resolvedArgs)) {
+            return null;
+        }
+
         return getCacheOrNewInfo(name,
                 () -> {
-                    LocalExecNode localExecNode = new LocalExecNode(name, path, args);
+                    LocalExecNode localExecNode = new LocalExecNode(name, resolvedPath, resolvedArgs);
                     if (StringUtils.isNotEmpty(encoding)) {
                         localExecNode.setEncoding(encoding);
                     }
@@ -89,8 +95,8 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
                 },
                 (oldNode) -> {
                     if (oldNode instanceof LocalExecNode localExecNode) {
-                        localExecNode.setPath(path);
-                        localExecNode.setArgs(args);
+                        localExecNode.setPath(resolvedPath);
+                        localExecNode.setArgs(resolvedArgs);
                         localExecNode.setUseTerminal(useTerminal);
                         localExecNode.setUseIdfEnv(useIdfEnv);
                         localExecNode.setEnvVars(envVars);
@@ -113,17 +119,20 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
         boolean useMonitor = getBoolAttribute(xmlTag, USE_MONITOR);
         boolean requestPort = getBoolAttribute(xmlTag, REQUEST_PORT, useMonitor);
         boolean useFilter = getBoolAttribute(xmlTag, CONSOLE_FILTER);
-        Map<String, String> envVars = parseEnv(xmlTag);
+        ResolvedVars vars = resolveVars(xmlTag);
+        Map<String, String> envVars = vars.env();
+        Map<String, String> macros = vars.macros();
+        String resolvedValue = EnvironmentVarUtil.substitutePartial(value, envVars, macros);
 
         return getCacheOrNewInfo(name, () -> {
-            EspIdfTaskCommandNode espIdfTaskTreeNode = new EspIdfTaskCommandNode(name, value, useFilter);
+            EspIdfTaskCommandNode espIdfTaskTreeNode = new EspIdfTaskCommandNode(name, resolvedValue, useFilter);
             espIdfTaskTreeNode.setUseMonitor(useMonitor);
             espIdfTaskTreeNode.setRequestPort(requestPort);
             espIdfTaskTreeNode.setEnvVars(envVars);
             return new XmlMarkerAction(espIdfTaskTreeNode, xmlTag.getProject());
         }, (oldNode) -> {
             if (oldNode instanceof EspIdfTaskCommandNode espIdfTaskTreeNode) {
-                espIdfTaskTreeNode.setCommand(value);
+                espIdfTaskTreeNode.setCommand(resolvedValue);
                 espIdfTaskTreeNode.setOutFilter(useFilter);
                 espIdfTaskTreeNode.setUseMonitor(useMonitor);
                 espIdfTaskTreeNode.setRequestPort(requestPort);
@@ -179,19 +188,64 @@ public class EspCustomRunLineMarkerContributor extends RunLineMarkerContributor 
             return null;
         }
 
-        Map<String, String> envVars = parseEnv(xmlTag);
+        ResolvedVars vars = resolveVars(xmlTag);
+        Map<String, String> envVars = vars.env();
+        Map<String, String> macros = vars.macros();
+        String resolvedValue = EnvironmentVarUtil.substitutePartial(value, envVars, macros);
         return getCacheOrNewInfo(name,
                 () -> {
-                    EspIdfTaskConsoleCommandNode commandNode = new EspIdfTaskConsoleCommandNode(name, value, true);
+                    EspIdfTaskConsoleCommandNode commandNode = new EspIdfTaskConsoleCommandNode(name, resolvedValue, true);
                     commandNode.setEnvVars(envVars);
                     return new XmlMarkerAction(commandNode, xmlTag.getProject());
                 },
                 (oldNode) -> {
                     if (oldNode instanceof EspIdfTaskConsoleCommandNode commandNode) {
-                        commandNode.setCommand(value);
+                        commandNode.setCommand(resolvedValue);
                         commandNode.setEnvVars(envVars);
                     }
                 }, xmlTag.getProject());
+    }
+
+    /** 单个任务解析后的合并结果：环境变量（注入进程）与宏（用于文本替换）。 */
+    private record ResolvedVars(Map<String, String> env, Map<String, String> macros) {
+    }
+
+    /**
+     * 解析任务的内联 env 与引用的 profile，合并出最终环境变量与宏。
+     * 优先级：内联 &gt; 命名 profile（按 profile 属性书写顺序）&gt; 匿名 profile。
+     */
+    private static ResolvedVars resolveVars(@NotNull XmlTag xmlTag) {
+        Profiles profiles = collectProfiles(xmlTag);
+        String profileAttr = getAttribute(xmlTag, PROFILE);
+        return new ResolvedVars(profiles.resolveEnv(profileAttr, parseEnv(xmlTag)),
+                profiles.resolveMacros(profileAttr));
+    }
+
+    /**
+     * 从自定义任务根标签下收集变量组 profile：{@code <envs>} / {@code <macros>} 为多行 key=value 列表。
+     * 无 {@code name} 的 profile 视为匿名（全局导入）。
+     */
+    private static Profiles collectProfiles(@NotNull XmlTag tag) {
+        Profiles profiles = new Profiles();
+        PsiFile file = tag.getContainingFile();
+        if (!(file instanceof XmlFile xmlFile)) {
+            return profiles;
+        }
+        XmlTag root = xmlFile.getRootTag();
+        if (root == null) {
+            return profiles;
+        }
+        for (XmlTag child : root.getSubTags()) {
+            if (!PROFILE.equals(child.getName())) {
+                continue;
+            }
+            Map<String, String> env = new HashMap<>();
+            putEnv(getSubTagTrimmedText(child, ENVS, false), env);
+            Map<String, String> macros = new HashMap<>();
+            putEnv(getSubTagTrimmedText(child, MACROS, false), macros);
+            profiles.addNamed(getAttribute(child, NAME), env, macros);
+        }
+        return profiles;
     }
 
     /**

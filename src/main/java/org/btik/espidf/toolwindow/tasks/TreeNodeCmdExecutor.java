@@ -54,7 +54,8 @@ public class TreeNodeCmdExecutor {
 
     public static void execute(EspIdfTaskCommandNode commandNode, @NotNull Project project, ProcessListener listener) {
         Map<String, String> envsWithProjectSettings = getEnvsWithProjectSettings(project);
-        envsWithProjectSettings.putAll(commandNode.getEnvVars());
+        envsWithProjectSettings.putAll(EnvironmentVarUtil.resolveEnvValues(commandNode.getEnvVars(),
+                substitutionEnv(envsWithProjectSettings)));
         String port = envsWithProjectSettings.get(ESP_PORT);
         if (port == null) {
             port = PORT_CONF_AUTO;
@@ -69,7 +70,9 @@ public class TreeNodeCmdExecutor {
         commandLine.withEnvironment(envsWithProjectSettings);
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
         commandLine.addParameters("-B", project.getService(IdfProjectConfigService.class).getCmakeBuildDir());
-        commandLine.addParameters(commandNode.getCommand().split(" "));
+        String command = EnvironmentVarUtil.substitute(commandNode.getCommand(),
+                substitutionEnv(envsWithProjectSettings), Map.of());
+        commandLine.addParameters(command.split(" "));
         if (IS_WINDOWS) {
             commandLine.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
         }
@@ -134,8 +137,10 @@ public class TreeNodeCmdExecutor {
         runConfiguration.setExecuteScriptFile(false);
         runConfiguration.setInterpreterPath(getCmdEnv());
         Map<String, String> environments = getEnvsWithProjectSettings(project);
-        environments.putAll(commandNode.getEnvVars());
-        String command = commandNode.getCommand();
+        environments.putAll(EnvironmentVarUtil.resolveEnvValues(commandNode.getEnvVars(),
+                substitutionEnv(environments)));
+        String command = EnvironmentVarUtil.substitute(commandNode.getCommand(),
+                substitutionEnv(environments), Map.of());
         if (IS_WINDOWS) {
             StringBuilder envPrefixBuilder = new StringBuilder();
             diffWithSystem(environments).forEach((key, value) -> {
@@ -178,7 +183,8 @@ public class TreeNodeCmdExecutor {
         if (commandNode.isUseIdfEnv()) {
             environments.putAll(getEnvsWithProjectSettings(project));
         }
-        environments.putAll(commandNode.getEnvVars());
+        environments.putAll(EnvironmentVarUtil.resolveEnvValues(commandNode.getEnvVars(),
+                substitutionEnv(environments)));
         if (!environments.isEmpty()) {
             commandLine.withEnvironment(environments);
         }
@@ -192,12 +198,15 @@ public class TreeNodeCmdExecutor {
                     .notify(project);
         }
 
-        if (StringUtils.isEmpty(commandNode.getPath())) {
+        Map<String, String> substEnv = substitutionEnv(environments);
+        String resolvedPath = EnvironmentVarUtil.substitute(commandNode.getPath(), substEnv, Map.of());
+        String resolvedArgs = EnvironmentVarUtil.substitute(commandNode.getArgs(), substEnv, Map.of());
+        if (StringUtils.isEmpty(resolvedPath)) {
             commandLine.setExePath(getCmdEnv());
-            commandLine.addParameters(getCmdArg(), commandNode.getArgs());
+            commandLine.addParameters(getCmdArg(), resolvedArgs);
         } else {
-            commandLine.setExePath(commandNode.getPath());
-            commandLine.addParameters(CommandLineParser.parseArgs(commandNode.getArgs()));
+            commandLine.setExePath(resolvedPath);
+            commandLine.addParameters(CommandLineParser.parseArgs(resolvedArgs));
         }
 
         if (IS_WINDOWS) {
@@ -209,6 +218,18 @@ public class TreeNodeCmdExecutor {
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    /**
+     * 用于执行期展开 {@code ${env:key}} 的最终环境：系统环境打底，再用任务实际使用的环境覆盖。
+     * 这样未在 profile/内联中声明的变量（如 IDF 注入的 ESPPORT、PATH 等）也能取到。
+     */
+    private static Map<String, String> substitutionEnv(Map<String, String> taskEnv) {
+        Map<String, String> env = new HashMap<>(System.getenv());
+        if (taskEnv != null) {
+            env.putAll(taskEnv);
+        }
+        return env;
     }
 
     private static String buildPowershellEnv(Map<String, String> environments) {
@@ -252,19 +273,28 @@ public class TreeNodeCmdExecutor {
             if (commandNode.isUseIdfEnv()) {
                 environments.putAll(getEnvsWithProjectSettings(project));
             }
-            environments.putAll(commandNode.getEnvVars());
+            environments.putAll(EnvironmentVarUtil.resolveEnvValues(commandNode.getEnvVars(),
+                    substitutionEnv(environments)));
             if (!environments.isEmpty()) {
                 cmdPrefixBuilder.append(buildPowershellEnv(environments));
             }
-            if (StringTools.appendNotEmpty(cmdPrefixBuilder, execPath)) {
+            Map<String, String> substEnv = substitutionEnv(environments);
+            String resolvedPath = EnvironmentVarUtil.substitute(execPath, substEnv, Map.of());
+            String resolvedArgs = EnvironmentVarUtil.substitute(commandNode.getArgs(), substEnv, Map.of());
+            if (StringTools.appendNotEmpty(cmdPrefixBuilder, resolvedPath)) {
                 cmdPrefixBuilder.append(" ");
             }
-            StringTools.appendNotEmpty(cmdPrefixBuilder, commandNode.getArgs());
+            StringTools.appendNotEmpty(cmdPrefixBuilder, resolvedArgs);
             runConfiguration.setScriptText(cmdPrefixBuilder.toString());
         } else {
+            Map<String, String> taskEnv = new HashMap<>();
             if (commandNode.isUseIdfEnv()) {
-                Map<String, String> environments = getEnvsWithProjectSettings(project);
-                environments.putAll(commandNode.getEnvVars());
+                taskEnv.putAll(getEnvsWithProjectSettings(project));
+            }
+            taskEnv.putAll(EnvironmentVarUtil.resolveEnvValues(commandNode.getEnvVars(),
+                    substitutionEnv(taskEnv)));
+            if (commandNode.isUseIdfEnv()) {
+                Map<String, String> environments = new HashMap<>(taskEnv);
                 // setEnvData 暂未兼容COMP_WORDBREAKS生成语句 先舍弃
                 environments.remove(IDF_PY_COMP_WORDBREAKS);
                 environments.remove(COMP_WORDBREAKS);
@@ -277,11 +307,14 @@ public class TreeNodeCmdExecutor {
                 runConfiguration.setEnvData(EnvironmentVariablesData.create(environments, true));
             }
 
+            Map<String, String> substEnv = substitutionEnv(taskEnv);
+            String resolvedPath = EnvironmentVarUtil.substitute(execPath, substEnv, Map.of());
+            String resolvedArgs = EnvironmentVarUtil.substitute(commandNode.getArgs(), substEnv, Map.of());
             String bin = "";
-            if (StringUtils.isNotEmpty(execPath)) {
-                bin = execPath + " ";
+            if (StringUtils.isNotEmpty(resolvedPath)) {
+                bin = resolvedPath + " ";
             }
-            runConfiguration.setScriptText(bin + StringTools.safeNull(commandNode.getArgs()));
+            runConfiguration.setScriptText(bin + StringTools.safeNull(resolvedArgs));
         }
         runConfiguration.setScriptWorkingDirectory(basePath);
 
@@ -301,10 +334,12 @@ public class TreeNodeCmdExecutor {
         commandLine.setExePath(getCmdEnv());
         commandLine.setWorkDirectory(project.getBasePath());
         Map<String, String> environments = getEnvsWithProjectSettings(project);
-        environments.putAll(commandNode.getEnvVars());
+        environments.putAll(EnvironmentVarUtil.resolveEnvValues(commandNode.getEnvVars(),
+                substitutionEnv(environments)));
         commandLine.withEnvironment(environments);
         commandLine.setCharset(Charset.forName(System.getProperty("sun.jnu.encoding", "UTF-8")));
-        commandLine.addParameters(getCmdArg(), commandNode.getCommand());
+        commandLine.addParameters(getCmdArg(), EnvironmentVarUtil.substitute(commandNode.getCommand(),
+                substitutionEnv(environments), Map.of()));
         if (IS_WINDOWS) {
             commandLine.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
         }

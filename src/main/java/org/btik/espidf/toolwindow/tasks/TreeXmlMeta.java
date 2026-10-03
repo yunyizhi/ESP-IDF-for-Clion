@@ -62,6 +62,21 @@ public interface TreeXmlMeta {
      */
     String ENV = "env";
 
+    /**
+     * 变量组 profile 标签：无 name 时匿名（全局导入），带 name 时由任务的 profile 属性引用
+     */
+    String PROFILE = "profile";
+
+    /**
+     * profile 内的拓展环境变量标签（多行 key=value），可用 ${env:key} 展开
+     */
+    String ENVS = "envs";
+
+    /**
+     * profile 内的替换宏标签（多行 key=value），可用 ${v:key} 展开
+     */
+    String MACROS = "macros";
+
     String ESP_CUSTOM_TASKS_XML = "esp_custom_tasks.xml";
 
     String ESP_CUSTOM_TASKS_XML_WIN_TEMPLATE = "esp_custom_tasks_windows.xml";

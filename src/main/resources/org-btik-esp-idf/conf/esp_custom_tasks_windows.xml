@@ -1,7 +1,16 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<esp-tasks xmlns="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema/v0.7"
+<esp-tasks xmlns="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema/v0.9"
            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-           xsi:schemaLocation="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema/v0.7 https://yunyizhi.github.io/ESP-IDF-for-Clion/esp-tasks-v0.7.xsd">
+           xsi:schemaLocation="https://yunyizhi.github.io/ESP-IDF-for-Clion/schema/v0.9 https://yunyizhi.github.io/ESP-IDF-for-Clion/esp-tasks-v0.9.xsd">
+
+<!--    <profile>-->
+<!--        <envs>-->
+<!--            A=B-->
+<!--        </envs>-->
+<!--        <macros>-->
+<!--            port=COM3-->
+<!--        </macros>-->
+<!--    </profile>-->
 
     <command name="List Targets" value="--preview --list-targets"/>
 
@@ -21,14 +30,14 @@
     <exec name="Run Single Command with Args" path="python" encoding="utf-8"
           args="
             -m esptool
-            --port COM1
+            --port ${env:ESPPORT}
             chip_id"
           idf-env="true"/>
 
     <exec name="Run Command with Args Block" path="python" idf-env="true">
         <args>
             -m esptool
-            --port COM1
+            --port ${env:ESPPORT}
             chip_id
         </args>
     </exec>

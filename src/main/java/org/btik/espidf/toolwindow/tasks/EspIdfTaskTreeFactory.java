@@ -161,20 +161,21 @@ public class EspIdfTaskTreeFactory {
      */
     private static Map<String, String> parseEnv(Element element) {
         Map<String, String> envVars = new HashMap<>();
-        putEnv(element.getAttribute(ENV), envVars);
+        parseEnvTextInto(element.getAttribute(ENV), envVars);
         Element envTag = getFirstElementByName(element, ENV);
         if (envTag != null) {
-            putEnv(envTag.getTextContent(), envVars);
+            parseEnvTextInto(envTag.getTextContent(), envVars);
         }
         return envVars;
     }
 
-    private static void putEnv(String text, Map<String, String> envVars) {
+    /** 宽松解析一段变量列表文本（每行一个 key=value），非法内容只记录日志不抛出。 */
+    private static void parseEnvTextInto(String text, Map<String, String> target) {
         if (StringUtils.isBlank(text)) {
             return;
         }
         try {
-            envVars.putAll(EnvironmentVarUtil.parseEnv(text));
+            target.putAll(EnvironmentVarUtil.parseEnv(text));
         } catch (RuntimeException e) {
             // 格式非法时忽略该来源，避免阻断整个任务树加载，格式问题由 xsd 在编辑器中提示
             LOG.warn("Malformed extended environment variables: " + text, e);
@@ -215,6 +216,7 @@ public class EspIdfTaskTreeFactory {
      * 解析失败时自行决定回退策略，避免用户正在输入导致 XML 暂不完整时产生噪音通知。
      */
     public static @NotNull List<DefaultMutableTreeNode> loadCustomTaskFromElement(@NotNull Element documentElement) {
+        Profiles profiles = collectProfiles(documentElement);
         List<DefaultMutableTreeNode> defaultMutableTreeNodes = new ArrayList<>();
         eachChildrenElement(documentElement, (child) -> {
             String type = child.getTagName();
@@ -223,8 +225,60 @@ public class EspIdfTaskTreeFactory {
                 return;
             }
             NodeModel<Element> childXmlNode = elementNodeModelFunction.apply(child);
+            applyProfiles(child, childXmlNode.getNode().getUserObject(), profiles);
             defaultMutableTreeNodes.add(childXmlNode.getNode());
         });
         return defaultMutableTreeNodes;
+    }
+
+    /**
+     * 收集根元素下的变量组 profile：其中 {@code <envs>} / {@code <macros>} 为多行 key=value 列表。
+     * 无 {@code name} 的 profile 视为匿名（全局导入）。
+     */
+    private static Profiles collectProfiles(Element root) {
+        Profiles profiles = new Profiles();
+        eachChildrenElement(root, (child) -> {
+            if (!PROFILE.equals(child.getTagName())) {
+                return;
+            }
+            Map<String, String> env = new HashMap<>();
+            Element envsTag = getFirstElementByName(child, ENVS);
+            if (envsTag != null) {
+                parseEnvTextInto(envsTag.getTextContent(), env);
+            }
+            Map<String, String> macros = new HashMap<>();
+            Element macrosTag = getFirstElementByName(child, MACROS);
+            if (macrosTag != null) {
+                parseEnvTextInto(macrosTag.getTextContent(), macros);
+            }
+            profiles.addNamed(child.getAttribute(NAME), env, macros);
+        });
+        return profiles;
+    }
+
+    /**
+     * 依据节点引用的 profile 合并环境变量（匿名 → 命名 → 内联），
+     * 并在 value / args / path 文本中展开 {@code ${env:key}} / {@code ${v:key}}。
+     */
+    private static void applyProfiles(Element element, Object userObject, Profiles profiles) {
+        if (!(userObject instanceof EspIdfTaskTreeNode node)) {
+            return;
+        }
+        String profileAttr = element.getAttribute(PROFILE);
+        Map<String, String> env = profiles.resolveEnv(profileAttr, parseEnv(element));
+        Map<String, String> macros = profiles.resolveMacros(profileAttr);
+        node.setEnvVars(env);
+        switch (node) {
+            case EspIdfTaskCommandNode commandNode ->
+                    commandNode.setCommand(EnvironmentVarUtil.substitutePartial(commandNode.getCommand(), env, macros));
+            case EspIdfTaskConsoleCommandNode consoleCommandNode ->
+                    consoleCommandNode.setCommand(EnvironmentVarUtil.substitutePartial(consoleCommandNode.getCommand(), env, macros));
+            case LocalExecNode localExecNode -> {
+                localExecNode.setPath(EnvironmentVarUtil.substitutePartial(localExecNode.getPath(), env, macros));
+                localExecNode.setArgs(EnvironmentVarUtil.substitutePartial(localExecNode.getArgs(), env, macros));
+            }
+            default -> {
+            }
+        }
     }
 }
