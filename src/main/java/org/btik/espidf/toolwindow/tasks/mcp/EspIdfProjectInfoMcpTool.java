@@ -21,6 +21,9 @@ import org.btik.espidf.state.model.IdfProfileInfo;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
+import java.util.Objects;
+
 import static org.btik.espidf.util.I18nMessage.$i18n;
 import static org.btik.espidf.util.I18nMessage.$i18nF;
 import static org.btik.espidf.toolwindow.tasks.mcp.McpSchemaUtils.EMPTY_JSON;
@@ -31,6 +34,7 @@ import static org.btik.espidf.toolwindow.tasks.mcp.McpSchemaUtils.schema;
  * 返回当前项目的关键信息，供 MCP 客户端在无头环境下复用与界面一致的构建环境：
  * <ul>
  *     <li>获取环境变量的脚本路径（toolchain 关联的 export 脚本，客户端可自行 source 得到构建环境变量）；</li>
+ *     <li>当前激活的 CMake profile 及全部可用 profile（含目标芯片、构建目录）；</li>
  *     <li>项目级配置（串口、监视波特率、下载波特率、CMake profile）。</li>
  * </ul>
  * 相比直接返回解析后的环境变量，返回脚本路径更轻量，也避免了环境变量随机器差异带来的问题。
@@ -97,6 +101,8 @@ public class EspIdfProjectInfoMcpTool implements McpTool {
                 }
             }
 
+            appendProfiles(sb, configService.getIdfProfileInfoList(), profileInfo);
+
             CPPToolchains.Toolchain toolchain = ApplicationManager.getApplication().runReadAction(
                     (Computable<CPPToolchains.Toolchain>) envService::getToolChianOfCheckedProfile);
             if (toolchain == null) {
@@ -130,6 +136,34 @@ public class EspIdfProjectInfoMcpTool implements McpTool {
         } catch (Throwable e) {
             return McpToolCallResult.Companion.error(
                     $i18nF("espidf.mcp.project.info.failed", e.getMessage()), EMPTY_JSON);
+        }
+    }
+
+    /**
+     * 追加「全部可用 CMake profile」列表，标注当前激活项，并附带每个 profile 的目标芯片与构建目录，
+     * 供 MCP 客户端调用 {@code espidf_set_project_config} 切换 profile 时选用。
+     */
+    private static void appendProfiles(StringBuilder sb, List<IdfProfileInfo> profiles, IdfProfileInfo active) {
+        sb.append($i18n("espidf.mcp.project.info.profiles")).append('\n');
+        if (profiles == null || profiles.isEmpty()) {
+            sb.append("  ").append($i18n("espidf.mcp.project.info.profiles.empty")).append('\n');
+            return;
+        }
+        String activeName = active == null ? null : active.getDisplayName();
+        for (IdfProfileInfo p : profiles) {
+            sb.append("  - ").append(p.getDisplayName());
+            if (Objects.equals(p.getDisplayName(), activeName)) {
+                sb.append(" [").append($i18n("espidf.mcp.project.info.profiles.active")).append(']');
+            }
+            if (p.getTarget() != null) {
+                sb.append("  ").append($i18n("espidf.mcp.project.info.target"))
+                        .append(' ').append(p.getTarget());
+            }
+            if (p.getBuildDir() != null) {
+                sb.append("  ").append($i18n("espidf.mcp.project.info.build.dir"))
+                        .append(' ').append(p.getBuildDir());
+            }
+            sb.append('\n');
         }
     }
 

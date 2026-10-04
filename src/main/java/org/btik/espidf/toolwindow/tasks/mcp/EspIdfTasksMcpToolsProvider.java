@@ -47,6 +47,7 @@ public class EspIdfTasksMcpToolsProvider implements McpToolsProvider {
                 new EspIdfListRunningTasksMcpTool(),
                 new EspIdfTerminateTaskMcpTool(),
                 new EspIdfProjectInfoMcpTool(),
+                new EspIdfSetProjectConfigMcpTool(),
                 new EspIdfSerialPortsMcpTool());
     }
 }
