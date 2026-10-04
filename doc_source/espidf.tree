@@ -14,6 +14,7 @@
         <toc-element topic="legacy.md"/>
     </toc-element>
     <toc-element topic="toolTree.md">
+        <toc-element topic="customTask.md"/>
         <toc-element topic="size_analysis.md"/>
     </toc-element>
     <toc-element topic="settings.md"/>
