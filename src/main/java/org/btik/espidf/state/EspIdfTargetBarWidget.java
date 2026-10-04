@@ -24,7 +24,7 @@ import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
-import org.btik.espidf.util.CmdTaskExecutor;
+import org.btik.espidf.util.CmdTaskManager;
 import org.btik.espidf.util.EnvironmentVarUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
@@ -115,7 +115,7 @@ public class EspIdfTargetBarWidget extends EditorBasedWidget implements StatusBa
         if (previewSelected) {
             listTarget.addParameters("--preview");
         }
-        String targets = TasksKt.runWithModalProgressBlocking(project, "Loading Targets", (scope, continuation) -> CmdTaskExecutor.exeGetStdOut(listTarget, 60 * 1000));
+        String targets = TasksKt.runWithModalProgressBlocking(project, "Loading Targets", (scope, continuation) -> CmdTaskManager.exeGetStdOut(listTarget, 60 * 1000));
         String[] targetsArray;
         if (StringUtils.isEmpty(targets)) {
             targetsArray = $sys("idf.targets.last").split(",");

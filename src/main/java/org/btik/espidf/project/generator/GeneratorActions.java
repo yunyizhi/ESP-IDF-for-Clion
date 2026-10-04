@@ -31,7 +31,7 @@ import org.btik.espidf.run.config.gdbinit.GdbSymbolsPathBox;
 import org.btik.espidf.run.config.model.GdbInitDebugConfigModel;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.service.IdfSysConfService;
-import org.btik.espidf.util.CmdTaskExecutor;
+import org.btik.espidf.util.CmdTaskManager;
 import org.btik.espidf.util.EnvironmentVarUtil;
 import org.btik.espidf.util.I18nMessage;
 import org.jetbrains.annotations.NotNull;
@@ -93,7 +93,7 @@ public abstract class GeneratorActions<T> {
                 () -> moveTmpDir(idfGenerateTmpDir,
                         () -> setTargetTask(envs,
                                 () -> loadCMakeProject(toolChainName)));
-        CmdTaskExecutor.execute(project, createProjectProfile,
+        CmdTaskManager.execute(project, createProjectProfile,
                 nextTaskChain, $i18n("idf.cmd.init.project.failed"), true
         );
     }
@@ -113,7 +113,7 @@ public abstract class GeneratorActions<T> {
                 EspIdfIcon.IDF_16_16, generate);
 
         try {
-            CmdTaskExecutor.execute(project, setTargetProfile,
+            CmdTaskManager.execute(project, setTargetProfile,
                     nextTask, $i18n("idf.cmd.init.project.failed"), true);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);

@@ -24,7 +24,7 @@ import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.toolwindow.tasks.model.EspIdfTaskActionNode;
 import org.btik.espidf.toolwindow.tasks.web.SizeAnalysisFileType;
 import org.btik.espidf.toolwindow.tasks.web.SizeAnalysisVirtualFile;
-import org.btik.espidf.util.CmdTaskExecutor;
+import org.btik.espidf.util.CmdTaskManager;
 import org.btik.espidf.util.EnvironmentVarUtil;
 import org.btik.espidf.util.I18nMessage;
 import org.jetbrains.ide.BuiltInServerManager;
@@ -163,7 +163,7 @@ public class EspIdfActionMap {
                 actionNode.getDisplayName(), EspIdfIcon.IDF_16_16, commandLine);
 
         try {
-            CmdTaskExecutor.execute(project, runProfile,
+            CmdTaskManager.execute(project, runProfile,
                     new ProcessEventAdaptor().withProcessTerminatedCb((event) -> {
                         Path outputPath = Path.of(outputFile);
                         if (event.getExitCode() == 0 && Files.exists(outputPath)) {

@@ -14,7 +14,7 @@ import org.btik.espidf.icon.EspIdfIcon;
 import org.btik.espidf.service.IdfEnvironmentService;
 import org.btik.espidf.service.IdfProjectConfigService;
 import org.btik.espidf.state.model.IdfProfileInfo;
-import org.btik.espidf.util.CmdTaskExecutor;
+import org.btik.espidf.util.CmdTaskManager;
 import org.btik.espidf.util.EnvironmentVarUtil;
 import org.btik.espidf.util.SysConf;
 import org.jetbrains.annotations.NotNull;
@@ -81,7 +81,7 @@ public class CheckBuildTypeAction extends AnAction implements DumbAware {
             IdfConsoleRunProfile idfConsoleRunProfile = new IdfConsoleRunProfile($i18n("idf.set.project.target"),
                     EspIdfIcon.IDF_16_16, commandLine);
             idfConsoleRunProfile.setUseOutFilter(true);
-            CmdTaskExecutor.execute(project, idfConsoleRunProfile,
+            CmdTaskManager.execute(project, idfConsoleRunProfile,
                     new ProcessEventAdaptor().withProcessTerminatedCb((event) -> ApplicationManager.getApplication().invokeLater(callback)));
         } catch (ExecutionException exception) {
             throw new RuntimeException(exception);

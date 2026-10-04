@@ -110,7 +110,7 @@ public class TreeNodeCmdExecutor {
             if (useMonitor) {
                 registerMonitorHandler(port, idfConsoleRunProfile);
             }
-            CmdTaskExecutor.execute(project, idfConsoleRunProfile, processListener);
+            CmdTaskManager.execute(project, idfConsoleRunProfile, processListener);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
         }
@@ -213,7 +213,7 @@ public class TreeNodeCmdExecutor {
             commandLine.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
         }
         try {
-            CmdTaskExecutor.execute(project, new IdfConsoleRunProfile(commandNode.getDisplayName(),
+            CmdTaskManager.execute(project, new IdfConsoleRunProfile(commandNode.getDisplayName(),
                     EspIdfIcon.IDF_16_16, commandLine), listener);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);
@@ -344,7 +344,7 @@ public class TreeNodeCmdExecutor {
             commandLine.withInitialColumns(SysConf.getInt("esp.idf.pyt.cmd.cols", 255));
         }
         try {
-            CmdTaskExecutor.execute(project, new IdfConsoleRunProfile(commandNode.getDisplayName(),
+            CmdTaskManager.execute(project, new IdfConsoleRunProfile(commandNode.getDisplayName(),
                     EspIdfIcon.IDF_16_16, commandLine), listener);
         } catch (ExecutionException e) {
             throw new RuntimeException(e);

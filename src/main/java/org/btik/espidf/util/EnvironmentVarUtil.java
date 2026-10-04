@@ -218,7 +218,7 @@ public class EnvironmentVarUtil {
                 .withParameters("--version");
         return TasksKt.runWithModalProgressBlocking(owner, $i18nF("esp.idf.read.version", toolchainName),
                 TaskCancellation.nonCancellable(), (scope, continuation) ->
-                        CmdTaskExecutor.exeGetStdOut(readVersion, 60 * 1000));
+                        CmdTaskManager.exeGetStdOut(readVersion, 60 * 1000));
     }
 
     public static String getIdfVersionByGit(Map<String, String> env, ModalTaskOwner owner, String toolchainName) {
@@ -235,7 +235,7 @@ public class EnvironmentVarUtil {
                 .withParameters("describe", "--tags", "--dirty", "--match", "v*.*");
         return TasksKt.runWithModalProgressBlocking(owner, $i18nF("esp.idf.read.version", toolchainName),
                 TaskCancellation.nonCancellable(), (scope, continuation) ->
-                        CmdTaskExecutor.exeGetStdOut(readVersion, 60 * 1000));
+                        CmdTaskManager.exeGetStdOut(readVersion, 60 * 1000));
     }
 
     public static String getIdfVersion(Map<String, String> env, ModalTaskOwner owner, String toolchainName) {

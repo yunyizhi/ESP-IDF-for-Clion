@@ -32,7 +32,7 @@
 - 显示名（display name）
 - 描述
 
-对于使用串口监视器（`use-monitor=true`）的任务，会在条目后追加 `[monitor]` 标记，提示该任务支持通过 `espidf_run_task` 的 `monitorWaitSeconds` 参数采集一段时间的日志。
+对于使用串口监视器（`use-monitor=true`）的任务，会在条目后追加 `[monitor]` 标记，提示该任务通常长时间运行，适合用 `espidf_run_task` 的 `async=true` 触发后立即返回，或用 `waitSeconds` 限定等待超时后拿到已采集的部分日志。
 
 **参数**
 
@@ -49,27 +49,37 @@
 `task` 参数接受任务的 `id`、显示名或完整路径（大小写不敏感），例如 `"Build"`、`"flash/Flash"`。
 可先调用 `espidf_list_tasks` 获取可用任务名。
 
-普通命令类任务会在结束后返回其输出与退出码；
-串口监视类（`use-monitor=true`）任务默认仅触发、不采集输出，其输出在 IDE 控制台查看。
+默认（`async=false`）为同步调用：等待任务结束（或到达 `waitSeconds` 等待超时）后返回捕获的输出与退出码，结构化结果中的 `status` 为 `exited`（若等待超时、任务仍在运行则为 `running`）；
+将 `async` 设为 `true` 则仅触发任务并立即返回，`status` 为 `running`，任务在 IDE 控制台后台继续运行，适用于长时间运行或串口监视类任务。
 
 **参数**
 
-| 参数                  | 类型    | 必填 | 说明                                                                                     |
-|---------------------|---------|----|----------------------------------------------------------------------------------------|
-| `task`              | string  | 是  | 要运行的 ESP-IDF 任务名称（id / 显示名 / 完整路径，大小写不敏感）                                          |
-| `monitorWaitSeconds`| integer | 否  | 仅对 `use-monitor=true` 的任务有效：采集串口监视输出持续的秒数。省略则仅触发任务、不采集输出；对非监视类任务无效 |
-| `projectPath`       | string  | 否  | 目标项目基目录绝对路径；多项目打开时建议填写                                                      |
+| 参数            | 类型    | 必填 | 说明                                                                                     |
+|---------------|---------|----|----------------------------------------------------------------------------------------|
+| `task`        | string  | 是  | 要运行的 ESP-IDF 任务名称（id / 显示名 / 完整路径，大小写不敏感）                                          |
+| `async`       | boolean | 否  | 为 `true` 时仅触发任务并立即返回（`status=running`）；为 `false`（默认）时等待任务结束后返回（`status=exited`） |
+| `waitSeconds` | integer | 否  | 通用的等待超时时间（秒），适用于所有任务；默认 600 秒。`async=true` 时忽略                          |
+| `projectPath` | string  | 否  | 目标项目基目录绝对路径；多项目打开时建议填写                                                      |
 
 **示例**
 
 ```json
 {
   "task": "monitor",
-  "monitorWaitSeconds": 10
+  "async": true
 }
 ```
 
-上述调用会在约 10 秒内采集串口监视日志后返回（监视进程仍在 IDE 控制台中继续运行）。
+上述调用会立即触发 `monitor` 任务并返回 `status=running`，其输出可在 IDE 控制台查看。
+
+```json
+{
+  "task": "build",
+  "waitSeconds": 300
+}
+```
+
+上述调用会等待 `build` 任务结束（最多 300 秒），返回捕获的输出、退出码与 `status=exited`。
 
 ---
 

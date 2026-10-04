@@ -43,6 +43,9 @@ public class EspIdfTasksMcpToolsProvider implements McpToolsProvider {
         return List.of(
                 new EspIdfListTasksMcpTool(registry),
                 new EspIdfRunTaskMcpTool(registry),
+                new EspIdfFetchTaskOutputMcpTool(),
+                new EspIdfListRunningTasksMcpTool(),
+                new EspIdfTerminateTaskMcpTool(),
                 new EspIdfProjectInfoMcpTool(),
                 new EspIdfSerialPortsMcpTool());
     }
