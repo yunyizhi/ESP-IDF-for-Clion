@@ -132,10 +132,12 @@ public class EspIdfRunTaskMcpTool implements McpTool {
             // 异步调用（或无法采集输出的任务）：仅触发任务后立即返回，任务在后台继续运行
             if (async || !capturable) {
                 Long taskId = startTask(project, node, null);
-                String text = $i18nF("espidf.mcp.run.task.triggered", node.getDisplayName())
-                        + (taskId != null ? "\n" + $i18nF("espidf.mcp.run.task.triggered.task.id", taskId) : "");
+                // taskId 直接写进正文，避免调用方误以为没有返回值
+                String text = taskId != null
+                        ? $i18nF("espidf.mcp.run.task.triggered.with.task.id", node.getDisplayName(), taskId)
+                        : $i18nF("espidf.mcp.run.task.triggered", node.getDisplayName());
                 return McpToolCallResult.Companion.text(text,
-                        structuredResult("running", node.getDisplayName(), taskId, null, OutputView.EMPTY, null));
+                        structuredResult("running", node.getDisplayName(), taskId, null, McpOutputView.EMPTY, null));
             }
 
             // 同步调用：注册输出收集器，等待任务结束（最多 waitSeconds 秒）
@@ -150,19 +152,24 @@ public class EspIdfRunTaskMcpTool implements McpTool {
             if (out == null) {
                 return McpToolCallResult.Companion.text(
                         $i18nF("espidf.mcp.run.task.no.output", node.getDisplayName()),
-                        structuredResult("exited", node.getDisplayName(), taskId, -1, OutputView.EMPTY, null));
+                        structuredResult("exited", node.getDisplayName(), taskId, -1, McpOutputView.EMPTY, null));
             }
             // exitCode == -2 表示等待超时，任务仍在后台运行，status 记为 running
             if (out.exitCode == -2) {
-                OutputView limited = limitLines(out.text, maxLines);
-                String header = $i18nF("espidf.mcp.run.task.timeout",
-                        node.getDisplayName(), waitMillis / 1000L);
-                return McpToolCallResult.Companion.text(header + limited.text(),
+                McpOutputView limited = McpOutputView.limit(out.text, maxLines);
+                StringBuilder header = new StringBuilder($i18nF("espidf.mcp.run.task.timeout",
+                        node.getDisplayName(), waitMillis / 1000L)).append('\n');
+                if (taskId != null) {
+                    header.append($i18nF("espidf.mcp.run.task.running.task.id", taskId)).append('\n');
+                }
+                return McpToolCallResult.Companion.text(
+                        header + limited.note($i18n("espidf.mcp.output.truncated.note"), maxLines) + limited.text(),
                         structuredResult("running", node.getDisplayName(), taskId, out.exitCode, limited, null));
             }
-            OutputView limited = limitLines(out.text, maxLines);
-            String header = $i18nF("espidf.mcp.run.task.finished", node.getDisplayName(), out.exitCode);
-            return McpToolCallResult.Companion.text(header + limited.text(),
+            McpOutputView limited = McpOutputView.limit(out.text, maxLines);
+            String header = $i18nF("espidf.mcp.run.task.finished", node.getDisplayName(), out.exitCode) + "\n";
+            return McpToolCallResult.Companion.text(
+                    header + limited.note($i18n("espidf.mcp.output.truncated.note"), maxLines) + limited.text(),
                     structuredResult("exited", node.getDisplayName(), taskId, out.exitCode, limited, null));
         } catch (Throwable e) {
             return McpToolCallResult.Companion.error(
@@ -171,11 +178,18 @@ public class EspIdfRunTaskMcpTool implements McpTool {
         }
     }
 
+    /** 启动后等待「任务登记完成」的最长时间：登记回调不保证在 runner.execute 返回前跑完 */
+    private static final long START_TASK_TIMEOUT_MS = 3000L;
+
+    /** 等待登记的轮询间隔 */
+    private static final long START_TASK_POLL_MILLIS = 25L;
+
     /**
      * 在 EDT 上启动任务，并返回本次新登记的任务 id（无法跟踪的任务类型或未启动时返回 {@code null}）。
      * <p>
-     * 用 {@code invokeAndWait} 保证在返回前任务已完成登记，因此异步调用也能先拿到 taskId，
-     * 供客户端随后用 {@code espidf_list_running_tasks} / {@code espidf_terminate_task} 查询或终止。
+     * 经 {@link CmdTaskManager} 的登记发生在运行内容的回调里，该回调不保证在 {@code runner.execute}
+     * 返回前执行完，所以启动后按名称轮询一小段时间等待登记，让异步调用也能带上 taskId，
+     * 供调用方随后用 {@code espidf_fetch_task_output} 拉取输出或 {@code espidf_terminate_task} 终止。
      */
     private static @Nullable Long startTask(@NotNull Project project, @NotNull EspIdfTaskTreeNode node,
                                             @Nullable ProcessListener listener) {
@@ -189,13 +203,40 @@ public class EspIdfRunTaskMcpTool implements McpTool {
         } else {
             ApplicationManager.getApplication().invokeAndWait(start);
         }
+        // 终端类任务与 action 不经 CmdTaskManager 登记，没必要等
+        long deadline = System.currentTimeMillis() + (isTrackable(node) ? START_TASK_TIMEOUT_MS : 0L);
         String name = node.getDisplayName();
-        return CmdTaskManager.activeTasks(project).stream()
-                .filter(task -> !before.contains(task.taskId()))
-                .filter(task -> name.equals(task.name()))
-                .map(CmdTaskManager.ActiveTask::taskId)
-                .findFirst()
-                .orElse(null);
+        Long unmatched = null;
+        while (true) {
+            for (CmdTaskManager.ActiveTask task : CmdTaskManager.activeTasks(project)) {
+                if (before.contains(task.taskId())) {
+                    continue;
+                }
+                if (name.equals(task.name())) {
+                    return task.taskId();
+                }
+                if (unmatched == null) {
+                    unmatched = task.taskId();
+                }
+            }
+            if (System.currentTimeMillis() >= deadline) {
+                return unmatched;
+            }
+            try {
+                Thread.sleep(START_TASK_POLL_MILLIS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                return unmatched;
+            }
+        }
+    }
+
+    /** 该任务类型是否会经 {@link CmdTaskManager} 登记（终端类任务与 action 不会） */
+    private static boolean isTrackable(@NotNull EspIdfTaskTreeNode node) {
+        if (node instanceof EspIdfTaskCommandNode || node instanceof RawCommandNode) {
+            return true;
+        }
+        return node instanceof LocalExecNode exec && !exec.isUseTerminal();
     }
 
     private static void executeTask(Project project, EspIdfTaskTreeNode node, ProcessListener listener) {
@@ -212,40 +253,6 @@ public class EspIdfRunTaskMcpTool implements McpTool {
         }
     }
 
-    /** 输出视图：可能被截断的文本 + 截断信息。 */
-    private record OutputView(String text, boolean truncated, int omittedLines) {
-        static final OutputView EMPTY = new OutputView("", false, 0);
-
-        static OutputView of(String text) {
-            return new OutputView(text == null ? "" : text, false, 0);
-        }
-    }
-
-    /**
-     * 保留输出末尾最多 {@code maxLines} 行：超出部分从开头丢弃并记录，{@code maxLines <= 0} 表示不限制。
-     */
-    private static OutputView limitLines(String text, int maxLines) {
-        if (text == null || text.isEmpty()) {
-            return OutputView.EMPTY;
-        }
-        if (maxLines <= 0) {
-            return OutputView.of(text);
-        }
-        String[] lines = text.split("\n", -1);
-        if (lines.length <= maxLines) {
-            return OutputView.of(text);
-        }
-        int omitted = lines.length - maxLines;
-        StringBuilder sb = new StringBuilder();
-        for (int i = omitted; i < lines.length; i++) {
-            sb.append(lines[i]);
-            if (i < lines.length - 1) {
-                sb.append('\n');
-            }
-        }
-        return new OutputView(sb.toString(), true, omitted);
-    }
-
     /**
      * 构造返回给 MCP 客户端的结构化结果：{@code status} / {@code taskName} / {@code exitCode} /
      * {@code output}（可选 {@code truncated} / {@code omittedLines} / {@code message}），均为可选字段。
@@ -255,7 +262,7 @@ public class EspIdfRunTaskMcpTool implements McpTool {
                                                @Nullable String taskName,
                                                @Nullable Long taskId,
                                                @Nullable Integer exitCode,
-                                               @Nullable OutputView output,
+                                               @Nullable McpOutputView output,
                                                @Nullable String message) {
         Map<String, JsonElement> m = new LinkedHashMap<>();
         m.put("status", JsonElementKt.JsonPrimitive(status));

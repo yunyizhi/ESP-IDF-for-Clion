@@ -114,7 +114,7 @@ public class EspIdfFetchTaskOutputMcpTool implements McpTool {
                 int exitCode = processHandler.getExitCode() == null ? -1 : processHandler.getExitCode();
                 return McpToolCallResult.Companion.text(
                         $i18nF("espidf.mcp.fetch.task.finished", task.name(), exitCode),
-                        structuredResult("exited", taskId, task.name(), exitCode, OutputView.EMPTY, null));
+                        structuredResult("exited", taskId, task.name(), exitCode, McpOutputView.EMPTY, null));
             }
 
             Integer waitSeconds = readInt(input, "waitSeconds");
@@ -129,8 +129,9 @@ public class EspIdfFetchTaskOutputMcpTool implements McpTool {
                 return McpToolCallResult.Companion.error(message,
                         structuredResult("error", taskId, task.name(), null, null, message));
             }
-            OutputView limited = limitLines(out.text, maxLines);
-            String body = limited.text().isEmpty() ? $i18n("espidf.mcp.fetch.task.no.new.output") : limited.text();
+            McpOutputView limited = McpOutputView.limit(out.text, maxLines);
+            String body = limited.note($i18n("espidf.mcp.output.truncated.note"), maxLines)
+                    + (limited.text().isEmpty() ? $i18n("espidf.mcp.fetch.task.no.new.output") : limited.text());
             if (out.exitCode == STILL_RUNNING) {
                 String header = $i18nF("espidf.mcp.fetch.task.running", task.name(), waitMillis / 1000L);
                 return McpToolCallResult.Companion.text(header + body,
@@ -145,45 +146,11 @@ public class EspIdfFetchTaskOutputMcpTool implements McpTool {
         }
     }
 
-    /** 输出视图：可能被截断的文本 + 截断信息。 */
-    private record OutputView(String text, boolean truncated, int omittedLines) {
-        static final OutputView EMPTY = new OutputView("", false, 0);
-
-        static OutputView of(String text) {
-            return new OutputView(text == null ? "" : text, false, 0);
-        }
-    }
-
-    /**
-     * 保留输出末尾最多 {@code maxLines} 行：超出部分从开头丢弃并记录，{@code maxLines <= 0} 表示不限制。
-     */
-    private static OutputView limitLines(String text, int maxLines) {
-        if (text == null || text.isEmpty()) {
-            return OutputView.EMPTY;
-        }
-        if (maxLines <= 0) {
-            return OutputView.of(text);
-        }
-        String[] lines = text.split("\n", -1);
-        if (lines.length <= maxLines) {
-            return OutputView.of(text);
-        }
-        int omitted = lines.length - maxLines;
-        StringBuilder sb = new StringBuilder();
-        for (int i = omitted; i < lines.length; i++) {
-            sb.append(lines[i]);
-            if (i < lines.length - 1) {
-                sb.append('\n');
-            }
-        }
-        return new OutputView(sb.toString(), true, omitted);
-    }
-
     private static JsonObject structuredResult(@NotNull String status,
                                                long taskId,
                                                @Nullable String taskName,
                                                @Nullable Integer exitCode,
-                                               @Nullable OutputView output,
+                                               @Nullable McpOutputView output,
                                                @Nullable String message) {
         Map<String, JsonElement> m = new LinkedHashMap<>();
         m.put("status", JsonElementKt.JsonPrimitive(status));
