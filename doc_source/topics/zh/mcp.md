@@ -4,7 +4,7 @@
 
 插件会向 CLion 内置的 MCP 服务（JetBrains MCP Server）注册一组 MCP 工具，
 使外部 AI 客户端（如接入 MCP 的对话助手）能够在无头环境下复用插件的能力：
-执行任务树上的命令、拉取运行中任务的输出、获取项目构建环境信息、更新项目配置、查询可用串口等。
+执行任务树上的命令、拉取任务输出（运行中增量与已结束结果）、获取项目构建环境信息、更新项目配置、查询可用串口等。
 
 这些工具与插件界面「任务树」点击执行的路径完全一致，因此 MCP 触发的结果与在 IDE 里手动运行一致。
 
@@ -17,15 +17,17 @@
 |------------------------------|--------------------------------------|
 | `espidf_list_tasks`          | 列出当前项目可运行的 ESP-IDF 任务            |
 | `espidf_run_task`            | 按名称运行某个 ESP-IDF 任务                 |
-| `espidf_fetch_task_output`   | 拉取运行中任务在等待窗口内新产生的输出（增量轮询）    |
-| `espidf_list_running_tasks`  | 列出当前项目正在运行的任务                    |
+| `espidf_fetch_task_output`   | 拉取任务输出：运行中为等待窗口内的增量，已结束为运行窗口保留的结果    |
+| `espidf_list_running_tasks`  | 列出任务执行情况（运行中与已结束）                    |
 | `espidf_terminate_task`      | 按 `taskId` 终止正在运行的任务              |
 | `espidf_get_project_info`    | 获取项目的构建环境信息（环境变量脚本、Profiles、配置等） |
 | `espidf_set_project_config`  | 更新项目配置（串口、监视/下载波特率、CMake Profile） |
 | `espidf_list_serial_ports`   | 列出当前机器上可用的串口                      |
 
 典型的长时间任务流程：先用 `espidf_list_tasks` 找到任务名，再用 `espidf_run_task`（`async=true`）触发并拿到 `taskId`，
-随后用 `espidf_fetch_task_output` 轮询增量日志，必要时用 `espidf_terminate_task` 结束任务。
+随后用 `espidf_fetch_task_output` 轮询增量日志，必要时用 `espidf_terminate_task` 结束任务；
+任务结束后仍可用同一个 `taskId` 调用 `espidf_fetch_task_output` 回看完整结果，
+任务执行情况（含已结束记录）可用 `espidf_list_running_tasks` 查看。
 
 ---
 
@@ -109,59 +111,79 @@
 
 ## espidf_fetch_task_output
 
-拉取「正在运行的 ESP-IDF 任务」的**增量输出**：只返回本次调用开始到等待结束之间新产生的输出（最多 `maxLines` 行，保留末尾行）。
+按任务状态返回输出，有两种语义：
 
-调用会订阅任务的实时输出并阻塞至多 `waitSeconds` 秒（默认 30 秒；设为 `0` 立即返回当前已到达的输出）。
-`status` 为 `running`（等待结束时任务仍在运行）、`exited`（任务已结束）或 `not_found`（`taskId` 未知）。
-通常与 `espidf_run_task(async=true)` 配合，用于轮询长时间运行的任务。
+- **任务仍在运行**：返回「本次调用开始」到「等待结束」之间**新产生的输出**（增量轮询，最多 `maxLines` 行，保留末尾行）。
+  调用会订阅任务的实时输出并阻塞至多 `waitSeconds` 秒（默认 30 秒；设为 `0` 立即返回当前已到达的输出）。
+  `status` 为 `running`（等待结束时仍在运行）或 `exited`（等待期间结束，返回该窗口的新增输出与退出码）。
+- **任务已结束（或未能启动）**：任务的运行窗口里保留的控制台输出即执行结果，直接返回该完整快照（`status=exited`），
+  因此已经结束的任务仍可事后读取结果；若对应 tab 已被关闭、输出不可用，则只返回退出码与提示；
+  若任务根本未能启动，则只返回「未能启动」的提示。
+
+通常与 `espidf_run_task(async=true)` 配合，用于轮询长时间运行的任务；任务结束后仍可用同一个 `taskId` 回看结果。
 
 **参数**
 
 | 参数            | 类型     | 必填 | 说明                                                        |
 |---------------|--------|----|-----------------------------------------------------------|
-| `taskId`      | integer | 是  | 运行中任务的标识（来自 `espidf_list_running_tasks` 或 `espidf_run_task` 的返回） |
-| `waitSeconds` | integer | 否  | 等待新输出的最长时间（秒），默认 30；设为 0 表示立即返回                            |
+| `taskId`      | integer | 是  | 目标任务标识（来自 `espidf_list_running_tasks` 或 `espidf_run_task` 的返回） |
+| `waitSeconds` | integer | 否  | 运行中任务等待新输出的最长时间（秒），默认 30；设为 0 表示立即返回；任务已结束时不生效            |
 | `maxLines`    | integer | 否  | 返回输出最多保留末尾多少行，默认 200；设为 0 或负数表示不限制                                     |
 | `projectPath` | string  | 否  | 目标项目基目录绝对路径；多项目打开时建议填写                                      |
 
 **返回字段**
 
-| 字段             | 类型      | 说明                                                   |
-|----------------|---------|------------------------------------------------------|
-| `status`       | string  | `running` / `exited` / `not_found` / `error`          |
-| `taskId`       | integer | 被拉取的任务标识                                             |
-| `taskName`     | string  | 任务显示名                                                |
-| `exitCode`     | integer | 进程退出码；任务仍在运行时缺省                                      |
-| `output`       | string  | 本次等待窗口内新产生的输出（可能被截断）                                  |
-| `truncated`    | boolean | 输出被截断时返回 `true`                                       |
-| `omittedLines` | integer | 因截断被丢弃的前置行数                                          |
-| `message`      | string  | 错误或非结果状态下的可读信息                                       |
+| 字段             | 类型      | 说明                                                       |
+|----------------|---------|----------------------------------------------------------|
+| `status`       | string  | `running` / `exited` / `not_found` / `error`              |
+| `taskId`       | integer | 被拉取的任务标识                                                 |
+| `taskName`     | string  | 任务显示名                                                    |
+| `exitCode`     | integer | 进程退出码；任务仍在运行时缺省                                          |
+| `output`       | string  | 运行中任务：本次等待窗口内新产生的输出；已结束任务：运行窗口保留的控制台输出（均可能被截断）            |
+| `truncated`    | boolean | 输出被截断时返回 `true`                                           |
+| `omittedLines` | integer | 因截断被丢弃的前置行数                                              |
+| `message`      | string  | 错误或非结果状态下的可读信息                                           |
 
 ---
 
 ## espidf_list_running_tasks
 
-列出当前项目中正在运行的 ESP-IDF 任务（由插件启动、经任务管理器登记的非终端任务）。
-可用于查看运行状态，并将返回的 `taskId` 交给 `espidf_terminate_task` 终止任务。
+列出当前项目的 ESP-IDF 任务执行情况（工具名保持不变）：由插件启动、经任务管理器登记的非终端任务，
+既包含仍在运行的任务，也包含已经结束（或未能启动）的保留记录及其状态、退出码与耗时。
+
+- 运行中任务的 `taskId` 可交给 `espidf_terminate_task` 终止，或用 `espidf_fetch_task_output` 拉取增量输出；
+- 已结束任务的 `taskId` 可用 `espidf_fetch_task_output` 读取运行窗口中保留的完整输出。
+
+已结束记录有两种淘汰时机：
+
+- 该任务在运行窗口里的内容（tab）被关闭后，记录会在**下一次新建任务或任务结束**时被顺带清理（不在关闭瞬间响应，允许一点延迟）；
+- 作为兜底，最多保留 20 条已结束记录，超出时淘汰最早结束的。
+
+运行中的任务不受这两种限制。
 
 **参数**
 
-| 参数           | 类型   | 必填 | 说明                                         |
-|--------------|--------|----|--------------------------------------------|
-| `projectPath`| string | 否  | 目标项目基目录绝对路径；多项目打开时用于定位项目，通常可省略 |
+| 参数                | 类型      | 必填 | 说明                                         |
+|-------------------|---------|----|--------------------------------------------|
+| `includeFinished` | boolean | 否  | 是否包含已结束（或未能启动）的任务记录，默认 `true`              |
+| `projectPath`     | string  | 否  | 目标项目基目录绝对路径；多项目打开时用于定位项目，通常可省略              |
 
 **返回字段**
 
-| 字段      | 类型    | 说明                                            |
-|---------|-------|-----------------------------------------------|
-| `count` | integer | 当前运行中的任务数量                                     |
-| `tasks` | array | 运行中任务列表，每项包含 `taskId`、`name`、`executionId`、`startTimeMillis`、`runningMillis` |
+| 字段              | 类型      | 说明                                                                                                          |
+|-----------------|---------|-------------------------------------------------------------------------------------------------------------|
+| `count`         | integer | 返回的任务执行记录数量                                                                                                 |
+| `runningCount`  | integer | 仍在运行的任务数量                                                                                                   |
+| `finishedCount` | integer | 已结束（或未能启动）的任务数量                                                                                             |
+| `tasks`         | array   | 任务执行记录列表，每项包含 `taskId`、`name`、`state`（`running` / `exited` / `not_started`）、`executionId`、`startTimeMillis`、`durationMillis`，已结束时还包含 `exitCode` |
 
 ---
 
 ## espidf_terminate_task
 
 按 `taskId` 终止一个正在运行的 ESP-IDF 任务（`taskId` 来自 `espidf_list_running_tasks` 或 `espidf_run_task` 的返回）。
+已结束的任务仍会出现在任务执行列表中，但无法终止：此时返回 `status=not_running` 与退出码，
+其结果可用 `espidf_fetch_task_output` 读取。
 
 **参数**
 
@@ -172,10 +194,11 @@
 
 **返回字段**
 
-| 字段       | 类型      | 说明                                                  |
-|----------|---------|-----------------------------------------------------|
-| `status` | string  | 找到并发起终止时为 `terminated`；未找到该任务时为 `not_found`         |
-| `taskId` | integer | 请求终止的 `taskId`                                        |
+| 字段         | 类型      | 说明                                                              |
+|------------|---------|-----------------------------------------------------------------|
+| `status`   | string  | 找到运行中任务并发起终止时为 `terminated`；任务已结束为 `not_running`；未找到该任务时为 `not_found` |
+| `taskId`   | integer | 请求终止的 `taskId`                                                  |
+| `exitCode` | integer | 已结束任务的退出码；仅在 `status=not_running` 时返回                             |
 
 ---
 

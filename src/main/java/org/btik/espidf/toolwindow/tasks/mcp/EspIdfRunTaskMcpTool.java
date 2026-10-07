@@ -194,7 +194,7 @@ public class EspIdfRunTaskMcpTool implements McpTool {
     private static @Nullable Long startTask(@NotNull Project project, @NotNull EspIdfTaskTreeNode node,
                                             @Nullable ProcessListener listener) {
         Set<Long> before = new HashSet<>();
-        for (CmdTaskManager.ActiveTask task : CmdTaskManager.activeTasks(project)) {
+        for (CmdTaskManager.CmdTask task : CmdTaskManager.activeTasks(project)) {
             before.add(task.taskId());
         }
         Runnable start = () -> executeTask(project, node, listener);
@@ -208,7 +208,7 @@ public class EspIdfRunTaskMcpTool implements McpTool {
         String name = node.getDisplayName();
         Long unmatched = null;
         while (true) {
-            for (CmdTaskManager.ActiveTask task : CmdTaskManager.activeTasks(project)) {
+            for (CmdTaskManager.CmdTask task : CmdTaskManager.activeTasks(project)) {
                 if (before.contains(task.taskId())) {
                     continue;
                 }

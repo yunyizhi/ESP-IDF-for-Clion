@@ -28,6 +28,9 @@ import static org.btik.espidf.toolwindow.tasks.mcp.McpSchemaUtils.schema;
 
 /**
  * 按 taskId 终止当前项目正在运行的 ESP-IDF 任务（taskId 来自 {@code espidf_list_running_tasks}）。
+ * <p>
+ * 已结束的任务（记录保留在列表中）无需也不能终止，此时返回 {@code status=not_running}，
+ * 其结果可通过 {@code espidf_fetch_task_output} 读取。
  */
 public class EspIdfTerminateTaskMcpTool implements McpTool {
 
@@ -47,6 +50,7 @@ public class EspIdfTerminateTaskMcpTool implements McpTool {
         McpToolSchema outputSchema = schema()
                 .string("status", $i18n("espidf.mcp.terminate.task.field.status"))
                 .integer("taskId", $i18n("espidf.mcp.terminate.task.field.taskId"))
+                .integer("exitCode", $i18n("espidf.mcp.terminate.task.field.exitCode"))
                 .build();
 
         this.descriptor = new McpToolDescriptor(
@@ -77,10 +81,16 @@ public class EspIdfTerminateTaskMcpTool implements McpTool {
             return McpToolCallResult.Companion.error($i18n("espidf.mcp.terminate.task.missing.param"), EMPTY_JSON);
         }
         try {
-            CmdTaskManager.ActiveTask task = CmdTaskManager.findTask(project, taskId);
+            CmdTaskManager.CmdTask task = CmdTaskManager.findTask(project, taskId);
             if (task == null) {
                 return McpToolCallResult.Companion.error($i18nF("espidf.mcp.terminate.task.not.found", taskId),
                         structuredResult("not_found", taskId));
+            }
+            // 已结束的任务保留在记录里，只能查询结果，不能再终止
+            if (!task.isAlive()) {
+                return McpToolCallResult.Companion.error(
+                        $i18nF("espidf.mcp.terminate.task.not.running", task.name(), taskId, task.exitCode()),
+                        structuredResult("not_running", taskId, task.exitCode()));
             }
             CmdTaskManager.terminate(project, taskId);
             return McpToolCallResult.Companion.text($i18nF("espidf.mcp.terminate.task.terminated", task.name(), taskId),
@@ -92,9 +102,16 @@ public class EspIdfTerminateTaskMcpTool implements McpTool {
     }
 
     private static JsonObject structuredResult(@NotNull String status, long taskId) {
+        return structuredResult(status, taskId, null);
+    }
+
+    private static JsonObject structuredResult(@NotNull String status, long taskId, @Nullable Integer exitCode) {
         Map<String, JsonElement> m = new LinkedHashMap<>();
         m.put("status", JsonElementKt.JsonPrimitive(status));
         m.put("taskId", JsonElementKt.JsonPrimitive(taskId));
+        if (exitCode != null) {
+            m.put("exitCode", JsonElementKt.JsonPrimitive(exitCode));
+        }
         return new JsonObject(m);
     }
 }
