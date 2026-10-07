@@ -1,21 +1,14 @@
 package org.btik.espidf.util;
 
-import com.intellij.execution.RunContentDescriptorId;
 import com.intellij.execution.ui.RunContentDescriptor;
-import com.intellij.execution.ui.RunContentManager;
-import com.intellij.openapi.application.Application;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -53,7 +46,7 @@ public final class CmdTaskRegistry {
 
     public void register(@NotNull CmdTaskManager.CmdTask task) {
         tasks.put(task.taskId(), task);
-        evictClosedRunContentsAsync();
+        evictClosedRunContents();
     }
 
     /** 标记任务已结束并记录退出码；记录保留，供后续查询执行结果。 */
@@ -63,7 +56,7 @@ public final class CmdTaskRegistry {
             return;
         }
         task.markFinished(exitCode);
-        evictClosedRunContentsAsync();
+        evictClosedRunContents();
         evictFinishedOverflow();
     }
 
@@ -74,62 +67,34 @@ public final class CmdTaskRegistry {
             return;
         }
         task.markNotStarted();
-        evictClosedRunContentsAsync();
+        evictClosedRunContents();
         evictFinishedOverflow();
     }
 
     /**
      * 淘汰「运行窗口已被关闭」的已结束记录：输出已经不可用，记录也没有保留价值。
      * <p>
-     * 不在关闭时立即响应（不订阅运行内容事件），只在新建任务或任务结束时顺带检查一次，
-     * 因此窗口关闭到记录被清理之间允许有延迟；检查本身不创建运行内容服务，
-     * 服务不存在（例如未打开过运行窗口）时不做任何淘汰，避免误删仍在窗口里的记录。
+     * 不在关闭时立即响应（不订阅运行内容事件），只在新建任务或任务结束时顺带检查一次。
+     * 判据取自 {@link RunContentDescriptor} 的公开状态：运行内容被关闭（或被复用替换）时，
+     * 平台会 dispose 该 descriptor，其内容引用与控制台引用会同时失效；
+     * 只有内容为空而控制台仍在（内容尚未显示）时不视为已关闭，避免误删刚结束任务的记录。
      */
     private void evictClosedRunContents() {
         try {
-            if (project == null || project.isDisposed()) {
-                return;
-            }
-            RunContentManager manager = RunContentManager.getInstanceIfCreated(project);
-            if (manager == null) {
-                return;
-            }
-            Set<RunContentDescriptorId> shownIds = new HashSet<>();
-            Collection<RunContentDescriptor> shown = manager.getRunContentDescriptors();
-            if (shown == null) {
-                return;
-            }
-            for (RunContentDescriptor descriptor : shown) {
-                if (descriptor.getId() != null) {
-                    shownIds.add(descriptor.getId());
-                }
-            }
             for (CmdTaskManager.CmdTask task : tasks.values()) {
                 if (task.isAlive()) {
                     continue;
                 }
                 RunContentDescriptor descriptor = task.descriptor();
-                // id 为空说明该内容未进入运行内容服务，无法判断是否关闭，保守保留
-                if (descriptor != null && descriptor.getId() != null && !shownIds.contains(descriptor.getId())) {
+                if (descriptor != null
+                        && descriptor.getAttachedContent() == null
+                        && descriptor.getExecutionConsole() == null) {
                     tasks.remove(task.taskId());
                 }
             }
         } catch (Throwable ignored) {
             // 清理只是顺带做的优化，失败不影响任务记录本身
         }
-    }
-
-    /**
-     * 触发一次关闭内容清理：需要读运行窗口（EDT 上的 UI 数据），
-     * 后台线程改派到 EDT 异步执行（用户不感知延迟），无 Application 的单元测试环境直接同步执行。
-     */
-    private void evictClosedRunContentsAsync() {
-        Application application = ApplicationManager.getApplication();
-        if (application == null || application.isDispatchThread()) {
-            evictClosedRunContents();
-            return;
-        }
-        application.invokeLater(this::evictClosedRunContents);
     }
 
     /** 已结束记录超出上限时，淘汰最早结束的那些（结束时间相同时按 taskId 先后）。 */

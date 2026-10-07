@@ -28,6 +28,17 @@ public final class RunContentOutputs {
     private RunContentOutputs() {
     }
 
+    /**
+     * 该运行内容的输出当前是否可读。
+     * <p>
+     * 判据是控制台是否还在：运行内容被关闭（或被复用替换）时平台会 dispose 对应的
+     * {@link RunContentDescriptor}，控制台引用随之失效，此后再也读不到文本。
+     * 供调用方在读取前区分「有输出但为空」与「输出已不可用」。
+     */
+    public static boolean isOutputAvailable(@Nullable RunContentDescriptor descriptor) {
+        return descriptor != null && descriptor.getExecutionConsole() != null;
+    }
+
     /** 读取任务运行内容中保留的全部控制台文本；无可用内容时返回 {@code null}。 */
     public static @Nullable String readOutput(@Nullable RunContentDescriptor descriptor) {
         if (descriptor == null) {

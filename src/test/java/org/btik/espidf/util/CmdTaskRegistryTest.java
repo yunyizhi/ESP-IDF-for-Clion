@@ -1,10 +1,10 @@
 package org.btik.espidf.util;
 
-import com.intellij.execution.RunContentDescriptorId;
 import com.intellij.execution.process.ProcessHandler;
+import com.intellij.execution.ui.ExecutionConsole;
 import com.intellij.execution.ui.RunContentDescriptor;
-import com.intellij.execution.ui.RunContentManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.ui.content.Content;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.junit.Test;
@@ -12,9 +12,8 @@ import org.mockito.Mockito;
 
 import java.io.OutputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -24,10 +23,11 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * {@link CmdTaskRegistry} 的执行记录语义：
- * 任务结束后记录保留（含退出码），运行中的任务排在前面，
- * 已结束记录超出上限时淘汰最早结束的那些。
+ * 任务结束后记录保留（含退出码），运行中的任务排在前面，已结束记录超出上限时淘汰最早结束的那些，
+ * 运行内容已被关闭（descriptor 被 dispose）的记录则在新建任务/任务结束时被顺带淘汰。
  * <p>
- * 用假的 {@link ProcessHandler} 代替真实进程，直接实例化注册表（只用到存储逻辑，不依赖平台服务）。
+ * 用假的 {@link ProcessHandler} 与 mock 的 {@link RunContentDescriptor} 代替真实进程与运行窗口，
+ * 直接实例化注册表（只用到存储逻辑，不依赖平台服务）。
  */
 public class CmdTaskRegistryTest {
 
@@ -81,18 +81,23 @@ public class CmdTaskRegistryTest {
         return new CmdTaskRegistry(PROJECT);
     }
 
-    /** 带「运行内容服务」的项目：{@code shown} 表示当前运行窗口里还留着的内容 */
-    private static CmdTaskRegistry registryWithRunContents(@Nullable Collection<RunContentDescriptor> shown) {
-        Project project = Mockito.mock(Project.class);
-        RunContentManager manager = Mockito.mock(RunContentManager.class);
-        Mockito.when(project.getServiceIfCreated(RunContentManager.class)).thenReturn(manager);
-        Mockito.when(manager.getRunContentDescriptors()).thenReturn(shown == null ? List.of() : shown);
-        return new CmdTaskRegistry(project);
+    /** 运行窗口里内容仍在的 descriptor（未关闭） */
+    private static RunContentDescriptor openDescriptor() {
+        RunContentDescriptor descriptor = Mockito.mock(RunContentDescriptor.class);
+        Mockito.when(descriptor.getAttachedContent()).thenReturn(Mockito.mock(Content.class));
+        Mockito.when(descriptor.getExecutionConsole()).thenReturn(Mockito.mock(ExecutionConsole.class));
+        return descriptor;
     }
 
-    private static RunContentDescriptor descriptor() {
+    /** 内容已被关闭/复用的 descriptor：平台 dispose 后内容与控制台引用同时失效 */
+    private static RunContentDescriptor closedDescriptor() {
+        return Mockito.mock(RunContentDescriptor.class);
+    }
+
+    /** 内容尚未显示：内容引用为空，但控制台仍在 */
+    private static RunContentDescriptor notShownDescriptor() {
         RunContentDescriptor descriptor = Mockito.mock(RunContentDescriptor.class);
-        Mockito.when(descriptor.getId()).thenReturn(Mockito.mock(RunContentDescriptorId.class));
+        Mockito.when(descriptor.getExecutionConsole()).thenReturn(Mockito.mock(ExecutionConsole.class));
         return descriptor;
     }
 
@@ -101,7 +106,7 @@ public class CmdTaskRegistryTest {
     public void finishedTaskIsRetainedWithExitCode() {
         CmdTaskRegistry registry = registry();
         long taskId = registry.nextTaskId();
-        CmdTaskManager.CmdTask task = task(taskId, new FakeProcessHandler(), System.currentTimeMillis());
+        CmdTaskManager.CmdTask task = task(taskId, new FakeProcessHandler(), System.currentTimeMillis(), openDescriptor());
         registry.register(task);
 
         assertTrue(task.isAlive());
@@ -125,7 +130,7 @@ public class CmdTaskRegistryTest {
     public void notStartedTaskIsRetained() {
         CmdTaskRegistry registry = registry();
         long taskId = registry.nextTaskId();
-        CmdTaskManager.CmdTask task = task(taskId, new FakeProcessHandler(), System.currentTimeMillis());
+        CmdTaskManager.CmdTask task = task(taskId, new FakeProcessHandler(), System.currentTimeMillis(), openDescriptor());
         registry.register(task);
 
         registry.markNotStarted(taskId);
@@ -139,8 +144,8 @@ public class CmdTaskRegistryTest {
     @Test
     public void runningTasksComeFirst() {
         CmdTaskRegistry registry = registry();
-        CmdTaskManager.CmdTask finished = task(registry.nextTaskId(), new FakeProcessHandler(), 1000L);
-        CmdTaskManager.CmdTask running = task(registry.nextTaskId(), new FakeProcessHandler(), 2000L);
+        CmdTaskManager.CmdTask finished = task(registry.nextTaskId(), new FakeProcessHandler(), 1000L, openDescriptor());
+        CmdTaskManager.CmdTask running = task(registry.nextTaskId(), new FakeProcessHandler(), 2000L, openDescriptor());
         registry.register(finished);
         registry.register(running);
         registry.markFinished(finished.taskId(), 0);
@@ -157,13 +162,13 @@ public class CmdTaskRegistryTest {
     @Test
     public void oldestFinishedTasksAreEvicted() {
         CmdTaskRegistry registry = registry();
-        CmdTaskManager.CmdTask running = task(registry.nextTaskId(), new FakeProcessHandler(), 0L);
+        CmdTaskManager.CmdTask running = task(registry.nextTaskId(), new FakeProcessHandler(), 0L, openDescriptor());
         registry.register(running);
 
         List<Long> finishedIds = new ArrayList<>();
         for (int i = 0; i < MAX_FINISHED_TASKS + 5; i++) {
             long taskId = registry.nextTaskId();
-            registry.register(task(taskId, new FakeProcessHandler(), i));
+            registry.register(task(taskId, new FakeProcessHandler(), i, openDescriptor()));
             finishedIds.add(taskId);
         }
         for (Long taskId : finishedIds) {
@@ -178,12 +183,12 @@ public class CmdTaskRegistryTest {
         assertNotNull(registry.find(running.taskId()));
     }
 
-    /** 运行窗口里内容已关闭的已结束记录，在任务结束时被顺带淘汰 */
+    /** 运行窗口内容已关闭的已结束记录，在任务结束时被顺带淘汰 */
     @Test
     public void closedRunContentRecordIsEvicted() {
-        CmdTaskRegistry registry = registryWithRunContents(List.of());
+        CmdTaskRegistry registry = registry();
         long taskId = registry.nextTaskId();
-        registry.register(task(taskId, new FakeProcessHandler(), System.currentTimeMillis(), descriptor()));
+        registry.register(task(taskId, new FakeProcessHandler(), System.currentTimeMillis(), closedDescriptor()));
 
         registry.markFinished(taskId, 0);
 
@@ -191,13 +196,12 @@ public class CmdTaskRegistryTest {
         assertTrue(registry.tasks().isEmpty());
     }
 
-    /** 运行窗口里内容还在的已结束记录必须保留（否则就失去了回看输出的来源） */
+    /** 运行窗口内容还在的已结束记录必须保留（否则就失去了回看输出的来源） */
     @Test
     public void recordWithOpenRunContentIsRetained() {
-        RunContentDescriptor runContent = descriptor();
-        CmdTaskRegistry registry = registryWithRunContents(List.of(runContent));
+        CmdTaskRegistry registry = registry();
         long taskId = registry.nextTaskId();
-        registry.register(task(taskId, new FakeProcessHandler(), System.currentTimeMillis(), runContent));
+        registry.register(task(taskId, new FakeProcessHandler(), System.currentTimeMillis(), openDescriptor()));
 
         registry.markFinished(taskId, 0);
 
@@ -205,12 +209,24 @@ public class CmdTaskRegistryTest {
         assertEquals(1, registry.tasks().size());
     }
 
-    /** 运行内容服务不存在（未打开过运行窗口）时不做淘汰，避免误删仍在窗口里的记录 */
+    /** 内容尚未显示（控制台仍在）时不能当作已关闭，避免误删刚结束任务的记录 */
     @Test
-    public void missingRunContentServiceKeepsRecords() {
+    public void recordNotYetShownIsRetained() {
         CmdTaskRegistry registry = registry();
         long taskId = registry.nextTaskId();
-        registry.register(task(taskId, new FakeProcessHandler(), System.currentTimeMillis(), descriptor()));
+        registry.register(task(taskId, new FakeProcessHandler(), System.currentTimeMillis(), notShownDescriptor()));
+
+        registry.markFinished(taskId, 0);
+
+        assertNotNull(registry.find(taskId));
+    }
+
+    /** 没有关联运行内容的记录不做关闭淘汰，保守保留 */
+    @Test
+    public void recordWithoutRunContentIsRetained() {
+        CmdTaskRegistry registry = registry();
+        long taskId = registry.nextTaskId();
+        registry.register(task(taskId, new FakeProcessHandler(), System.currentTimeMillis()));
 
         registry.markFinished(taskId, 0);
 
@@ -220,23 +236,22 @@ public class CmdTaskRegistryTest {
     /** 新建任务时同样会顺带清理已关闭的记录 */
     @Test
     public void newTaskAlsoEvictsClosedRecords() {
-        RunContentDescriptor closed = descriptor();
-        Project project = Mockito.mock(Project.class);
-        RunContentManager manager = Mockito.mock(RunContentManager.class);
-        Mockito.when(project.getServiceIfCreated(RunContentManager.class)).thenReturn(manager);
-        // 用可变的「当前运行窗口内容」模拟 tab 的打开与关闭
-        AtomicReference<Collection<RunContentDescriptor>> shown = new AtomicReference<>(List.of(closed));
-        Mockito.when(manager.getRunContentDescriptors()).thenAnswer(invocation -> shown.get());
-        CmdTaskRegistry registry = new CmdTaskRegistry(project);
+        CmdTaskRegistry registry = registry();
+        AtomicBoolean closed = new AtomicBoolean(false);
+        Content content = Mockito.mock(Content.class);
+        ExecutionConsole console = Mockito.mock(ExecutionConsole.class);
+        RunContentDescriptor descriptor = Mockito.mock(RunContentDescriptor.class);
+        Mockito.when(descriptor.getAttachedContent()).thenAnswer(invocation -> closed.get() ? null : content);
+        Mockito.when(descriptor.getExecutionConsole()).thenAnswer(invocation -> closed.get() ? null : console);
 
         long firstId = registry.nextTaskId();
-        registry.register(task(firstId, new FakeProcessHandler(), 1L, closed));
+        registry.register(task(firstId, new FakeProcessHandler(), 1L, descriptor));
         registry.markFinished(firstId, 0);
         assertNotNull("窗口没关闭时记录必须保留", registry.find(firstId));
 
-        shown.set(List.of());
+        closed.set(true);
         long secondId = registry.nextTaskId();
-        registry.register(task(secondId, new FakeProcessHandler(), 2L, descriptor()));
+        registry.register(task(secondId, new FakeProcessHandler(), 2L, openDescriptor()));
 
         assertNull("新建任务时应顺带淘汰窗口已关闭的记录", registry.find(firstId));
         assertNotNull(registry.find(secondId));
@@ -248,7 +263,7 @@ public class CmdTaskRegistryTest {
         CmdTaskRegistry registry = registry();
         long taskId = registry.nextTaskId();
         FakeProcessHandler handler = new FakeProcessHandler();
-        registry.register(task(taskId, handler, System.currentTimeMillis()));
+        registry.register(task(taskId, handler, System.currentTimeMillis(), openDescriptor()));
         registry.markFinished(taskId, 0);
 
         assertFalse(registry.terminate(taskId));

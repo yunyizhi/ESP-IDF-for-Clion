@@ -53,7 +53,8 @@ public class EspIdfCustomDebugSettingEditor extends SettingsEditor<EspIdfDebugRu
     public EspIdfCustomDebugSettingEditor(@NotNull Project project) {
         this.project = project;
         rootPanel = new JPanel(new VerticalFlowLayout(0, 2));
-        envComponent = new EnvironmentVariablesComponent();
+        // 使用带 Project 的构造：无参构造已被标记 @Deprecated，且带 Project 时环境变量对话框可用
+        envComponent = new EnvironmentVariablesComponent(project);
         envComponent.getLabel().setVisible(false);
         JPanel wrapper = new JPanel(new GridLayoutManager(7, 2, JBUI.insetsTop(16), -1, -1));
 

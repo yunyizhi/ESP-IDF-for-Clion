@@ -117,8 +117,12 @@
   调用会订阅任务的实时输出并阻塞至多 `waitSeconds` 秒（默认 30 秒；设为 `0` 立即返回当前已到达的输出）。
   `status` 为 `running`（等待结束时仍在运行）或 `exited`（等待期间结束，返回该窗口的新增输出与退出码）。
 - **任务已结束（或未能启动）**：任务的运行窗口里保留的控制台输出即执行结果，直接返回该完整快照（`status=exited`），
-  因此已经结束的任务仍可事后读取结果；若对应 tab 已被关闭、输出不可用，则只返回退出码与提示；
-  若任务根本未能启动，则只返回「未能启动」的提示。
+  因此已经结束的任务仍可事后读取结果；若任务根本未能启动，则只返回「未能启动」的提示。
+
+> **已结束任务的输出以运行窗口（控制台）仍存活为前提**：tab 被关闭、或运行内容被复用替换后，平台会释放对应的
+> 运行内容，控制台文本随之不可读，此时本工具只能返回退出码与「输出不可用」的提示；这类记录随后也会在任务清理中
+> 被淘汰（见 `espidf_list_running_tasks`）。调用前可用该工具的每条记录里的 `outputAvailable` 字段、
+> 或文本行末尾的 `输出：输出可用/输出不可用` 标记来判断，无需先试错。
 
 通常与 `espidf_run_task(async=true)` 配合，用于轮询长时间运行的任务；任务结束后仍可用同一个 `taskId` 回看结果。
 
@@ -152,7 +156,8 @@
 既包含仍在运行的任务，也包含已经结束（或未能启动）的保留记录及其状态、退出码与耗时。
 
 - 运行中任务的 `taskId` 可交给 `espidf_terminate_task` 终止，或用 `espidf_fetch_task_output` 拉取增量输出；
-- 已结束任务的 `taskId` 可用 `espidf_fetch_task_output` 读取运行窗口中保留的完整输出。
+- 已结束任务的 `taskId` 可用 `espidf_fetch_task_output` 读取运行窗口中保留的完整输出
+  （**以运行窗口的控制台仍存活为前提**，每条记录的 `outputAvailable` 给出该判定）。
 
 已结束记录有两种淘汰时机：
 
@@ -175,7 +180,19 @@
 | `count`         | integer | 返回的任务执行记录数量                                                                                                 |
 | `runningCount`  | integer | 仍在运行的任务数量                                                                                                   |
 | `finishedCount` | integer | 已结束（或未能启动）的任务数量                                                                                             |
-| `tasks`         | array   | 任务执行记录列表，每项包含 `taskId`、`name`、`state`（`running` / `exited` / `not_started`）、`executionId`、`startTimeMillis`、`durationMillis`，已结束时还包含 `exitCode` |
+| `tasks`         | array   | 任务执行记录列表，每项包含 `taskId`、`name`、`state`（`running` / `exited` / `not_started`）、`executionId`、`startTimeMillis`、`durationMillis`、`outputAvailable`（该任务的运行窗口输出当前是否可读），已结束时还包含 `exitCode` |
+
+> `outputAvailable=false` 表示对应运行窗口 tab 已关闭或运行内容已被复用替换：此时 `espidf_fetch_task_output`
+> 对该任务只能返回退出码与提示，接下来这条记录也会在任务清理中被淘汰。
+>
+> 返回的**文本**里每行末尾同样给出输出可用性（`输出：输出可用` / `输出：输出不可用`），
+> 因此只读文本、不解析结构化字段的调用方也能直接判断，示例：
+>
+> ```text
+> ESP-IDF 任务执行情况
+> - [2] Monitor  （运行中，167 秒，输出：输出可用）
+> - [1] Monitor  （已结束：exited，exitCode=0，4 秒，输出：输出不可用）
+> ```
 
 ---
 

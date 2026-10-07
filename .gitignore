@@ -6989,3 +6989,5 @@ src/main/resources/web/
 /.intellijPlatform/coroutines-javaagent.jar
 /.intellijPlatform/self-update.lock
 /.codebuddy/plans/esp-tasks-profile-vars_e6fb61f9.md
+/web-size/package-lock.json
+/doc_source/webHelpESPIDF2-all.zip

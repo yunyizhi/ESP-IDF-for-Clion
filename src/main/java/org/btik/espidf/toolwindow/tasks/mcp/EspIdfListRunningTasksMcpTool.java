@@ -14,6 +14,7 @@ import kotlinx.serialization.json.JsonElement;
 import kotlinx.serialization.json.JsonElementKt;
 import kotlinx.serialization.json.JsonObject;
 import org.btik.espidf.util.CmdTaskManager;
+import org.btik.espidf.util.RunContentOutputs;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -120,14 +121,26 @@ public class EspIdfListRunningTasksMcpTool implements McpTool {
         }
     }
 
-    /** 文本行：运行中标注 running，已结束标注状态、退出码与耗时。 */
+    /** 文本行：运行中标注 running，已结束标注状态、退出码与耗时；两者都带上输出可用性。 */
     private static String taskLine(@NotNull CmdTaskManager.CmdTask task, boolean running) {
         long seconds = task.durationMillis() / 1000L;
+        String output = outputState(RunContentOutputs.isOutputAvailable(task.descriptor()));
         if (running) {
-            return $i18nF("espidf.mcp.list.running.tasks.item.running", task.taskId(), task.name(), seconds);
+            return $i18nF("espidf.mcp.list.running.tasks.item.running",
+                    task.taskId(), task.name(), seconds, output);
         }
         return $i18nF("espidf.mcp.list.running.tasks.item.finished", task.taskId(), task.name(),
-                stateName(task.state()), task.exitCode(), seconds);
+                stateName(task.state()), task.exitCode(), seconds, output);
+    }
+
+    /**
+     * 输出可用性的文本标记：结构化字段只在 JSON 里，只读文本的调用方会误以为输出一定取得到，
+     * 因此文本行同样标注（已结束任务的输出以运行窗口控制台存活为前提）。
+     */
+    private static String outputState(boolean available) {
+        return $i18n(available
+                ? "espidf.mcp.list.running.tasks.output.available"
+                : "espidf.mcp.list.running.tasks.output.unavailable");
     }
 
     private static JsonObject taskItem(@NotNull CmdTaskManager.CmdTask task, boolean running) {
@@ -141,6 +154,9 @@ public class EspIdfListRunningTasksMcpTool implements McpTool {
         if (!running) {
             item.put("exitCode", JsonElementKt.JsonPrimitive(task.exitCode()));
         }
+        // 输出能否读取取决于运行窗口内容是否还在：已结束任务的输出以控制台存活为前提
+        item.put("outputAvailable", JsonElementKt.JsonPrimitive(
+                RunContentOutputs.isOutputAvailable(task.descriptor())));
         return new JsonObject(item);
     }
 
