@@ -71,5 +71,6 @@
         <product id="1001" type="ESP32 JTAG CDC"/>
         <product id="0002" type="ESP32S2"/>
         <product id="0012" type="ESP32P4"/>
+        <product id="0020" type="ESP32S31"/>
     </vendor>
 </Vendors>
