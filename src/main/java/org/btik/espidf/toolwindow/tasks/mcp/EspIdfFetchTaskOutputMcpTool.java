@@ -43,7 +43,8 @@ import static org.btik.espidf.toolwindow.tasks.mcp.McpSchemaUtils.schema;
 public class EspIdfFetchTaskOutputMcpTool implements McpTool {
 
     private static final McpToolCategory CATEGORY =
-            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false);
+            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false,
+                    "ESP-IDF Tasks", "ESP-IDF related MCP tools");
 
     /** 默认等待窗口：30 秒 */
     private static final long DEFAULT_WAIT_MILLIS = 30 * 1000L;
@@ -83,6 +84,7 @@ public class EspIdfFetchTaskOutputMcpTool implements McpTool {
         this.descriptor = new McpToolDescriptor(
                 "espidf_fetch_task_output",
                 $i18n("espidf.mcp.fetch.task.name"),
+                $i18n("espidf.mcp.fetch.task.desc"),
                 $i18n("espidf.mcp.fetch.task.desc"),
                 CATEGORY,
                 "espidf_fetch_task_output",

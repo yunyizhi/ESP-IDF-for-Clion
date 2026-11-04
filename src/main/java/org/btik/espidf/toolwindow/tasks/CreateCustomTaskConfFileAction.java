@@ -49,7 +49,7 @@ public class CreateCustomTaskConfFileAction extends AnAction {
                 refreshTree.run();
                 ApplicationManager.getApplication().invokeLater(() -> {
                     FileEditorManager instance = FileEditorManager.getInstance(project);
-                    instance.openFile(xmlVirtual, true);
+                    instance.requestOpenFile(xmlVirtual);
                     xmlVirtual.refresh(true, true);
 
                 });

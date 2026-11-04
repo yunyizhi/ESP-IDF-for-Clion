@@ -30,10 +30,11 @@ dependencies {
     testImplementation("org.mockito:mockito-core:5.20.0")
     implementation("com.fazecast:jSerialComm:2.11.4")
     intellijPlatform {
-        clion("2026.2") { useInstaller = false }
+        clion("263.7307.108-EAP") { useInstaller = false }
         bundledPlugins(
             "com.intellij.clion",
             "com.intellij.cmake",
+            "com.intellij.xml",
             "com.intellij.clion.embedded",
             "com.jetbrains.sh",
             "org.jetbrains.plugins.terminal",
@@ -86,7 +87,8 @@ intellijPlatform {
 
     pluginVerification {
         ides {
-            recommended()
+            // 263 稳定版尚未发布，先用当前目标平台（263 EAP）校验
+            current()
         }
     }
 }

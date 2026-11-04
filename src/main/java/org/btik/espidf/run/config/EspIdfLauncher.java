@@ -27,7 +27,7 @@ import com.jetbrains.cidr.cpp.toolchains.CPPEnvironment;
 import com.jetbrains.cidr.cpp.toolchains.CPPToolchains;
 import com.jetbrains.cidr.cpp.toolchains.TrivialNativeToolchain;
 import com.jetbrains.cidr.execution.CidrCoroutineHelper;
-import com.jetbrains.cidr.execution.console.CidrPathConsoleFilter;
+import com.jetbrains.cidr.execution.CidrPathWithOffsetConsoleFilter;
 import com.jetbrains.cidr.execution.TrivialRunParameters;
 import com.jetbrains.cidr.execution.debugger.CidrDebugProcess;
 import com.jetbrains.cidr.execution.debugger.backend.DebuggerDriver;
@@ -147,7 +147,7 @@ public class EspIdfLauncher<T> extends CLionLauncher {
                     @Override
                     public @NotNull ConsoleView createConsole() {
                         ConsoleView console = super.createConsole();
-                        console.addMessageFilter(new CidrPathConsoleFilter(getProject(), null, Path.of(projectPath)));
+                        console.addMessageFilter(new CidrPathWithOffsetConsoleFilter(getProject(), null, Path.of(projectPath)));
                         return console;
                     }
 

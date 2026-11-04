@@ -15,6 +15,7 @@ import org.btik.espidf.service.IdfProjectConfigService;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
@@ -183,11 +184,11 @@ public class EnvironmentVarUtil {
     }
 
     public static String findIdfFullPath(String path) {
-        File idfPyFile = PathEnvironmentVariableUtil.findInPath(OsUtil.getIdfExe(), path, null);
-        if ((idfPyFile == null || !idfPyFile.exists()) && OsUtil.IS_WINDOWS) {
-            idfPyFile = PathEnvironmentVariableUtil.findInPath(OsUtil.Const.IDF_EXE, path, null);
+        Path idfPyFile = PathEnvironmentVariableUtil.findFirst(OsUtil.getIdfExe(), path);
+        if ((idfPyFile == null || !Files.exists(idfPyFile)) && OsUtil.IS_WINDOWS) {
+            idfPyFile = PathEnvironmentVariableUtil.findFirst(OsUtil.Const.IDF_EXE, path);
         }
-        return safe2String(idfPyFile, File::getPath);
+        return safe2String(idfPyFile, Path::toString);
     }
 
     public static Map<String, String> getEnvsWithProjectSettings(@NotNull Project project) {
@@ -203,8 +204,8 @@ public class EnvironmentVarUtil {
         if (path == null) {
             path = env.get("Path");
         }
-        File gitFile = PathEnvironmentVariableUtil.findInPath(OsUtil.getGitExe(), path, null);
-        return safe2String(gitFile, File::getPath);
+        Path gitFile = PathEnvironmentVariableUtil.findFirst(OsUtil.getGitExe(), path);
+        return safe2String(gitFile, Path::toString);
     }
 
     public static String getIdfVersionByIdfPy(Map<String, String> env, ModalTaskOwner owner, String toolchainName) {

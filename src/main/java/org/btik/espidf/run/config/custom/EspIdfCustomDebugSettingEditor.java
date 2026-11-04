@@ -26,6 +26,7 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 
 import static org.btik.espidf.ui.componets.MouseHooks.mouseClicked;
@@ -172,9 +173,9 @@ public class EspIdfCustomDebugSettingEditor extends SettingsEditor<EspIdfDebugRu
         if (path == null) {
             return;
         }
-        File gdbFile = PathEnvironmentVariableUtil.findInPath(gdbExecutable, path, null);
+        Path gdbFile = PathEnvironmentVariableUtil.findFirst(gdbExecutable, path);
         if (gdbFile != null) {
-            gdb.setRootDir(gdbFile.getParentFile());
+            gdb.setRootDir(gdbFile.getParent().toFile());
         }
 
     }

@@ -1,8 +1,10 @@
 package org.btik.espidf.toolwindow.kconfig;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.DeserializationFeature;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.intellij.execution.ExecutionException;
 import com.intellij.execution.configurations.GeneralCommandLine;
 import com.intellij.execution.executors.DefaultRunExecutor;
@@ -114,8 +116,9 @@ public class KConfServer implements ProcessListener {
     }
 
     private void processBufferForJsonObjects() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        ObjectMapper mapper = JsonMapper.builder()
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .build();
 
         int startIndex = 0;
         while (startIndex < builder.length()) {
@@ -150,7 +153,7 @@ public class KConfServer implements ProcessListener {
                     onMsg.accept(status);
                     builder.delete(0, currentIndex);
                     startIndex = 0;
-                } catch (IOException e) {
+                } catch (JacksonException e) {
                     LOG.error("Parse failed" + jsonString, e);
                     builder.delete(jsonStart, currentIndex);
                     startIndex = jsonStart;

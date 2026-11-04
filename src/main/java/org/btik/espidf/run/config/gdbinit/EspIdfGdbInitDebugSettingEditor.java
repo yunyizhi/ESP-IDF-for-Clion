@@ -26,6 +26,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ItemEvent;
 import java.io.File;
+import java.nio.file.Path;
 import java.util.Map;
 
 import static org.btik.espidf.util.I18nMessage.$i18n;
@@ -136,9 +137,9 @@ public class EspIdfGdbInitDebugSettingEditor extends SettingsEditor<EspIdfDebugR
         if (path == null) {
             return;
         }
-        File gdbFile = PathEnvironmentVariableUtil.findInPath(gdbExecutable, path, null);
+        Path gdbFile = PathEnvironmentVariableUtil.findFirst(gdbExecutable, path);
         if (gdbFile != null) {
-            gdb.setRootDir(gdbFile.getParentFile());
+            gdb.setRootDir(gdbFile.getParent().toFile());
         }
     }
 

@@ -29,11 +29,11 @@ public class TaskIconCellRenderer extends DefaultTreeCellRenderer {
         ijIconMap.put("ij:AllIcons.Actions.Refresh", AllIcons.Actions.Refresh);
         metaIconMap.put(EspIdfTaskTreeNode.class, AllIcons.Nodes.ConfigFolder);
         metaIconMap.put(EspIdfTaskFolderNode.class, AllIcons.Nodes.ConfigFolder);
-        metaIconMap.put(EspIdfTaskCommandNode.class, icons.ExternalSystemIcons.Task);
+        metaIconMap.put(EspIdfTaskCommandNode.class, AllIcons.General.GearPlain);
         metaIconMap.put(EspIdfTaskConsoleCommandNode.class, AllIcons.Nodes.Console);
         metaIconMap.put(EspIdfTaskActionNode.class, AllIcons.Nodes.Console);
-        metaIconMap.put(RawCommandNode.class, icons.ExternalSystemIcons.Task);
-        metaIconMap.put(LocalExecNode.class, icons.ExternalSystemIcons.Task);
+        metaIconMap.put(RawCommandNode.class, AllIcons.General.GearPlain);
+        metaIconMap.put(LocalExecNode.class, AllIcons.General.GearPlain);
     }
 
     JLabel label = new JLabel();

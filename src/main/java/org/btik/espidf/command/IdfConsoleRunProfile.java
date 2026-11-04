@@ -11,7 +11,7 @@ import com.intellij.execution.runners.ExecutionEnvironment;
 import com.intellij.execution.ui.ConsoleView;
 import com.intellij.execution.ui.ConsoleViewContentType;
 import com.intellij.openapi.project.Project;
-import com.jetbrains.cidr.execution.console.CidrPathConsoleFilter;
+import com.jetbrains.cidr.execution.CidrPathWithOffsetConsoleFilter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -90,7 +90,7 @@ public class IdfConsoleRunProfile implements RunProfile {
         }
         if (useOutFilter) {
             Project project = environment.getProject();
-            consoleBuilder.filters(new CidrPathConsoleFilter(project, null, null));
+            consoleBuilder.filters(new CidrPathWithOffsetConsoleFilter(project, null, null));
         }
         return commandLineState;
     }

@@ -40,7 +40,8 @@ import static org.btik.espidf.toolwindow.tasks.mcp.McpSchemaUtils.schema;
 public class EspIdfSetProjectConfigMcpTool implements McpTool {
 
     private static final McpToolCategory CATEGORY =
-            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false);
+            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false,
+                    "ESP-IDF Tasks", "ESP-IDF related MCP tools");
 
     private final McpToolDescriptor descriptor;
 
@@ -57,6 +58,7 @@ public class EspIdfSetProjectConfigMcpTool implements McpTool {
         this.descriptor = new McpToolDescriptor(
                 "espidf_set_project_config",
                 $i18n("espidf.mcp.set.config.name"),
+                $i18n("espidf.mcp.set.config.desc"),
                 $i18n("espidf.mcp.set.config.desc"),
                 CATEGORY,
                 "espidf_set_project_config",

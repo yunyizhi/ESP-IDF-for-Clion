@@ -15,7 +15,7 @@ public class I18nMessage extends DynamicBundle {
     public static NotificationGroup NOTIFICATION_GROUP;
 
     public I18nMessage(@NotNull String pathToBundle) {
-        super(pathToBundle);
+        super(I18nMessage.class, pathToBundle);
     }
 
     public static String getMsg(String key) {

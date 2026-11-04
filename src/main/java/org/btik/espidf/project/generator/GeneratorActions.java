@@ -221,7 +221,7 @@ public abstract class GeneratorActions<T> {
             if (mainSrc == null) {
                 return;
             }
-            editorManager.openFile(mainSrc, true);
+            editorManager.requestOpenFile(mainSrc);
         });
     }
 

@@ -190,7 +190,7 @@ public class EspIdfActionMap {
     private static void openPreviewInEditor(Project project, String url, String cmakeBuildDir) {
         String fileName = "Size-Analysis [" + cmakeBuildDir + "]." + SizeAnalysisFileType.DEFAULT_EXTENSION;
         SizeAnalysisVirtualFile virtualFile = new SizeAnalysisVirtualFile(fileName, url, project.getBasePath());
-        FileEditorManager.getInstance(project).openFile(virtualFile, true);
+        FileEditorManager.getInstance(project).requestOpenFile(virtualFile);
     }
 
     public static void exec(EspIdfTaskActionNode actionNode, Project project) {

@@ -47,7 +47,8 @@ import java.util.Set;
 public class EspIdfRunTaskMcpTool implements McpTool {
 
     private static final McpToolCategory CATEGORY =
-            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false);
+            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false,
+                    "ESP-IDF Tasks", "ESP-IDF related MCP tools");
 
     private static final long AWAIT_TIMEOUT_MS = 10 * 60 * 1000L;
 
@@ -83,6 +84,7 @@ public class EspIdfRunTaskMcpTool implements McpTool {
         this.descriptor = new McpToolDescriptor(
                 "espidf_run_task",
                 $i18n("espidf.mcp.run.task.name"),
+                $i18n("espidf.mcp.run.task.desc"),
                 $i18n("espidf.mcp.run.task.desc"),
                 CATEGORY,
                 "espidf_run_task",

@@ -35,7 +35,8 @@ import static org.btik.espidf.toolwindow.tasks.mcp.McpSchemaUtils.schema;
 public class EspIdfTerminateTaskMcpTool implements McpTool {
 
     private static final McpToolCategory CATEGORY =
-            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false);
+            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false,
+                    "ESP-IDF Tasks", "ESP-IDF related MCP tools");
 
     private final McpToolDescriptor descriptor;
 
@@ -56,6 +57,7 @@ public class EspIdfTerminateTaskMcpTool implements McpTool {
         this.descriptor = new McpToolDescriptor(
                 "espidf_terminate_task",
                 $i18n("espidf.mcp.terminate.task.name"),
+                $i18n("espidf.mcp.terminate.task.desc"),
                 $i18n("espidf.mcp.terminate.task.desc"),
                 CATEGORY,
                 "espidf_terminate_task",

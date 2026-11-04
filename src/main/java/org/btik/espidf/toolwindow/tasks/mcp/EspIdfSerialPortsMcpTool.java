@@ -28,7 +28,8 @@ import static org.btik.espidf.toolwindow.tasks.mcp.McpSchemaUtils.emptySchema;
 public class EspIdfSerialPortsMcpTool implements McpTool {
 
     private static final McpToolCategory CATEGORY =
-            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false);
+            new McpToolCategory("ESP-IDF Tasks", "esp.idf.tasks", false, false,
+                    "ESP-IDF Tasks", "ESP-IDF related MCP tools");
 
     private final McpToolDescriptor descriptor;
 
@@ -37,6 +38,7 @@ public class EspIdfSerialPortsMcpTool implements McpTool {
         this.descriptor = new McpToolDescriptor(
                 "espidf_list_serial_ports",
                 $i18n("espidf.mcp.serial.ports.name"),
+                $i18n("espidf.mcp.serial.ports.desc"),
                 $i18n("espidf.mcp.serial.ports.desc"),
                 CATEGORY,
                 "espidf_list_serial_ports",

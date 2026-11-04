@@ -14,7 +14,7 @@ public class SysConf extends DynamicBundle {
     private static final SysConf INSTANCE = new SysConf("org-btik-esp-idf.conf.systemConf");
 
     private SysConf(@NotNull String pathToBundle) {
-        super(pathToBundle);
+        super(SysConf.class, pathToBundle);
     }
 
     public static String get(String key) {
