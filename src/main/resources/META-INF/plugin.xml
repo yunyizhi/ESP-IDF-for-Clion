@@ -7,6 +7,7 @@
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
     <name>ESP-IDF</name>
     <depends>com.intellij.modules.clion</depends>
+    <depends>com.intellij.modules.jcef</depends>
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="lustreofjade@qq.com" url="">云逸之</vendor>
 
